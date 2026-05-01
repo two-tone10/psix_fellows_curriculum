@@ -1383,13 +1383,9 @@ function buildSessions() {
 
     // Activities HTML
     const activitiesHTML = s.activities.map((a, i) => `
-      <div class="activity-card ${a.isNew ? 'new-act' : ''}">
+      <div class="activity-card">
         <div class="act-num">${i + 1}</div>
         <div class="act-body">
-          <div class="act-meta">
-            ${a.isNew ? '<span class="badge-new">★ New</span>' : ''}
-            ${a.time ? `<span class="badge-time">${a.time}</span>` : ''}
-          </div>
           <div class="act-text">${a.text}</div>
         </div>
       </div>
@@ -1486,7 +1482,7 @@ function buildSessions() {
 
         <div class="section-hd">Activities</div>
         <div class="activities-list">${activitiesHTML}</div>
-        ${s.activities.some(a => a.isNew) ? `<div class="new-note"><div class="new-note-dot"></div> ★ New activity added to deepen learning in this module</div>` : ''}
+
       </div>
 
       <!-- REFLECT TAB -->
