@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSiX Fellow's Journey Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:       #1B3A5C;
+  --navy-lt:    #E8EEF5;
+  --navy-dk:    #122840;
+  --gold:       #A87820;
+  --gold-lt:    #FEF7E8;
+  --gold-pale:  #FDF3D8;
+  --white:      #FFFFFF;
+  --off-white:  #F8F7F4;
+  --text:       #1A1A1A;
+  --text-med:   #444444;
+  --text-lt:    #7A7A7A;
+  --border:     #E2E2E2;
+  --new-act:    #B54800;
+  --new-act-lt: #FFF1E8;
+  --con:   #1B5E8A; --con-lt: #E5EFF6;
+  --tra:   #2D6B4E; --tra-lt: #E5F0EA;
+  --gra:   #6B2738; --gra-lt: #F2E8EB;
+  --tea:   #4A3570; --tea-lt: #EDE9F5;
+  --all:   #2B4040; --all-lt: #E5EEED;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--off-white);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────── */
+.sidebar {
+  width: 230px;
+  min-width: 230px;
+  background: var(--navy-dk);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 200;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.sidebar-brand {
+  padding: 28px 22px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand-eyebrow {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 6px;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.brand-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 5px;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-section-label {
+  padding: 18px 22px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+}
+
+.month-nav { padding: 0 10px 4px; }
+
+.month-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 7px;
+  text-align: left;
+  margin-bottom: 1px;
+  gap: 10px;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.month-btn:hover { background: rgba(255,255,255,0.07); }
+.month-btn.active { background: rgba(255,255,255,0.12); }
+.month-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gold);
+}
+
+.month-dot {
+  width: 9px; height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.month-btn-info { flex: 1; min-width: 0; }
+
+.month-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.2;
+}
+
+.month-btn.active .month-name { color: rgba(255,255,255,0.95); font-weight: 600; }
+
+.month-session-title {
+  font-size: 10px;
+  color: rgba(255,255,255,0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+
+.month-inperson {
+  font-size: 9px;
+  color: #F5A623;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.sidebar-legend {
+  margin: 16px 10px 20px;
+  padding: 14px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.legend-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.legend-item:last-child { margin-bottom: 0; }
+
+.legend-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.3;
+}
+
+/* ─── TOPBAR ────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 230px;
+  right: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  padding: 0 48px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+}
+
+.topbar-session {
+  font-size: 13px;
+  color: var(--text-lt);
+  font-style: italic;
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-print {
+  padding: 7px 16px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s;
+}
+.btn-print:hover { opacity: 0.82; }
+
+.btn-outline {
+  padding: 7px 14px;
+  background: none;
+  color: var(--navy);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.btn-outline:hover { border-color: var(--navy); }
+
+/* ─── MAIN ──────────────────────────────────────────── */
+.main {
+  margin-left: 230px;
+  padding-top: 54px;
+  flex: 1;
+  min-height: 100vh;
+}
+
+.content-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 48px 96px;
+}
+
+/* ─── SESSION PANELS ──────────────────────────────── */
+.session-panel {
+  display: none;
+  animation: fadeUp 0.22s ease;
+}
+.session-panel.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── SESSION HEADER ──────────────────────────────── */
+.session-header { padding: 48px 0 0; }
+
+.session-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.session-month-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+}
+
+.domain-pill {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--white);
+}
+
+.inperson-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: #FFF3E0;
+  border: 1px solid #F5A623;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #A06010;
+  letter-spacing: 0.05em;
+}
+
+.session-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.18;
+  margin-bottom: 24px;
+}
+
+/* ─── INQUIRY BLOCK ───────────────────────────────── */
+.inquiry-block {
+  border-left: 5px solid var(--gold);
+  background: var(--gold-pale);
+  border-radius: 0 10px 10px 0;
+  padding: 28px 32px 24px;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.inquiry-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.inquiry-question {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.48;
+}
+
+/* ─── DESCRIPTION ─────────────────────────────────── */
+.session-description {
+  font-size: 15px;
+  color: var(--text-med);
+  line-height: 1.78;
+  margin-bottom: 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── TABS ────────────────────────────────────────── */
+.tabs-bar {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 32px;
+  gap: 2px;
+}
+
+.tab-btn {
+  padding: 10px 22px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-lt);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--navy); }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ─── SECTION HEADER ──────────────────────────────── */
+.section-hd {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── GOALS ───────────────────────────────────────── */
+.goals-list { margin-bottom: 40px; }
+
+.goal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #F2F2F2;
+  cursor: pointer;
+}
+.goal-item:last-child { border-bottom: none; }
+.goal-item:hover .goal-circle { border-color: var(--navy); }
+
+.goal-circle {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #CCD5E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.15s;
+  font-size: 12px;
+  color: transparent;
+}
+.goal-item.done .goal-circle {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: white;
+}
+
+.goal-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.58;
+  transition: color 0.15s;
+}
+.goal-item.done .goal-text { color: var(--text-lt); text-decoration: line-through; }
+
+/* ─── ACTIVITIES ──────────────────────────────────── */
+.activities-list { margin-bottom: 24px; }
+
+.activity-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+.activity-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); transform: translateY(-1px); }
+.activity-card.new-act { border-color: #F0DECE; background: var(--new-act-lt); }
+
+.act-num {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--navy-lt);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.activity-card.new-act .act-num { background: #FAD9C0; color: var(--new-act); }
+
+.act-body { flex: 1; }
+
+.act-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.badge-new {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--new-act);
+  background: #FAD9C0;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.badge-time {
+  font-size: 11px;
+  color: var(--text-lt);
+  background: #F0F0F0;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.activity-card.new-act .badge-time { background: #F0DECE; }
+
+.act-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.6;
+}
+.activity-card.new-act .act-text { color: var(--text); }
+
+.new-note {
+  font-size: 11px;
+  color: var(--text-lt);
+  font-style: italic;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.new-note-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--new-act); opacity: 0.5; }
+
+/* ─── PREPARE TAB ─────────────────────────────────── */
+.phase-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.phase-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F2F2F2;
+}
+
+.phase-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.phase-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.phase-task-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.72;
+}
+
+.task-check-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #F2F2F2;
+}
+
+.task-check-wrap input[type=checkbox] {
+  width: 17px; height: 17px;
+  margin-top: 2px;
+  accent-color: var(--navy);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.task-check-label {
+  font-size: 13px;
+  color: var(--text-lt);
+  font-style: italic;
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+/* ─── READINGS ────────────────────────────────────── */
+.readings-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.reading-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+.reading-row:last-child { border-bottom: none; }
+
+.reading-bullet {
+  color: var(--gold);
+  font-size: 16px;
+  line-height: 1.3;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.reading-text {
+  font-size: 13px;
+  color: var(--text-lt);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+/* ─── REFLECT TAB ─────────────────────────────────── */
+.reflect-after-card {
+  background: var(--gold-lt);
+  border: 1px solid #EDD9A0;
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+}
+
+.reflect-after-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.reflect-after-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.72;
+}
+
+.reflect-prompts {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.reflect-prompt-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F2F2F2;
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.6;
+}
+.reflect-prompt-item:last-child { border-bottom: none; }
+
+.prompt-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-lt);
+  background: #F0F0F0;
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ─── CONNECTS FORWARD ────────────────────────────── */
+.connects-forward {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--navy-lt);
+  border-left: 4px solid var(--navy);
+  border-radius: 0 8px 8px 0;
+  padding: 18px 22px;
+  margin-top: 36px;
+}
+
+.connects-arrow {
+  font-size: 18px;
+  color: var(--navy);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.connects-body { flex: 1; }
+
+.connects-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy);
+  opacity: 0.6;
+  margin-bottom: 5px;
+}
+
+.connects-text {
+  font-size: 14px;
+  color: var(--navy);
+  font-style: italic;
+  line-height: 1.65;
+}
+
+/* ─── PRINT ───────────────────────────────────────── */
+@media print {
+  @page { margin: 0.75in; }
+  .sidebar, .topbar { display: none !important; }
+  .main { margin-left: 0 !important; padding-top: 0 !important; }
+  body { background: white; }
+  .session-panel { display: block !important; page-break-after: always; animation: none; }
+  .tabs-bar { display: none; }
+  .tab-pane { display: block !important; }
+  .activity-card { break-inside: avoid; box-shadow: none; }
+  .phase-card, .reflect-after-card, .readings-card { break-inside: avoid; }
+  .content-wrap { padding: 0; max-width: 100%; }
+  .session-header { padding: 24px 0 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-eyebrow">Research Fellowship</div>
+    <div class="brand-name">Translational Fellowship in Purpose Science</div>
+    <div class="brand-sub">PSiX · Purpose Commons · BCTR</div>
+  </div>
+
+  <div class="sidebar-section-label">Fellowship Year</div>
+
+  <nav class="month-nav" id="monthNav">
+    <!-- rendered by JS -->
+  </nav>
+
+  <div class="sidebar-legend">
+    <div class="legend-title">Domains</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#1B5E8A"></div><div class="legend-label">Purpose Science Content</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2D6B4E"></div><div class="legend-label">Translational & Community</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#6B2738"></div><div class="legend-label">Grant Development</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4A3570"></div><div class="legend-label">Course Design & Teaching</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2B4040"></div><div class="legend-label">All Four Domains</div></div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-title">Fellow's Journey Companion</div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-session" id="topbarSession">Select a session →</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-outline" onclick="window.print()">⎙ Print Session</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════ -->
+<main class="main">
+  <div class="content-wrap" id="contentWrap">
+    <!-- session panels rendered by JS -->
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const DOMAINS = {
+  content:       { color: '#1B5E8A', lt: '#E5EFF6', label: 'Purpose Science Content' },
+  translational: { color: '#2D6B4E', lt: '#E5F0EA', label: 'Translational & Community' },
+  grant:         { color: '#6B2738', lt: '#F2E8EB', label: 'Grant Development' },
+  teaching:      { color: '#4A3570', lt: '#EDE9F5', label: 'Course Design & Teaching' },
+  all:           { color: '#2B4040', lt: '#E5EEED', label: 'All Four Domains' },
+};
+
+const SESSIONS = [
+  {
+    id: 'jul', month: 'July', domain: 'content', inPerson: false,
+    title: 'Foundations of Purpose Science',
+    inquiry: "What do we mean when we say 'purpose,' and what is at stake in how we define it?",
+    before: "Read one foundational purpose science text and write a paragraph: how does this definition fit (or not fit) what you have observed in your own work?",
+    after: "Post a 200-word reflection to the cohort forum: how has the session sharpened, complicated, or changed your working definition of purpose? What question is more pressing for you now than before?",
+    description: "The fellowship year opens with a dive into the scientific foundations of purpose. Fellows establish a shared conceptual vocabulary, survey the landmark empirical literature, and situate purpose science within the broader landscape of positive youth development and developmental psychology. This session ensures that fellows, regardless of their prior proximity to purpose science, enter the year with a rigorous and common intellectual foundation.",
+    goals: [
+      "Articulate a clear, research-grounded definition of purpose and distinguish it from related constructs (meaning, identity, motivation, goal pursuit)",
+      "Survey the landmark empirical literature on purpose, including key longitudinal and intervention studies",
+      "Identify open questions and contested debates that represent opportunities for new scholarship",
+      "Begin developing a personal intellectual map of where your research interests intersect with the purpose science field",
+    ],
+    activities: [
+      { text: "Guided reading and annotation of 4–6 foundational purpose science texts, with structured reflection prompts", time: "20 min" },
+      { text: "Small group discussion: Where does your prior scholarship connect to purpose science? Where does it diverge?", time: "25 min" },
+      { text: "'Purpose Science Landscape' mapping exercise: fellows collaboratively chart the field's major themes, methods, populations studied, and gaps", time: "30 min" },
+      { text: "Guest presentation by a senior Lab of Labs researcher on the state of the field and its most pressing unanswered questions", time: "20 min" },
+      { text: "Personal Purpose Positioning — Write a 150-word statement on your own relationship to purpose as a scholar or practitioner, then pair-share. Surfaces prior assumptions before literature engagement.", time: "20 min", isNew: true },
+      { text: "Contested Definitions Fishbowl — Fellows are assigned different definitional frameworks (Damon; McKnight & Kashdan; Bronk) and defend them in a rotating fishbowl. Surfaces the stakes embedded in how we define the construct.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Damon, W., Menon, J., & Bronk, K. C. (2003). The development of purpose during adolescence",
+      "Burrow, A. L., & Hill, P. L. (2011). Purpose as a form of identity capital for positive youth adjustment",
+      "McKnight, P. E., & Kashdan, T. B. (2009). Purpose in life as a system that creates and sustains health and well-being",
+    ],
+    reflectPrompts: [
+      "Which definition of purpose felt most aligned with what you observe in your own work — and why?",
+      "What assumptions about who has purpose (and who doesn't) did you notice in the texts?",
+      "What is one thing you believe about purpose that the literature hasn't yet confirmed?",
+    ],
+    connectsTo: "As you build a shared vocabulary for purpose, begin noticing: whose definitions have shaped the literature — and whose haven't? That question anchors August.",
+  },
+
+  {
+    id: 'aug', month: 'August', domain: 'content', inPerson: false,
+    title: 'Purpose Across Contexts: Culture, Identity, and Equity',
+    inquiry: "Whose purpose is represented in the literature — and whose is not?",
+    before: "Select a purpose science study and examine its sample: who participated, who was excluded, and what assumptions about purpose are embedded in its measures? Bring a one-page analysis.",
+    after: "Identify one gap in the purpose literature that your home institution or community context is uniquely positioned to address. Write a brief research provocation (150–200 words) and share it with the cohort.",
+    description: "Purpose science has historically concentrated on certain populations and institutional contexts. This session expands the frame, exploring how purpose is shaped by cultural context, racial and ethnic identity, socioeconomic circumstance, and structural inequality. Fellows examine both what the existing literature tells us about purpose across diverse populations and where critical gaps remain — gaps their own research programs may be uniquely positioned to address.",
+    goals: [
+      "Analyze how cultural context shapes the development, expression, and measurement of purpose",
+      "Critically evaluate the existing literature on purpose across diverse racial, ethnic, and socioeconomic groups",
+      "Identify ways in which standard purpose measures may carry cultural assumptions that limit generalizability",
+      "Connect equity considerations to your own emerging research questions and community partnerships",
+    ],
+    activities: [
+      { text: "Critical reading exercise: Fellows review 2–3 purpose studies and analyze sample characteristics, measurement tools, and generalizability claims", time: "25 min" },
+      { text: "Panel discussion with Community Research Mentors on how purpose shows up — and is talked about — in the communities they serve", time: "30 min" },
+      { text: "Reflective writing: How might your home institution's community context shape the purpose questions worth asking?", time: "15 min" },
+      { text: "Introduction to culturally responsive research design principles", time: "20 min" },
+      { text: "'Whose Study Is This?' Protocol — Fellows apply a structured four-lens critique (sample, measures, context, assumptions) to three studies, building a shared analytical template for the year.", time: "30 min", isNew: true },
+      { text: "Community-Centered Research Question Charrette — Small groups draft what a study designed by and for their community partner's constituents might look like, then compare across groups.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Sumner, R., Burrow, A. L., & Hill, P. L. (2018). The development of purpose in life among adolescents who experience marginalization",
+      "Selected readings on culturally responsive research methods in developmental science",
+      "Purpose Commons National Purpose Survey co-design documentation (internal)",
+    ],
+    reflectPrompts: [
+      "What assumptions about 'universal' purpose did you find embedded in the studies you examined?",
+      "Whose voice or experience is most conspicuously absent from the literature — and why does that matter for your research?",
+      "What would it mean to let community context reshape your research question, not just your sample?",
+    ],
+    connectsTo: "Clarity about equity gaps in the literature becomes the foundation for asking: what does research partnership look like when designed around those gaps? That is September's opening question.",
+  },
+
+  {
+    id: 'sep', month: 'September', domain: 'translational', inPerson: false,
+    title: 'Translational Research Methods and Community-Based Design',
+    inquiry: "What does it mean to study purpose with communities rather than on them?",
+    before: "Listen to or read one practitioner account of a research partnership gone well — and one that didn't. Come prepared to discuss: what made the difference, and what does that mean for how you want to work?",
+    after: "Draft your researcher-practitioner partnership philosophy: a one-page statement of how you intend to show up in community partnerships, what you will offer, and what you will genuinely be willing to learn. Share with your assigned mentor.",
+    description: "This session provides fellows with a rigorous introduction to translational research methods — the scientific and relational practices that allow academic knowledge to move into and be shaped by real-world contexts. Fellows learn frameworks for community-based participatory research, examine the continuum from basic to applied science, and begin developing their own researcher-practitioner partnership philosophy.",
+    goals: [
+      "Distinguish between basic, applied, and translational research and articulate the value and demands of each",
+      "Understand core principles of CBPR and how they apply to purpose science",
+      "Identify the relational competencies — trust-building, communication across difference, navigating power — required for effective community partnerships",
+      "Begin drafting a personal researcher-practitioner partnership philosophy statement",
+    ],
+    activities: [
+      { text: "BCTR-led workshop: Introduction to the translational research continuum and community-engaged research frameworks", time: "30 min" },
+      { text: "Case study analysis: Two real-world examples of community-engaged research in youth development — one successful, one that encountered significant challenges", time: "25 min" },
+      { text: "Dyadic reflection with assigned Lab of Labs mentor: What does your current scholarship look like on the translational continuum, and where do you want it to go?", time: "20 min" },
+      { text: "Introduction to the co-design process used by Purpose Commons Design Teams", time: "15 min" },
+      { text: "Partnership Values Inventory — Fellows complete a self-assessment ranking their priorities in partnership work (speed vs. depth, control vs. co-ownership) and discuss how those priorities align — or create tension — with community norms.", time: "20 min", isNew: true },
+      { text: "Power Mapping Exercise — Using a structured diagram, fellows map themselves in a hypothetical community-university partnership, identifying where authority concentrates and how to distribute it intentionally.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Israel, B. A., et al. (1998). Review of community-based research: Assessing partnership approaches to improve public health",
+      "BCTR Translational Research Framework documentation (internal)",
+      "Selected readings on research-practice partnerships in education and youth development",
+    ],
+    reflectPrompts: [
+      "Where do you sit on the translational continuum right now — and where do you want to be by the end of the fellowship year?",
+      "What values or habits from your academic training might create friction in community partnership? How will you manage that?",
+      "What would you need to genuinely learn from a community partner, not just learn about?",
+    ],
+    connectsTo: "Knowing how to partner with communities is half the work. The other half is knowing how to communicate what you learn there — in language different audiences can act on. That is October's focus.",
+  },
+
+  {
+    id: 'oct', month: 'October', domain: 'translational', inPerson: false,
+    title: 'Communicating Across Boundaries: Writing, Speaking, and Translating Science',
+    inquiry: "What makes knowledge about purpose usable — and for whom?",
+    before: "Find one example of purpose science research communicated effectively to a non-academic audience. Analyze what makes it work: what was translated, what was preserved, and what — if anything — was lost?",
+    after: "Draft a one-page research brief on your emerging project, written for a YSO program director with no social science background. Have a colleague or community partner read it and give you honest feedback before November's convening.",
+    description: "Translational researchers must be multilingual in a professional sense — able to write for peer-reviewed journals, speak to practitioners in plain language, and communicate findings to youth, families, and policymakers. This session builds those communication competencies directly, with particular attention to skills that are rarely taught in doctoral programs but are essential for the kind of scholarship this fellowship cultivates.",
+    goals: [
+      "Develop practical skills for writing about purpose science for non-academic audiences",
+      "Practice translating research findings into actionable recommendations for youth-serving organizations",
+      "Understand how to build a public scholarship presence that extends the reach of purpose science",
+      "Prepare for the November Community Engagement Intensive by developing a clear, accessible summary of your emerging research direction",
+    ],
+    activities: [
+      { text: "Writing workshop: Draft a 300-word plain-language summary of a purpose science finding and receive structured peer feedback", time: "25 min" },
+      { text: "Guest practitioner session: A YSO leader discusses what they actually need from researchers — what's useful, what isn't, and how communication style affects trust", time: "25 min" },
+      { text: "Practice presentation: Fellows deliver a 5-minute accessible overview of their research interests to a simulated practitioner audience", time: "30 min" },
+      { text: "Pre-Intensive preparation: Fellows refine their research summaries and develop 2–3 discussion questions for YSO partners", time: "15 min" },
+      { text: "The Multilingual Translation Challenge — Translate the same research finding into three forms: a 280-character social post, a YSO staff brief (one paragraph), and a 30-second parent explanation. Compare what survived each translation.", time: "25 min", isNew: true },
+      { text: "Research Communication Audit — Bring one page of your own academic writing and annotate what would need to change (vocabulary, framing, structure) for a non-academic practitioner audience. Generates a personal translation checklist.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Selected readings on public scholarship and researcher communication",
+      "Examples of effective research-to-practice briefs from the BCTR and Purpose Commons archives",
+    ],
+    reflectPrompts: [
+      "What do you lose — scientifically or intellectually — in the act of translation? Is that loss acceptable? Necessary?",
+      "Who is the hardest audience for you to communicate with effectively — and what does that reveal?",
+      "What would it mean for your scholarship to be genuinely useful to the communities you study?",
+    ],
+    connectsTo: "These communication skills will be tested immediately at the November Community Engagement Intensive. Arrive ready to use them in real partnership conversations.",
+  },
+
+  {
+    id: 'nov', month: 'November', domain: 'translational', inPerson: true,
+    title: 'Community Engagement Intensive',
+    inquiry: "What questions are worth pursuing when researchers and communities decide together?",
+    before: "Review the Community Fellows' refined research question summaries (distributed in advance). For each, write one sentence on what excites you scientifically and one sentence on what you might need to learn or do differently to pursue it well.",
+    after: "Within two weeks of the convening, send a personal follow-up to at least one YSO partner you met. Reflect in the cohort forum: what did you commit to, and what will it require of you?",
+    description: "November's in-person Community Engagement Intensive brings Research Fellows together with Community Fellows, additional researchers, youth, and YSO leaders for a multi-day immersive convening. Fellows present their collaborative and individual research projects, receive feedback from the broader network, and deepen the researcher-practitioner relationships that will sustain their work beyond the fellowship year.",
+    goals: [
+      "Share early-stage research projects and receive substantive feedback from researchers, practitioners, and youth",
+      "Deepen relationships with Community Fellows and YSO partners from the Purpose Commons network",
+      "Identify emerging themes in the purpose science-practice ecosystem that may inform future research directions",
+      "Develop or refine co-design agreements with community partners for ongoing research collaboration",
+    ],
+    activities: [
+      { text: "Research project presentations with structured feedback from mixed researcher-practitioner-youth panels", time: "Varies" },
+      { text: "Facilitated cross-track dialogue: What are Community Fellows learning that Research Fellows should know? And vice versa?", time: "45 min" },
+      { text: "YSO partnership development sessions: Fellows meet with potential and current community partners to advance formal agreements", time: "60 min" },
+      { text: "Network-wide theme identification: Participants collectively surface emerging questions for future fellowship cohorts and the broader field", time: "30 min" },
+      { text: "Asset Mapping in Cross-Track Pairs — Research and Community Fellows partner and complete the same structured asset map. They then compare: what unique knowledge, relationships, and access does each bring that the other does not?", time: "30 min", isNew: true },
+      { text: "Commitment Letter Draft — Draft a brief formal letter of intent to one YSO partner, specifying one concrete collaboration offer, a realistic timeline, and what you are asking in return. Makes partnership intentions concrete and accountable.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Pre-reading: Community Fellows' refined research question summaries (distributed in advance of the convening)",
+    ],
+    reflectPrompts: [
+      "What surprised you most in hearing how community partners and youth talk about purpose?",
+      "What commitment did you make at the convening — and what will it actually require of you to keep it?",
+      "What did you learn from a Community Fellow that you couldn't have learned from a peer in your discipline?",
+    ],
+    connectsTo: "The questions that emerge in community partnership are not just research questions — they are the foundation of a fundable agenda. December begins that work.",
+  },
+
+  {
+    id: 'dec', month: 'December', domain: 'grant', inPerson: false,
+    title: 'Grant Development I: Landscape, Strategy, and the Fundable Question',
+    inquiry: "What makes a research question fundable — and what makes it worth funding?",
+    before: "Read one funded grant abstract in purpose science or a closely adjacent field. Identify the moves the writer makes: how is the problem framed, how is significance established, and how is the question positioned as both important and answerable?",
+    after: "Draft your specific aims page or project summary and share it with your Lab of Labs mentor before January's session. In your cover note, identify the one thing you are most uncertain about and the one thing you believe most strongly.",
+    description: "The first of two dedicated grant development sessions focuses on the strategic dimensions of research funding: how to read the funding landscape, how to identify alignment between a funder's priorities and your research questions, and how to articulate a research vision that is both scientifically compelling and fundable. Fellows begin developing the conceptual architecture of a grant proposal, grounded in a question co-developed with their community partner.",
+    goals: [
+      "Navigate the purpose science funding landscape, including federal, foundation, and private sources",
+      "Identify 2–3 viable funding opportunities aligned with your emerging research agenda",
+      "Understand the anatomy of a competitive grant proposal and what reviewers look for",
+      "Draft a preliminary specific aims or project summary that integrates a community-sourced question",
+    ],
+    activities: [
+      { text: "Funding landscape workshop: Survey NIH, NSF, private foundation, and purpose-specific opportunities with guidance from PSiX grant development staff", time: "25 min" },
+      { text: "Funder analysis exercise: Select one funding opportunity and analyze its priorities, review criteria, and fit with your research direction", time: "20 min" },
+      { text: "Aims drafting workshop: With mentor feedback, draft a preliminary specific aims page or project summary", time: "30 min" },
+      { text: "Peer review exercise: Exchange drafts and provide structured critique using a simplified reviewer rubric", time: "20 min" },
+      { text: "Funder Persona Role-Play — Fellows are assigned distinct funder personas (NIH study section member, family foundation officer, purpose-specific funder) and evaluate each other's aims from that perspective. Surfaces how framing shifts based on audience.", time: "25 min", isNew: true },
+      { text: "Grant Autopsy — Fellows examine a sanitized declined proposal and diagnose reasons for non-funding using a structured protocol. Normalizes revision and builds critical analytical skills.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Selected successful grant abstracts from purpose science and adjacent fields (provided by PSiX)",
+      "NIH and foundation guidance on proposal writing for early-career researchers",
+      "Purpose Commons funding landscape brief (internal)",
+    ],
+    reflectPrompts: [
+      "What is the difference between the question you most want to ask and the question you believe a funder will fund? How will you navigate that?",
+      "What makes your community partnership a scientific asset, not just an ethical commitment? How does your aims page reflect that?",
+      "What would it mean to build a grant pipeline, not just write one proposal?",
+    ],
+    connectsTo: "A fundable question is only as strong as the method behind it. January will push you to interrogate the design choices embedded in your specific aims.",
+  },
+
+  {
+    id: 'jan', month: 'January', domain: 'content', inPerson: false,
+    title: 'Research Design, Measurement, and Rigor in Purpose Science',
+    inquiry: "How do our design choices shape what we can — and cannot — know about purpose?",
+    before: "Select a purpose science study and write a one-page methodological critique: what could this design reveal, and what did its choices foreclose? What would you have done differently, and why?",
+    after: "Revisit your emerging research project and write a one-page design rationale: why this method, for this question, with this community? Submit to your mentor as a living document to return to in April.",
+    description: "This methodologically focused session deepens fellows' technical competency in purpose science research design. Fellows examine the range of methods used in the field — from survey-based cross-sectional designs to longitudinal, experimental, and qualitative approaches — and explore how to select and justify design choices in the context of community-engaged research. Special attention is given to measurement and instrument validity across diverse populations.",
+    goals: [
+      "Evaluate the methodological strengths and limitations of major research designs used in purpose science",
+      "Critically assess the most widely used purpose measurement instruments and their applicability across populations",
+      "Understand how community partnership contexts shape and constrain research design choices",
+      "Apply design principles to your own developing research project, with attention to rigor and feasibility",
+    ],
+    activities: [
+      { text: "Methodological deep dive: Select and present a purpose science study, analyzing its design choices and what those choices allow and foreclose", time: "30 min" },
+      { text: "Measurement workshop: Hands-on review of the Youth Purpose Survey, Claremont Purpose Scale, and other widely used instruments — what do they measure well, and for whom?", time: "25 min" },
+      { text: "Research design consultation with assigned Lab of Labs mentor: Applying methodological principles to your own project", time: "20 min" },
+      { text: "Community partner check-in: How does your research design fit the organizational context and timeline of your YSO partner?", time: "15 min" },
+      { text: "Method Speed Dating — Rotate through five method stations (survey, interview, longitudinal, experimental, CBPR) and apply each to the same research question for 5 minutes per station. Surfaces hidden methodological assumptions.", time: "30 min", isNew: true },
+      { text: "Measure Adaptation Workshop — Take a validated purpose scale and adapt it for a specific community (e.g., rural youth, English Language Learners). What changes? What breaks? What requires co-design with community?", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Bronk, K. C. (2011). The role of purpose in life in healthy identity formation: A grounded model",
+      "Selected psychometric studies on purpose measurement instruments",
+      "Readings on mixed-methods and qualitative approaches in community-engaged developmental research",
+    ],
+    reflectPrompts: [
+      "What does your choice of method assume about where purpose 'lives' — in the person, the context, the relationship?",
+      "What is the riskiest design choice in your current project — and what makes it worth that risk?",
+      "How does your community partner's reality constrain your ideal design? How have you responded to that constraint?",
+    ],
+    connectsTo: "The design rationale you write this month is the document you will bring to the February Mid-Year Convening for honest assessment.",
+  },
+
+  {
+    id: 'feb', month: 'February', domain: 'grant', inPerson: true,
+    title: 'Research Fellow Mid-Year Convening',
+    inquiry: "What is working — and what needs to change?",
+    before: "Complete a mid-year self-assessment against your individualized learning plan. Identify one thing you are proud of, one thing that has been harder than expected, and one specific ask you have of the group or your mentors.",
+    after: "Update your individualized learning plan based on mid-year feedback. Share with PSiX staff within two weeks.",
+    description: "The February Mid-Year Convening is a dedicated checkpoint for Research Fellows — a moment to step back, assess progress, recalibrate learning plans, and workshop grant proposals in a structured peer and mentor environment. This convening is explicitly designed as a feedback and iteration space, not a showcase. Fellows are expected to bring works-in-progress and genuine questions.",
+    goals: [
+      "Assess progress against individualized learning plan goals and identify areas requiring additional support",
+      "Receive structured feedback on developing grant proposals from Lab of Labs mentors and peers",
+      "Recalibrate research timelines and community partnership plans for the second half of the fellowship year",
+      "Build cohort trust and peer support structures that extend beyond the formal fellowship year",
+    ],
+    activities: [
+      { text: "Grant proposal workshop: Fellows present developing proposals; structured feedback using a reviewer rubric from Lab of Labs mentors", time: "60 min" },
+      { text: "Learning plan review: Individual check-ins with PSiX staff to assess progress and adjust goals for the remainder of the year", time: "30 min" },
+      { text: "Peer consultation circles: Small groups workshop shared challenges — institutional resistance, partnership friction, methodology questions", time: "40 min" },
+      { text: "Field-building dialogue: What does this cohort want to contribute to purpose science, and how does this fellowship get them there?", time: "30 min" },
+      { text: "The Honest Dashboard — Create a three-color (green/yellow/red) visual of your key fellowship milestones and share openly. Normalizes struggle, makes support needs visible, and creates permission for honest conversation.", time: "20 min", isNew: true },
+      { text: "Revised Success Criteria — Revisit success criteria from your original learning plan and renegotiate any that no longer fit the reality of your work. Distinguishes growth from original intentions.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Fellows' own draft grant materials (peer review preparation)",
+      "BCTR reflective practice framework documentation (internal)",
+    ],
+    reflectPrompts: [
+      "What has been genuinely harder than you expected — and what does that tell you about what you still need to learn?",
+      "What is the most important thing you would tell yourself at the beginning of the fellowship year?",
+      "What specific support do you need in the second half — and who will you ask for it?",
+    ],
+    connectsTo: "Research rigor is necessary but not sufficient. The Mid-Year Convening makes clear that where you work matters as much as how you work. March turns to the institutional terrain.",
+  },
+
+  {
+    id: 'mar', month: 'March', domain: 'translational', inPerson: false,
+    title: 'Institutional Navigation: Building a Purpose Science Program at Your Home Institution',
+    inquiry: "What is possible within my institution — and how might I expand those possibilities?",
+    before: "Draw a simple map of your institution: who are the people, structures, and norms that shape what you can do? Mark where purpose science work currently fits — and where you want it to fit.",
+    after: "Share your 12-month institutional action plan with one trusted colleague at your home institution. Note their reaction: what encouraged them, what surprised them, what raised concerns? Bring those observations to April's session.",
+    description: "This session addresses one of the most practical and underestimated challenges facing early-career faculty: navigating the institutional terrain of their own university. Building a purpose science research program requires understanding promotion and tenure structures, cultivating internal champions, managing teaching loads, and making the case for community-engaged scholarship to colleagues who may be skeptical.",
+    goals: [
+      "Map the institutional landscape at your home university — who are the allies, the skeptics, and the gatekeepers?",
+      "Understand how to make the case for community-engaged scholarship within traditional academic evaluation frameworks",
+      "Develop a personalized institutional action plan for the year following the fellowship",
+      "Build peer support structures with cohort members facing similar institutional contexts",
+    ],
+    activities: [
+      { text: "Institutional mapping exercise: Diagram the key relationships, structures, and decision points relevant to building a purpose science program at your home institution", time: "25 min" },
+      { text: "Case studies: Senior researchers share their experiences navigating institutional resistance and support for community-engaged scholarship", time: "25 min" },
+      { text: "Action planning workshop: Draft a 12-month institutional action plan, reviewed by PSiX staff and mentors", time: "30 min" },
+      { text: "Peer consultation: Fellows with similar institutional contexts workshop shared strategies", time: "20 min" },
+      { text: "Ally Interview Debrief — Between sessions, conduct a 20-minute structured conversation with a senior colleague about how community-engaged scholarship is perceived at your institution. Session opens with cross-cohort debrief of findings.", time: "20 min", isNew: true },
+      { text: "The Skeptic's Pitch — Practice a 3-minute case for purpose science and community-engaged scholarship to a resistant colleague, with peers playing the skeptic role. Builds persuasive fluency and resilience across disciplinary difference.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Selected readings on tenure and promotion for community-engaged scholars",
+      "Boyer, E. L. (1996). The scholarship of engagement",
+      "PSiX institutional navigation brief (internal)",
+    ],
+    reflectPrompts: [
+      "Who at your institution has the most power to help your purpose science work — and do they know you well enough to advocate for you?",
+      "What is the most significant institutional constraint you face, and what is your strategy for navigating it?",
+      "What would you need to do or demonstrate in the next 12 months to make community-engaged scholarship legible as rigorous scholarship in your context?",
+    ],
+    connectsTo: "Your institutional action plan and your grant proposal are not separate projects — they are the same argument addressed to different audiences. April brings both together.",
+  },
+
+  {
+    id: 'apr', month: 'April', domain: 'grant', inPerson: false,
+    title: 'Grant Development II: Writing, Revising, and Submitting',
+    inquiry: "What does it take to move from idea to compelling proposal — and what does that process reveal about what you actually believe?",
+    before: "Circulate your near-complete grant proposal to your cohort peers and mentor at least one week before the session. In your cover note, identify the section you are least confident about and the central argument you most want to pressure-test.",
+    after: "Revise and finalize your grant proposal incorporating workshop feedback. Identify your submission target and submit — or commit to a submission date — within 60 days of the session.",
+    description: "The second grant development session shifts from strategy to craft. Fellows bring substantially developed proposals and work through the writing, revision, and submission process with intensive peer and mentor support. The session addresses the specific writing demands of grant proposals — clarity of argument, specificity of design, responsiveness to reviewer concerns — and prepares fellows to submit a competitive proposal within or immediately following the fellowship year.",
+    goals: [
+      "Produce a substantially complete, reviewer-ready grant proposal in purpose science",
+      "Develop skills in responding to reviewer feedback and revising proposals for resubmission",
+      "Understand the administrative and institutional requirements for grant submission at your home institution",
+      "Build a sustainable grant development practice — not just one proposal, but a pipeline",
+    ],
+    activities: [
+      { text: "Full proposal workshop: Fellows circulate near-complete proposals in advance; session devoted to line-by-line feedback from mentors and peers", time: "60 min" },
+      { text: "Revision sprint: Focused time revising based on workshop feedback with real-time support available", time: "25 min" },
+      { text: "Submission preparation: PSiX grant development staff walk fellows through institutional submission requirements, IRB considerations, and budget development", time: "20 min" },
+      { text: "Pipeline planning: Identify 2–3 additional funding opportunities and develop a 12-month submission calendar", time: "15 min" },
+      { text: "Simulated Panel Review — Form mock study sections and score each other's proposals using an actual NIH or foundation review rubric. Debrief from both sides of the table: what did it feel like to review, and what did that reveal about your own proposal?", time: "30 min", isNew: true },
+      { text: "Resubmission Resilience Memo — Draft a 'response to anticipated reviewer concerns' memo for your own proposal, pre-empting likely critiques. Builds strategic thinking and normalizes revision as part of the process.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Fellows' own grant proposals (peer review preparation)",
+      "Selected readings on grant writing craft and common reviewer critiques",
+      "NIH review criteria guidance and foundation RFP examples",
+    ],
+    reflectPrompts: [
+      "What central claim are you making in this proposal — and do you genuinely believe it?",
+      "What is the most likely reason a reviewer would decline your proposal? How have you addressed that in the revision?",
+      "What does it mean to build a grant pipeline, not just write one proposal? What is your next submission after this one?",
+    ],
+    connectsTo: "The grant you are drafting is the research program you want to teach. May's session will ask you to make that connection explicit — and to begin building the course that carries your scholarship forward.",
+  },
+
+  {
+    id: 'may', month: 'May', domain: 'teaching', inPerson: false,
+    title: 'Course Design and Teaching Purpose Science',
+    inquiry: "How can I teach purpose in a way that enables others to build — not just understand?",
+    before: "Think of a course you took that changed how you think — not just what you know. What did the instructor do? How was it designed? Write a paragraph on what you want to carry forward into your own teaching of purpose science.",
+    after: "Finalize your capstone portfolio — research plan, community partnership documentation, grant proposal, institutional action plan, and course syllabus — in preparation for the June Culminating Symposium. Share a draft with your mentor before the symposium.",
+    description: "The final monthly session is devoted to the teaching mission — the downstream multiplier that distinguishes this fellowship from others. Fellows finalize their purpose science course syllabus or module, practice teaching core concepts to peer audiences, and develop strategies for getting new courses approved at their home institutions. This session also serves as capstone preparation.",
+    goals: [
+      "Complete a full, implementation-ready syllabus or course module in purpose science for your home institution",
+      "Develop and practice teaching at least one core purpose science concept to a non-specialist audience",
+      "Identify the pathway to course approval and implementation at your home institution",
+      "Synthesize the year's learning in preparation for the Culminating Symposium capstone presentation",
+    ],
+    activities: [
+      { text: "Syllabus workshop: Share draft syllabi; structured peer and mentor feedback on content, sequencing, and pedagogical approach", time: "30 min" },
+      { text: "Teaching demonstration: Each fellow delivers a 10-minute micro-lesson on a purpose science concept; cohort provides feedback using a structured observation protocol", time: "40 min" },
+      { text: "Institutional pathway planning: Map the specific steps required to get your course approved and scheduled at your home institution", time: "20 min" },
+      { text: "Capstone preparation: Develop your Culminating Symposium presentation, integrating research plan, community partnership, grant proposal, and course design into a coherent vision", time: "25 min" },
+      { text: "Purpose Science Teaching Philosophy Statement — Draft a 250-word teaching philosophy specific to purpose science, articulating what you believe students should be able to do — not just know — by the end of your course.", time: "20 min", isNew: true },
+      { text: "Letter to Next Year's Fellow — Write a 300-word letter to an incoming Research Fellow, sharing what you wish you had known at the start and what the fellowship most changed in your thinking, research practice, or sense of yourself as a scholar.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Selected readings on course design in the social sciences",
+      "Examples of purpose science syllabi from PSiX network institutions (internal)",
+      "Fink, L. D. (2003). Creating Significant Learning Experiences — selected chapters",
+    ],
+    reflectPrompts: [
+      "What do you believe students should be able to do — not just know — after taking a course in purpose science?",
+      "What is the most important thing you learned this year that you want to teach forward?",
+      "Who will you be as a scholar-practitioner one year from now? What will you be building?",
+    ],
+    connectsTo: "Everything produced this year — research plan, community partnerships, grant proposal, course syllabus — comes together in June. The Culminating Symposium is the first audience for your full vision.",
+  },
+
+  {
+    id: 'jun', month: 'June', domain: 'all', inPerson: true,
+    title: 'Culminating Symposium',
+    inquiry: "What am I now positioned to build next?",
+    before: "Review your individualized learning plan from the start of the year alongside your capstone portfolio. Write a two-page narrative: How have you changed as a scholar and practitioner? What do you now believe that you did not before?",
+    after: "This is the final inquiry — but it is not the last question. The Culminating Symposium marks the beginning of the next phase of your work. Carry your guiding inquiry forward.",
+    description: "The June Culminating Symposium marks the close of the formal fellowship year and the opening of everything the fellowship has been building toward. Fellows present their capstone portfolios — integrating their translational research statement, community partnership documentation, grant proposal, institutional action plan, and course syllabus — to an audience of Lab of Labs researchers, Purpose Commons partners, BCTR colleagues, and invited guests. The symposium is not a defense. It is a demonstration.",
+    goals: [
+      "Present a coherent capstone portfolio integrating all four fellowship domains",
+      "Receive feedback from the broader PSiX network — researchers, practitioners, and community partners — on the work as a whole",
+      "Articulate a clear vision of the scholarship and teaching program you are now positioned to build",
+      "Celebrate one year of rigorous, purposeful, community-grounded work with your cohort",
+    ],
+    activities: [
+      { text: "Capstone portfolio presentations: Research plan, community partnership documentation, grant proposal, institutional action plan, and course syllabus", time: "Varies" },
+      { text: "Structured feedback from Lab of Labs researchers, Purpose Commons partners, and BCTR colleagues", time: "Varies" },
+      { text: "Network reception: Fellows and mentors across cohort years share work and build enduring connections", time: "Open" },
+      { text: "Cohort reflection: What has this year produced — individually and collectively — for the purpose science field?", time: "30 min" },
+    ],
+    readings: [
+      "Fellows' own capstone portfolios (distributed in advance to reviewers)",
+    ],
+    reflectPrompts: [
+      "Looking at the full arc of the year: what question are you leaving with that you didn't arrive with?",
+      "What does your capstone portfolio say about who you are as a scholar? Does it feel true?",
+      "What will you build in the next year that would not have been possible without this fellowship?",
+    ],
+    connectsTo: null,
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+
+function buildNav() {
+  const nav = document.getElementById('monthNav');
+  nav.innerHTML = '';
+  SESSIONS.forEach((s, i) => {
+    const d = DOMAINS[s.domain];
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (i === 0 ? ' active' : '');
+    btn.dataset.id = s.id;
+    btn.innerHTML = `
+      <div class="month-dot" style="background:${d.color}"></div>
+      <div class="month-btn-info">
+        <div class="month-name">${s.month}</div>
+        <div class="month-session-title">${s.title}</div>
+      </div>
+      ${s.inPerson ? '<span class="month-inperson">●</span>' : ''}
+    `;
+    btn.onclick = () => showSession(s.id);
+    nav.appendChild(btn);
+  });
+}
+
+function buildSessions() {
+  const wrap = document.getElementById('contentWrap');
+  wrap.innerHTML = '';
+  SESSIONS.forEach(s => {
+    const d = DOMAINS[s.domain];
+    const panel = document.createElement('div');
+    panel.className = 'session-panel';
+    panel.id = 'panel-' + s.id;
+
+    // Activities HTML
+    const activitiesHTML = s.activities.map((a, i) => `
+      <div class="activity-card ${a.isNew ? 'new-act' : ''}">
+        <div class="act-num">${i + 1}</div>
+        <div class="act-body">
+          <div class="act-meta">
+            ${a.isNew ? '<span class="badge-new">★ New</span>' : ''}
+            ${a.time ? `<span class="badge-time">${a.time}</span>` : ''}
+          </div>
+          <div class="act-text">${a.text}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Readings HTML
+    const readingsHTML = s.readings.map(r => `
+      <div class="reading-row">
+        <span class="reading-bullet">—</span>
+        <span class="reading-text">${r}</span>
+      </div>
+    `).join('');
+
+    // Goals HTML
+    const goalsHTML = s.goals.map(g => `
+      <div class="goal-item" onclick="toggleGoal(this)">
+        <div class="goal-circle">✓</div>
+        <div class="goal-text">${g}</div>
+      </div>
+    `).join('');
+
+    // Reflect prompts HTML
+    const promptsHTML = (s.reflectPrompts || []).map((p, i) => `
+      <div class="reflect-prompt-item">
+        <div class="prompt-num">${i + 1}</div>
+        <div>${p}</div>
+      </div>
+    `).join('');
+
+    // Connects forward
+    const connectsHTML = s.connectsTo ? `
+      <div class="connects-forward">
+        <div class="connects-arrow">→</div>
+        <div class="connects-body">
+          <div class="connects-label">Connects Forward</div>
+          <div class="connects-text">${s.connectsTo}</div>
+        </div>
+      </div>
+    ` : '';
+
+    panel.innerHTML = `
+      <div class="session-header">
+        <div class="session-eyebrow">
+          <span class="session-month-label">${s.month}</span>
+          <span class="domain-pill" style="background:${d.color}">${d.label}</span>
+          ${s.inPerson ? '<span class="inperson-badge">★ In-Person Convening</span>' : ''}
+        </div>
+        <h1 class="session-title">${s.title}</h1>
+      </div>
+
+      <div class="inquiry-block">
+        <div class="inquiry-label">Guiding Inquiry</div>
+        <div class="inquiry-question">${s.inquiry}</div>
+      </div>
+
+      <p class="session-description">${s.description}</p>
+
+      <div class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab(this, '${s.id}', 'prepare')">Prepare</button>
+        <button class="tab-btn" onclick="switchTab(this, '${s.id}', 'session')">Session</button>
+        <button class="tab-btn" onclick="switchTab(this, '${s.id}', 'reflect')">Reflect</button>
+      </div>
+
+      <!-- PREPARE TAB -->
+      <div class="tab-pane active" id="tab-${s.id}-prepare">
+        <div class="phase-card">
+          <div class="phase-card-header">
+            <div class="phase-icon" style="background:${d.color}22; color:${d.color}; font-size:16px;">◆</div>
+            <div class="phase-card-title">Before the Session</div>
+          </div>
+          <div class="phase-task-text">${s.before}</div>
+          <div class="task-check-wrap">
+            <input type="checkbox" id="check-before-${s.id}">
+            <label for="check-before-${s.id}">Mark complete when done</label>
+          </div>
+        </div>
+
+        <div class="section-hd" style="margin-top:24px">Assigned Readings</div>
+        <div class="readings-card">
+          ${readingsHTML}
+        </div>
+      </div>
+
+      <!-- SESSION TAB -->
+      <div class="tab-pane" id="tab-${s.id}-session">
+        <div class="section-hd">Learning Goals</div>
+        <div class="goals-list">${goalsHTML}</div>
+
+        <div class="section-hd">Activities</div>
+        <div class="activities-list">${activitiesHTML}</div>
+        ${s.activities.some(a => a.isNew) ? `<div class="new-note"><div class="new-note-dot"></div> ★ New activity added to deepen learning in this module</div>` : ''}
+      </div>
+
+      <!-- REFLECT TAB -->
+      <div class="tab-pane" id="tab-${s.id}-reflect">
+        <div class="reflect-after-card">
+          <div class="reflect-after-label">After the Session</div>
+          <div class="reflect-after-text">${s.after}</div>
+        </div>
+
+        <div class="section-hd">Reflection Prompts</div>
+        <div class="reflect-prompts">${promptsHTML}</div>
+
+        ${connectsHTML}
+      </div>
+    `;
+    wrap.appendChild(panel);
+  });
+}
+
+function showSession(id) {
+  // Update panels
+  document.querySelectorAll('.session-panel').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('panel-' + id);
+  if (target) target.classList.add('active');
+
+  // Update nav buttons
+  document.querySelectorAll('.month-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+
+  // Update topbar
+  const s = SESSIONS.find(s => s.id === id);
+  if (s) {
+    document.getElementById('topbarSession').textContent = s.month + ' — ' + s.title;
+  }
+
+  // Scroll to top of main
+  document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function switchTab(btn, sessionId, tab) {
+  // Deactivate all tabs in this session
+  const panel = document.getElementById('panel-' + sessionId);
+  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  panel.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+  // Activate selected
+  btn.classList.add('active');
+  const pane = document.getElementById('tab-' + sessionId + '-' + tab);
+  if (pane) pane.classList.add('active');
+}
+
+function toggleGoal(el) {
+  el.classList.toggle('done');
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+buildNav();
+buildSessions();
+showSession('jul');
+</script>
+</body>
+</html>
