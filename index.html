@@ -624,6 +624,9 @@ body {
   border-bottom: 1px solid #F5F5F5;
 }
 .reading-row:last-child { border-bottom: none; }
+.reading-row.read .read-check { color: var(--gold); }
+.reading-row.read .reading-text { color: var(--text-lt); text-decoration: line-through; }
+.reading-row:hover { background: rgba(0,0,0,0.02); }
 
 .reading-bullet {
   color: var(--gold);
@@ -1393,20 +1396,26 @@ function buildSessions() {
     `).join('');
 
     // Readings HTML
-    const readingsHTML = s.readings.map(r => `
-      <div class="reading-row">
-        <span class="reading-bullet">—</span>
+    const readingsHTML = s.readings.map(r => {
+      const safe = r.replace(/"/g, '&quot;');
+      const stitle = s.title.replace(/"/g, '&quot;');
+      return `<div class="reading-row" onclick="toggleReading(this)" style="cursor:pointer;"
+        data-sid="${s.id}" data-stitle="${stitle}" data-task="${safe}">
+        <span class="reading-bullet read-check">—</span>
         <span class="reading-text">${r}</span>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
 
     // Goals HTML
-    const goalsHTML = s.goals.map(g => `
-      <div class="goal-item" onclick="toggleGoal(this)">
+    const goalsHTML = s.goals.map(g => {
+      const safe = g.replace(/"/g, '&quot;');
+      const stitle = s.title.replace(/"/g, '&quot;');
+      return `<div class="goal-item" onclick="toggleGoal(this)"
+        data-sid="${s.id}" data-stitle="${stitle}" data-task="${safe}">
         <div class="goal-circle">✓</div>
         <div class="goal-text">${g}</div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
 
     // Reflect prompts HTML
     const promptsHTML = (s.reflectPrompts || []).map((p, i) => `
@@ -1530,8 +1539,41 @@ function switchTab(btn, sessionId, tab) {
   if (pane) pane.classList.add('active');
 }
 
+const TRACKER_URL = 'https://script.google.com/macros/s/AKfycbx3BBaniqMRRoKOi3-19bheviGIVHOT25OCUreNE_XMn2Nq3dljxhbkypYoZUlZPPOEIA/exec';
+
+function trackProgress(sessionId, sessionTitle, taskType, taskText, action) {
+  if (!fellowName) return;
+  fetch(TRACKER_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fellow_name:   fellowName,
+      session_id:    sessionId,
+      session_title: sessionTitle,
+      task_type:     taskType,
+      task_text:     taskText,
+      action:        action
+    })
+  }).catch(() => {});
+}
+
 function toggleGoal(el) {
   el.classList.toggle('done');
+  const action = el.classList.contains('done') ? 'checked' : 'unchecked';
+  trackProgress(
+    el.dataset.sid, el.dataset.stitle,
+    'Learning Goal', el.dataset.task, action
+  );
+}
+
+function toggleReading(el) {
+  el.classList.toggle('read');
+  const action = el.classList.contains('read') ? 'checked' : 'unchecked';
+  trackProgress(
+    el.dataset.sid, el.dataset.stitle,
+    'Reading', el.dataset.task, action
+  );
 }
 
 // ═══════════════════════════════════════════════════════
