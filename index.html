@@ -750,9 +750,135 @@ body {
   .content-wrap { padding: 0; max-width: 100%; }
   .session-header { padding: 24px 0 0; }
 }
+
+/* ─── ACCESS GATE OVERLAY ────────────────────────────── */
+#gate-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--navy-dk);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0;
+  transition: opacity 0.5s ease;
+}
+#gate-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+.gate-brand {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.gate-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 12px;
+}
+.gate-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 600;
+  color: #fff; line-height: 1.3;
+  margin-bottom: 6px;
+}
+.gate-subtitle {
+  font-size: 13px; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+}
+.gate-divider {
+  width: 48px; height: 2px;
+  background: var(--gold); opacity: 0.5;
+  margin: 24px auto;
+}
+
+.gate-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 40px 48px;
+  width: 380px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.gate-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 2px;
+}
+.gate-input {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px; color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.gate-input:focus { border-color: var(--gold); }
+.gate-input::placeholder { color: rgba(255,255,255,0.2); }
+.gate-btn {
+  width: 100%;
+  background: var(--gold);
+  border: none; border-radius: 8px;
+  padding: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: #fff; cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.2s, transform 0.1s;
+}
+.gate-btn:hover { background: #c49030; }
+.gate-btn:active { transform: scale(0.98); }
+.gate-error {
+  font-size: 12px; color: #e07070;
+  text-align: center; min-height: 16px;
+}
+
+#gate-step-name { display: none; }
+
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════
+     ACCESS GATE
+════════════════════════════════════════════════════ -->
+<div id="gate-overlay">
+  <div class="gate-brand">
+    <div class="gate-eyebrow">Purpose Commons · BCTR at Cornell</div>
+    <div class="gate-title">PSiX Fellow's<br>Journey Companion</div>
+    <div class="gate-subtitle">Translational Fellowship in Purpose Science</div>
+    <div class="gate-divider"></div>
+  </div>
+
+  <!-- Step 1: Passcode -->
+  <div id="gate-step-pass">
+    <div class="gate-card">
+      <div>
+        <div class="gate-label">Access Code</div>
+        <input id="gate-pass-input" class="gate-input" type="password"
+               placeholder="Enter your cohort passcode"
+               onkeydown="if(event.key==='Enter')gateCheckPass()">
+      </div>
+      <div id="gate-pass-error" class="gate-error"></div>
+      <button class="gate-btn" onclick="gateCheckPass()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Name -->
+  <div id="gate-step-name">
+    <div class="gate-card">
+      <div>
+        <div class="gate-label">Your Name</div>
+        <input id="gate-name-input" class="gate-input" type="text"
+               placeholder="First and last name"
+               onkeydown="if(event.key==='Enter')gateCheckName()">
+      </div>
+      <div id="gate-name-error" class="gate-error"></div>
+      <button class="gate-btn" onclick="gateCheckName()">Enter the Fellowship →</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ═══════════════════════════════════════════════════
      SIDEBAR
@@ -790,6 +916,7 @@ body {
     <div class="topbar-session" id="topbarSession">Select a session →</div>
   </div>
   <div class="topbar-actions">
+    <div id="fellow-greeting" style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);letter-spacing:0.04em;margin-right:8px;"></div>
     <button class="btn-outline" onclick="window.print()">⎙ Print Session</button>
   </div>
 </header>
@@ -1410,6 +1537,39 @@ function toggleGoal(el) {
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
+// ─── ACCESS GATE LOGIC ──────────────────────────────
+const PASSCODE = 'psixfellows_2026';
+let fellowName = '';
+
+function gateCheckPass() {
+  const val = document.getElementById('gate-pass-input').value.trim();
+  if (val === PASSCODE) {
+    document.getElementById('gate-step-pass').style.display = 'none';
+    document.getElementById('gate-step-name').style.display = 'block';
+    setTimeout(() => document.getElementById('gate-name-input').focus(), 50);
+  } else {
+    document.getElementById('gate-pass-error').textContent = 'Incorrect passcode. Please try again.';
+    document.getElementById('gate-pass-input').value = '';
+  }
+}
+
+function gateCheckName() {
+  const val = document.getElementById('gate-name-input').value.trim();
+  if (val.length < 2) {
+    document.getElementById('gate-name-error').textContent = 'Please enter your full name.';
+    return;
+  }
+  fellowName = val;
+  // Update topbar greeting
+  const greeting = document.getElementById('fellow-greeting');
+  if (greeting) greeting.textContent = 'Welcome, ' + fellowName.split(' ')[0];
+  // Fade out overlay
+  const overlay = document.getElementById('gate-overlay');
+  overlay.classList.add('fade-out');
+  setTimeout(() => { overlay.style.display = 'none'; }, 500);
+}
+
+// Initialize app (runs immediately, hidden until gate clears)
 buildNav();
 buildSessions();
 showSession('jul');
