@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PSiX Facilitator Dashboard</title>
+<style>
+  :root {
+    --navy:#1B3A5C; --navyDk:#122840; --navyMd:#1E4570; --navyLt:#E8EEF5;
+    --gold:#A87820; --goldLt:#FFD580; --white:#FFFFFF; --off:#F8F7F4;
+    --textMed:#CCDDEE; --textDim:#7A9BB5; --slate:#3D5A73;
+    --con:#1B5E8A; --tra:#2D6B4E; --gra:#6B2738; --tea:#4A3570; --all:#2B4040;
+    --red:#C0392B; --green:#27AE60; --amber:#E67E22;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, 'Segoe UI', sans-serif; background: var(--navyDk); color: var(--white); min-height: 100vh; }
+
+  /* ── GATE ─────────────────────────────────────────────────── */
+  #gate {
+    position: fixed; inset: 0; background: var(--navyDk);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .gate-box {
+    background: var(--navyMd); border: 1px solid var(--gold);
+    border-radius: 4px; padding: 48px 52px; width: 420px; text-align: center;
+  }
+  .gate-eyebrow { font-size: 9px; letter-spacing: 5px; color: var(--gold); font-weight: 700; margin-bottom: 20px; }
+  .gate-box h1 { font-size: 22px; color: var(--white); margin-bottom: 8px; font-weight: 600; }
+  .gate-box p { font-size: 13px; color: var(--textDim); margin-bottom: 28px; line-height: 1.5; }
+  .gate-box input {
+    width: 100%; padding: 11px 14px; background: var(--navyDk); border: 1px solid var(--slate);
+    border-radius: 3px; color: var(--white); font-size: 14px; letter-spacing: 3px;
+    outline: none; margin-bottom: 12px; text-align: center;
+  }
+  .gate-box input:focus { border-color: var(--gold); }
+  .gate-box button {
+    width: 100%; padding: 11px; background: var(--gold); border: none;
+    border-radius: 3px; color: var(--white); font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; cursor: pointer; transition: opacity .15s;
+  }
+  .gate-box button:hover { opacity: .88; }
+  #gate-error { color: #E57373; font-size: 12px; margin-top: 10px; min-height: 16px; }
+  #gate-badge { display: inline-block; background: var(--gra); color: var(--white);
+    font-size: 8px; font-weight: 700; letter-spacing: 3px; padding: 3px 8px;
+    border-radius: 2px; margin-bottom: 18px; }
+
+  /* ── TOPBAR ───────────────────────────────────────────────── */
+  #app { display: none; }
+  .topbar {
+    background: var(--navyDk); border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 0 28px; display: flex; align-items: center; gap: 16px;
+    height: 54px; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo { font-size: 11px; font-weight: 700; letter-spacing: 4px; color: var(--gold); }
+  .topbar-sep { width: 1px; height: 22px; background: rgba(255,255,255,.15); }
+  .topbar-title { font-size: 13px; color: var(--textMed); flex: 1; }
+  .badge-fac { background: var(--gra); color: var(--white); font-size: 8px;
+    font-weight: 700; letter-spacing: 3px; padding: 3px 8px; border-radius: 2px; }
+  .topbar-btn {
+    padding: 6px 14px; border-radius: 3px; font-size: 12px; font-weight: 700;
+    letter-spacing: 1px; cursor: pointer; border: none; transition: opacity .15s;
+  }
+  .topbar-btn:hover { opacity: .82; }
+  .btn-refresh { background: var(--navyMd); color: var(--goldLt); border: 1px solid var(--slate); }
+  .btn-script { background: transparent; color: var(--textDim); border: 1px solid var(--slate); }
+  #refresh-status { font-size: 11px; color: var(--textDim); }
+
+  /* ── LAYOUT ───────────────────────────────────────────────── */
+  .page { max-width: 1320px; margin: 0 auto; padding: 28px 28px 60px; }
+
+  /* ── STAT CARDS ───────────────────────────────────────────── */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--navyMd); border-radius: 4px; padding: 18px 20px;
+    border-left: 3px solid var(--gold);
+  }
+  .stat-num { font-size: 36px; font-weight: 700; color: var(--white); line-height: 1; }
+  .stat-label { font-size: 10px; color: var(--textDim); letter-spacing: 2px; font-weight: 700;
+    margin-top: 5px; text-transform: uppercase; }
+  .stat-sub { font-size: 11px; color: var(--textMed); margin-top: 4px; }
+
+  /* ── SECTION HEADER ───────────────────────────────────────── */
+  .section-hdr {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px; margin-top: 32px;
+  }
+  .section-hdr h2 { font-size: 10px; font-weight: 700; letter-spacing: 4px;
+    color: var(--gold); text-transform: uppercase; }
+  .section-hdr-line { flex: 1; height: 1px; background: rgba(255,255,255,.1); }
+
+  /* ── TIMELINE ARC ─────────────────────────────────────────── */
+  .arc-wrap { background: var(--navyMd); border-radius: 4px; padding: 24px 28px 20px; }
+  .arc-row { display: flex; gap: 0; position: relative; }
+  .arc-cell { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+  .arc-cell:not(:last-child)::after {
+    content:''; position: absolute; top: 13px; left: calc(50% + 14px);
+    width: calc(100% - 28px); height: 2px; background: rgba(255,255,255,.15); z-index: 0;
+  }
+  .arc-cell.done:not(:last-child)::after { background: rgba(255,255,255,.35); }
+  .arc-dot {
+    width: 28px; height: 28px; border-radius: 50%; z-index: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--white);
+    border: 2px solid rgba(255,255,255,.2); cursor: default;
+  }
+  .arc-cell.done .arc-dot { border-color: transparent; }
+  .arc-cell.current .arc-dot { box-shadow: 0 0 0 3px rgba(168,120,32,.35); border-color: var(--gold); }
+  .arc-month { font-size: 9px; font-weight: 700; color: var(--textDim);
+    letter-spacing: 1px; margin-top: 6px; }
+  .arc-cell.done .arc-month, .arc-cell.current .arc-month { color: var(--textMed); }
+  .arc-label { font-size: 9px; color: var(--textDim); margin-top: 2px; text-align: center;
+    line-height: 1.3; max-width: 64px; }
+  .arc-cell.done .arc-label { color: var(--textMed); }
+  .arc-cell.current .arc-label { color: var(--white); font-weight: 600; }
+
+  /* ── PROGRESS GRID ────────────────────────────────────────── */
+  .grid-wrap { background: var(--navyMd); border-radius: 4px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  thead th {
+    background: var(--navyDk); padding: 9px 10px; font-size: 9px; font-weight: 700;
+    letter-spacing: 2px; color: var(--textDim); text-transform: uppercase; text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,.08); white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; padding-left: 18px; min-width: 160px; }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,.06); transition: background .1s; }
+  tbody tr:hover { background: rgba(255,255,255,.04); }
+  tbody td { padding: 10px 10px; font-size: 13px; color: var(--textMed); text-align: center; }
+  tbody td:first-child { text-align: left; padding-left: 18px; color: var(--white);
+    font-weight: 600; font-size: 13px; }
+  .cell-bar { display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .pip { width: 10px; height: 10px; border-radius: 2px; }
+  .pip-done { background: var(--tra); }
+  .pip-partial { background: var(--amber); }
+  .pip-none { background: rgba(255,255,255,.1); }
+  .pct-label { font-size: 10px; color: var(--textDim); }
+
+  /* ── ACTIVITY FEED ────────────────────────────────────────── */
+  .feed-wrap { background: var(--navyMd); border-radius: 4px; padding: 4px 0; max-height: 320px; overflow-y: auto; }
+  .feed-item {
+    display: flex; align-items: flex-start; gap: 14px; padding: 11px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.06); font-size: 12.5px;
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .feed-name { color: var(--white); font-weight: 600; }
+  .feed-action { color: var(--textMed); }
+  .feed-session { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 1px;
+    padding: 1px 5px; border-radius: 2px; margin-left: 4px; vertical-align: middle; }
+  .feed-time { color: var(--textDim); font-size: 11px; margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+  .feed-type-goal { color: var(--goldLt); }
+  .feed-type-reading { color: var(--tra); }
+  .feed-empty { padding: 32px 20px; text-align: center; color: var(--textDim); font-size: 13px; }
+
+  /* ── SCRIPT MODAL ─────────────────────────────────────────── */
+  #script-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500;
+    display: none; align-items: center; justify-content: center;
+  }
+  #script-modal.open { display: flex; }
+  .modal-box {
+    background: var(--navyMd); border: 1px solid var(--gold); border-radius: 4px;
+    padding: 36px 40px; width: 680px; max-height: 85vh; overflow-y: auto;
+  }
+  .modal-box h3 { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .modal-box p { font-size: 13px; color: var(--textMed); line-height: 1.6; margin-bottom: 16px; }
+  .modal-box ol { font-size: 13px; color: var(--textMed); line-height: 1.7; padding-left: 20px; margin-bottom: 18px; }
+  .modal-box ol li { margin-bottom: 6px; }
+  pre {
+    background: var(--navyDk); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 3px; padding: 16px 18px; font-family: 'Consolas', monospace;
+    font-size: 11.5px; color: var(--goldLt); overflow-x: auto; line-height: 1.6;
+    margin-bottom: 18px; white-space: pre-wrap;
+  }
+  .modal-close {
+    background: var(--navyDk); border: 1px solid var(--slate); color: var(--textDim);
+    padding: 8px 18px; border-radius: 3px; cursor: pointer; font-size: 12px;
+    font-weight: 700; letter-spacing: 1px;
+  }
+  .modal-close:hover { color: var(--white); }
+
+  /* ── NO DATA ──────────────────────────────────────────────── */
+  .no-data-banner {
+    background: rgba(168,120,32,.12); border: 1px solid rgba(168,120,32,.3);
+    border-radius: 4px; padding: 14px 20px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .no-data-banner .icon { font-size: 20px; }
+  .no-data-banner .msg { font-size: 13px; color: var(--textMed); line-height: 1.5; }
+  .no-data-banner .msg strong { color: var(--goldLt); }
+  .link-btn { background: none; border: none; color: var(--goldLt); font-size: 13px;
+    cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navyDk); }
+  ::-webkit-scrollbar-thumb { background: var(--slate); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── GATE ──────────────────────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-eyebrow">PSIX · TRANSLATIONAL FELLOWSHIP</div>
+    <span id="gate-badge">🔒 FACILITATOR ONLY</span>
+    <h1>Dashboard Access</h1>
+    <p>Enter the facilitator passcode to view fellow progress, session coverage, and live activity.</p>
+    <input type="password" id="gate-input" placeholder="PASSCODE" autocomplete="off"
+      onkeydown="if(event.key==='Enter') gateSubmit()" />
+    <button onclick="gateSubmit()">ENTER DASHBOARD</button>
+    <div id="gate-error"></div>
+  </div>
+</div>
+
+<!-- ── APP ───────────────────────────────────────────────────── -->
+<div id="app">
+
+  <div class="topbar">
+    <div class="topbar-logo">PSIX</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-title">Facilitator Dashboard · 2025–2026</div>
+    <span class="badge-fac">🔒 FACILITATOR ONLY</span>
+    <span id="refresh-status"></span>
+    <button class="topbar-btn btn-refresh" onclick="loadData()">↻ Refresh</button>
+    <button class="topbar-btn btn-script" onclick="document.getElementById('script-modal').classList.add('open')">Connect Sheet</button>
+  </div>
+
+  <div class="page">
+
+    <!-- No-data banner (shown until sheet is connected) -->
+    <div class="no-data-banner" id="no-data-banner" style="display:none">
+      <span class="icon">⚠</span>
+      <div class="msg">
+        <strong>Sheet not yet connected.</strong> The activity feed and fellow progress grid need a one-time update to your Google Apps Script.
+        <button class="link-btn" onclick="document.getElementById('script-modal').classList.add('open')">
+          See how to connect →
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card" style="border-color:var(--tra)">
+        <div class="stat-num" id="stat-fellows">–</div>
+        <div class="stat-label">Fellows Active</div>
+        <div class="stat-sub" id="stat-fellows-sub">Loading…</div>
+      </div>
+      <div class="stat-card" style="border-color:var(--gold)">
+        <div class="stat-num" id="stat-checkins">–</div>
+        <div class="stat-label">Total Check-ins</div>
+        <div class="stat-sub" id="stat-checkins-sub">Goals + readings logged</div>
+      </div>
+      <div class="stat-card" style="border-color:var(--con)">
+        <div class="stat-num" id="stat-session">–</div>
+        <div class="stat-label">Current Session</div>
+        <div class="stat-sub" id="stat-session-sub">Based on calendar month</div>
+      </div>
+      <div class="stat-card" style="border-color:var(--gra)">
+        <div class="stat-num" id="stat-last">–</div>
+        <div class="stat-label">Last Activity</div>
+        <div class="stat-sub" id="stat-last-sub">Most recent check-in</div>
+      </div>
+    </div>
+
+    <!-- Fellowship Arc -->
+    <div class="section-hdr">
+      <h2>Fellowship Year Arc</h2>
+      <div class="section-hdr-line"></div>
+    </div>
+    <div class="arc-wrap">
+      <div class="arc-row" id="arc-row"></div>
+    </div>
+
+    <!-- Fellow Progress Grid -->
+    <div class="section-hdr">
+      <h2>Fellow Progress by Session</h2>
+      <div class="section-hdr-line"></div>
+    </div>
+    <div class="grid-wrap">
+      <table id="progress-table">
+        <thead id="progress-head"></thead>
+        <tbody id="progress-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="section-hdr">
+      <h2>Recent Activity</h2>
+      <div class="section-hdr-line"></div>
+    </div>
+    <div class="feed-wrap" id="feed"></div>
+
+  </div><!-- /page -->
+</div><!-- /app -->
+
+<!-- ── SCRIPT MODAL ───────────────────────────────────────────── -->
+<div id="script-modal">
+  <div class="modal-box">
+    <h3>Connect Your Google Sheet</h3>
+    <p>The dashboard reads live fellow activity from the same Google Sheet your companion site already writes to. You need to add one function to your existing Apps Script so it can also return data on request.</p>
+
+    <ol>
+      <li>Open your Google Sheet: <strong>Extensions → Apps Script</strong></li>
+      <li>You'll see your existing <code>doPost(e)</code> function. Add the <code>doGet(e)</code> function below <strong>in the same script file</strong>.</li>
+      <li>Click <strong>Deploy → Manage Deployments</strong>, then click the pencil icon on your existing deployment.</li>
+      <li>Set <strong>Version</strong> to "New version" and click <strong>Deploy</strong>. The URL stays the same — no changes needed here.</li>
+    </ol>
+
+    <p><strong>Paste this function into your Apps Script (alongside your existing doPost):</strong></p>
+    <pre>function doGet(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+    if (data.length < 2) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok', data: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var headers = data[0];
+    var rows = data.slice(1).map(function(row) {
+      var obj = {};
+      headers.forEach(function(h, i) { obj[h] = row[i]; });
+      return obj;
+    });
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok', data: rows }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'error', message: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+
+    <p>After redeploying, click <strong>↻ Refresh</strong> in the dashboard topbar. Fellow activity will appear automatically.</p>
+    <button class="modal-close" onclick="document.getElementById('script-modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+const PASSCODE = 'psixfacilitator_2026';
+const TRACKER_URL = 'https://script.google.com/macros/s/AKfycbx3BBaniqMRRoKOi3-19bheviGIVHOT25OCUreNE_XMn2Nq3dljxhbkypYoZUlZPPOEIA/exec';
+
+// ── SESSION DEFINITIONS ───────────────────────────────────────────
+const SESSIONS = [
+  { id:'s1',  n:1,  month:'Jul', label:'Purpose\nScience',  domain:'con', color:'#1B5E8A' },
+  { id:'s2',  n:2,  month:'Aug', label:'Measure-\nment',    domain:'con', color:'#1B5E8A' },
+  { id:'s3',  n:3,  month:'Sep', label:'Partner-\nships',   domain:'tra', color:'#2D6B4E' },
+  { id:'s4',  n:4,  month:'Oct', label:'Trans-\nlation',    domain:'tra', color:'#2D6B4E' },
+  { id:'s5',  n:5,  month:'Nov', label:'Con-\nvening',      domain:'tra', color:'#2D6B4E' },
+  { id:'s6',  n:6,  month:'Dec', label:'Grant\nWriting',    domain:'gra', color:'#6B2738' },
+  { id:'s7',  n:7,  month:'Jan', label:'Research\nDesign',  domain:'gra', color:'#6B2738' },
+  { id:'s8',  n:8,  month:'Feb', label:'Mid-Year\nReview',  domain:'all', color:'#2B4040' },
+  { id:'s9',  n:9,  month:'Mar', label:'Inst.\nChange',     domain:'tra', color:'#2D6B4E' },
+  { id:'s10', n:10, month:'Apr', label:'Grant\nSprint',     domain:'gra', color:'#6B2738' },
+  { id:'s11', n:11, month:'May', label:'Teaching',          domain:'tea', color:'#4A3570' },
+  { id:'s12', n:12, month:'Jun', label:'Sym-\nposium',      domain:'all', color:'#2B4040' },
+];
+
+// ── GATE ──────────────────────────────────────────────────────────
+function gateSubmit() {
+  const val = document.getElementById('gate-input').value.trim();
+  if (val === PASSCODE) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  } else {
+    document.getElementById('gate-error').textContent = 'Incorrect passcode. Try again.';
+    document.getElementById('gate-input').value = '';
+    document.getElementById('gate-input').focus();
+  }
+}
+
+// ── CURRENT SESSION (calendar-based) ─────────────────────────────
+function currentSession() {
+  const now = new Date();
+  const m = now.getMonth(); // 0=Jan
+  // Fellowship year: Jul(6)→Jun(5)
+  const map = {6:1,7:2,8:3,9:4,10:5,11:6,0:7,1:8,2:9,3:10,4:11,5:12};
+  return map[m] || 1;
+}
+
+// ── BUILD ARC ─────────────────────────────────────────────────────
+function buildArc() {
+  const cur = currentSession();
+  const row = document.getElementById('arc-row');
+  row.innerHTML = '';
+  SESSIONS.forEach(s => {
+    const done = s.n < cur;
+    const active = s.n === cur;
+    const cell = document.createElement('div');
+    cell.className = 'arc-cell' + (done?' done':'') + (active?' current':'');
+    const dotStyle = done || active
+      ? `background:${s.color};`
+      : `background:rgba(255,255,255,.1);`;
+    const borderStyle = active ? `border-color:var(--gold);` : '';
+    cell.innerHTML = `
+      <div class="arc-dot" style="${dotStyle}${borderStyle}">${s.n}</div>
+      <div class="arc-month">${s.month}</div>
+      <div class="arc-label">${s.label.replace(/\n/g,'<br>')}</div>`;
+    row.appendChild(cell);
+  });
+}
+
+// ── BUILD PROGRESS TABLE (static skeleton) ───────────────────────
+function buildTableSkeleton() {
+  const head = document.getElementById('progress-head');
+  const headerSessions = SESSIONS.map(s =>
+    `<th style="color:${s.color}">${s.month}<br><span style="font-size:8px;letter-spacing:0;font-weight:400;color:var(--textDim)">S${s.n}</span></th>`
+  ).join('');
+  head.innerHTML = `<tr><th>Fellow</th>${headerSessions}<th>Overall</th></tr>`;
+}
+
+// ── POPULATE TABLE FROM DATA ──────────────────────────────────────
+function populateTable(rows) {
+  const body = document.getElementById('progress-body');
+  if (!rows || rows.length === 0) {
+    body.innerHTML = `<tr><td colspan="14" style="padding:28px;text-align:center;color:var(--textDim)">
+      No activity logged yet — fellows will appear here as they check in.</td></tr>`;
+    return;
+  }
+
+  // Build per-fellow, per-session counts
+  const fellows = {};
+  rows.forEach(r => {
+    const name = r.fellow_name || r['fellow_name'] || '';
+    const sid  = r.session_id  || r['session_id']  || '';
+    const act  = (r.action     || r['action']      || '').toLowerCase();
+    if (!name || !sid || act !== 'checked') return;
+    if (!fellows[name]) fellows[name] = {};
+    fellows[name][sid] = (fellows[name][sid] || 0) + 1;
+  });
+
+  const fellowNames = Object.keys(fellows).sort();
+  if (fellowNames.length === 0) {
+    body.innerHTML = `<tr><td colspan="14" style="padding:28px;text-align:center;color:var(--textDim)">
+      No check-ins recorded yet.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = fellowNames.map(name => {
+    let total = 0, possible = 0;
+    const cells = SESSIONS.map(s => {
+      const count = fellows[name][s.id] || 0;
+      total += count;
+      possible += 5; // approximate goals+readings per session
+      let cls = 'pip-none';
+      if (count >= 4) cls = 'pip-done';
+      else if (count >= 1) cls = 'pip-partial';
+      const label = count > 0 ? count : '';
+      return `<td>
+        <div class="cell-bar">
+          <div class="pip ${cls}" title="${count} check-ins"></div>
+          <span class="pct-label">${label}</span>
+        </div>
+      </td>`;
+    }).join('');
+    const pct = possible > 0 ? Math.round(total/possible*100) : 0;
+    const pctColor = pct >= 75 ? 'var(--tra)' : pct >= 40 ? 'var(--amber)' : 'var(--textDim)';
+    return `<tr>
+      <td>${name}</td>
+      ${cells}
+      <td style="color:${pctColor};font-weight:700">${pct}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── DOMAIN COLOR ──────────────────────────────────────────────────
+const domainColors = {con:'#1B5E8A',tra:'#2D6B4E',gra:'#6B2738',tea:'#4A3570',all:'#2B4040'};
+function sessionColor(sid) {
+  const s = SESSIONS.find(x => x.id === sid);
+  return s ? s.color : '#7A9BB5';
+}
+
+// ── BUILD FEED ────────────────────────────────────────────────────
+function buildFeed(rows) {
+  const feed = document.getElementById('feed');
+  if (!rows || rows.length === 0) {
+    feed.innerHTML = `<div class="feed-empty">No activity yet — check back after fellows begin logging in.</div>`;
+    return;
+  }
+
+  // Sort newest first; take last 50
+  const sorted = [...rows]
+    .filter(r => (r.action||'').toLowerCase() === 'checked')
+    .sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0))
+    .slice(0, 50);
+
+  if (sorted.length === 0) {
+    feed.innerHTML = `<div class="feed-empty">No check-ins yet.</div>`;
+    return;
+  }
+
+  feed.innerHTML = sorted.map(r => {
+    const name = r.fellow_name || '—';
+    const sid  = r.session_id  || '';
+    const type = r.task_type   || '';
+    const text = r.task_text   || '';
+    const ts   = r.timestamp   ? new Date(r.timestamp) : null;
+    const timeStr = ts ? ts.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    const dot  = sessionColor(sid);
+    const s    = SESSIONS.find(x => x.id === sid);
+    const sLabel = s ? `${s.month} · S${s.n}` : sid;
+    const typeClass = type.toLowerCase().includes('goal') ? 'feed-type-goal' : 'feed-type-reading';
+    const shortText = text.length > 80 ? text.slice(0,80) + '…' : text;
+    return `<div class="feed-item">
+      <div class="feed-dot" style="background:${dot}"></div>
+      <div>
+        <span class="feed-name">${name}</span>
+        <span class="feed-action"> logged a <span class="${typeClass}">${type}</span></span>
+        <span class="feed-session" style="background:${dot}">${sLabel}</span>
+        <div style="font-size:11.5px;color:var(--textDim);margin-top:3px">${shortText}</div>
+      </div>
+      <div class="feed-time">${timeStr}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── UPDATE STATS ──────────────────────────────────────────────────
+function updateStats(rows) {
+  const cur = currentSession();
+  const s = SESSIONS.find(x => x.n === cur);
+  document.getElementById('stat-session').textContent = `S${cur}`;
+  document.getElementById('stat-session-sub').textContent = s ? `${s.month} — ${s.label.replace(/\n/,' ')}` : '';
+
+  if (!rows || rows.length === 0) {
+    document.getElementById('stat-fellows').textContent = '0';
+    document.getElementById('stat-fellows-sub').textContent = 'No activity yet';
+    document.getElementById('stat-checkins').textContent = '0';
+    document.getElementById('stat-last').textContent = '—';
+    document.getElementById('stat-last-sub').textContent = 'No check-ins yet';
+    return;
+  }
+
+  const checked = rows.filter(r => (r.action||'').toLowerCase() === 'checked');
+  const fellows = new Set(checked.map(r => r.fellow_name).filter(Boolean));
+  document.getElementById('stat-fellows').textContent = fellows.size;
+  document.getElementById('stat-fellows-sub').textContent = [...fellows].slice(0,3).join(', ') + (fellows.size > 3 ? '…' : '');
+  document.getElementById('stat-checkins').textContent = checked.length;
+
+  const sorted = checked.sort((a,b) => new Date(b.timestamp||0) - new Date(a.timestamp||0));
+  if (sorted[0]) {
+    const last = sorted[0];
+    const ts = last.timestamp ? new Date(last.timestamp) : null;
+    document.getElementById('stat-last').textContent = last.fellow_name || '—';
+    document.getElementById('stat-last-sub').textContent = ts
+      ? ts.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  }
+}
+
+// ── LOAD DATA ─────────────────────────────────────────────────────
+async function loadData() {
+  const status = document.getElementById('refresh-status');
+  status.textContent = 'Refreshing…';
+  try {
+    const res = await fetch(TRACKER_URL, { method:'GET', redirect:'follow' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json.status === 'ok' && Array.isArray(json.data)) {
+      document.getElementById('no-data-banner').style.display = 'none';
+      populateTable(json.data);
+      buildFeed(json.data);
+      updateStats(json.data);
+      status.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+    } else {
+      throw new Error(json.message || 'Unexpected response');
+    }
+  } catch(e) {
+    document.getElementById('no-data-banner').style.display = 'flex';
+    populateTable([]);
+    buildFeed([]);
+    updateStats([]);
+    status.textContent = 'Sheet not connected';
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+function init() {
+  buildArc();
+  buildTableSkeleton();
+  const cur = currentSession();
+  const s = SESSIONS.find(x => x.n === cur);
+  document.getElementById('stat-session').textContent = `S${cur}`;
+  document.getElementById('stat-session-sub').textContent = s ? `${s.month} — ${s.label.replace(/\n/,' ')}` : '';
+  loadData();
+}
+</script>
+</body>
+</html>
