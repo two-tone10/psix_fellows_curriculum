@@ -369,6 +369,7 @@ body {
   display: none;
   padding-top: 34px;
   animation: fadeUp 0.22s ease;
+  scroll-margin-top: 74px;
 }
 .dashboard-panel.active { display: block; }
 
@@ -558,6 +559,15 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.month-status-meta {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 3px;
 }
 
 .focus-inquiry {
@@ -1282,13 +1292,22 @@ body {
   color: var(--text-lt);
   cursor: pointer;
   letter-spacing: 0.02em;
+  text-decoration: none;
   transition: color 0.15s, border-color 0.15s;
 }
 .tab-btn:hover { color: var(--navy); }
 .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
 
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
+.tab-pane {
+  display: block;
+  scroll-margin-top: 82px;
+  padding-top: 4px;
+}
+.tab-pane + .tab-pane {
+  margin-top: 38px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
 
 /* ─── SECTION HEADER ──────────────────────────────── */
 .section-hd {
@@ -3045,11 +3064,34 @@ function getStatusClass(status) {
   return `status-${status.key}`;
 }
 
+const SECTION_TABS = ['prepare', 'session', 'reflect', 'portfolio', 'resources'];
+
+function parseRoute() {
+  const hash = (window.location.hash || '#dashboard').replace(/^#/, '');
+  if (!hash || hash === 'dashboard') return { view: 'dashboard' };
+  const parts = hash.split('-');
+  const sessionId = parts[0];
+  const section = parts.slice(1).join('-') || 'overview';
+  const session = SESSIONS.find(item => item.id === sessionId);
+  if (!session) return { view: 'dashboard' };
+  return {
+    view: 'session',
+    sessionId,
+    section: SECTION_TABS.includes(section) ? section : 'overview'
+  };
+}
+
+function setRoute(hash) {
+  const cleanHash = hash.replace(/^#/, '');
+  if (window.location.hash === '#' + cleanHash) {
+    routeFromHash({ behavior: 'smooth' });
+  } else {
+    window.location.hash = cleanHash;
+  }
+}
+
 function goToTask(sessionId, tab) {
-  showSession(sessionId);
-  const panel = document.getElementById('panel-' + sessionId);
-  const btn = panel && panel.querySelector(`.tab-btn[data-tab="${tab}"]`);
-  if (btn) switchTab(btn, sessionId, tab);
+  setRoute(`${sessionId}-${tab}`);
 }
 
 function buildDashboard() {
@@ -3058,9 +3100,7 @@ function buildDashboard() {
   const focusProgress = getSessionProgress(focus);
   const focusStatus = getSessionStatus(focus);
   const nextAction = getNextAction(focus);
-  const upcomingConvenings = SESSIONS.filter(session => session.inPerson);
   const focusReadings = focus.readings.slice(0, 3).map(getReadingData);
-  const focusResourceCount = countResources(focus);
   const portfolioStats = getPortfolioStats();
 
   dashboard.innerHTML = `
@@ -3111,20 +3151,15 @@ function buildDashboard() {
               return `
                 <div class="month-status-row">
                   <div class="month-status-name">${escapeHTML(session.month)}</div>
-                  <div class="month-status-title">${escapeHTML(session.title)}</div>
+                  <div>
+                    <div class="month-status-title">${escapeHTML(session.title)}</div>
+                    ${session.inPerson ? '<div class="month-status-meta">In-person convening</div>' : ''}
+                  </div>
                   <span class="status-pill ${getStatusClass(status)}">${escapeHTML(status.label)}</span>
                 </div>
               `;
             }).join('')}
           </div>
-        </div>
-
-        <div class="dashboard-card">
-          <div class="dashboard-card-header">
-            <div class="dashboard-card-title">Readiness</div>
-            <div class="dashboard-card-note">${escapeHTML(focus.month)}</div>
-          </div>
-          ${renderReadinessChecklist(focus, { showIntro: false })}
         </div>
 
         <div class="dashboard-card">
@@ -3162,38 +3197,6 @@ function buildDashboard() {
 
         <div class="dashboard-card">
           <div class="dashboard-card-header">
-            <div class="dashboard-card-title">Resource Hub</div>
-            <div class="dashboard-card-note">${focusResourceCount.total} items</div>
-          </div>
-          <div class="resource-hub-list">
-            ${getResourceGroups(focus).map(group => `
-              <div class="resource-hub-item">
-                <div class="resource-hub-dot"></div>
-                <div>
-                  <button class="dashboard-link-button" onclick="goToTask('${focus.id}', 'resources')">${escapeHTML(group.title)}</button>
-                  <div class="resource-summary">${escapeHTML(group.note)} · ${group.items.length} item${group.items.length === 1 ? '' : 's'}</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <div class="dashboard-card">
-          <div class="dashboard-card-header">
-            <div class="dashboard-card-title">In-Person Convenings</div>
-          </div>
-          <div class="convening-list">
-            ${upcomingConvenings.map(session => `
-              <div class="convening-item">
-                <div class="convening-dot"></div>
-                <div><strong>${escapeHTML(session.month)}</strong><br>${escapeHTML(session.title)}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <div class="dashboard-card">
-          <div class="dashboard-card-header">
             <div class="dashboard-card-title">Capstone Assembly</div>
             <div class="dashboard-card-note">Where artifacts lead</div>
           </div>
@@ -3215,15 +3218,79 @@ function updateDashboard() {
 }
 
 function showDashboard() {
+  setRoute('dashboard');
+}
+
+function applyDashboardView() {
   activeView = 'dashboard';
-  document.getElementById('dashboardPanel').classList.add('active');
-  document.querySelectorAll('.session-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  activeSessionId = '';
+  const dashboard = document.getElementById('dashboardPanel');
+  if (dashboard) dashboard.classList.add('active');
   const dashboardBtn = document.getElementById('dashboardNavBtn');
   if (dashboardBtn) dashboardBtn.classList.add('active');
-  document.getElementById('topbarSession').textContent = 'Dashboard';
+  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
+  document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
+  const topbar = document.getElementById('topbarSession');
+  if (topbar) topbar.textContent = 'Dashboard';
+}
+
+function updateSectionNav(sessionId, section) {
+  const panel = document.getElementById('panel-' + sessionId);
+  if (!panel) return;
+  const activeSection = SECTION_TABS.includes(section) ? section : 'prepare';
+  panel.querySelectorAll('.tab-btn').forEach(link => {
+    link.classList.toggle('active', link.dataset.tab === activeSection);
+  });
+}
+
+function applySessionView(sessionId, section = 'overview') {
+  activeView = 'session';
+  activeSessionId = sessionId;
+  const dashboard = document.getElementById('dashboardPanel');
+  if (dashboard) dashboard.classList.remove('active');
+  const dashboardBtn = document.getElementById('dashboardNavBtn');
+  if (dashboardBtn) dashboardBtn.classList.remove('active');
+  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
+  const target = document.getElementById('panel-' + sessionId);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.month-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.id === sessionId);
+  });
+  const session = SESSIONS.find(item => item.id === sessionId);
+  const topbar = document.getElementById('topbarSession');
+  if (session && topbar) topbar.textContent = session.month + ' — ' + session.title;
+  updateSectionNav(sessionId, section);
+}
+
+function scrollToRoute(route, behavior = 'smooth') {
+  let target = null;
+  if (route.view === 'dashboard') {
+    target = document.getElementById('dashboardPanel');
+  } else if (route.section === 'overview') {
+    target = document.getElementById('panel-' + route.sessionId);
+  } else {
+    target = document.getElementById(`${route.sessionId}-${route.section}`);
+  }
+  if (target) {
+    target.scrollIntoView({ behavior, block: 'start' });
+    return;
+  }
+  const main = document.querySelector('.main');
+  if (main) main.scrollTo({ top: 0, behavior });
+  window.scrollTo({ top: 0, behavior });
+}
+
+function routeFromHash(options = {}) {
+  const route = parseRoute();
+  const behavior = options.behavior || 'smooth';
+  if (route.view === 'dashboard') {
+    applyDashboardView();
+  } else {
+    applySessionView(route.sessionId, route.section);
+  }
   updateProgressUI();
-  document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+  requestAnimationFrame(() => scrollToRoute(route, behavior));
+  setTimeout(() => scrollToRoute(route, behavior), 120);
 }
 
 function updateProgressUI() {
@@ -3446,15 +3513,15 @@ function buildSessions() {
       <p class="session-description">${escapeHTML(s.description)}</p>
 
       <div class="tabs-bar">
-        <button class="tab-btn active" data-tab="prepare" onclick="switchTab(this, '${s.id}', 'prepare')">Prepare</button>
-        <button class="tab-btn" data-tab="session" onclick="switchTab(this, '${s.id}', 'session')">Session</button>
-        <button class="tab-btn" data-tab="reflect" onclick="switchTab(this, '${s.id}', 'reflect')">Reflect</button>
-        <button class="tab-btn" data-tab="portfolio" onclick="switchTab(this, '${s.id}', 'portfolio')">Portfolio</button>
-        <button class="tab-btn" data-tab="resources" onclick="switchTab(this, '${s.id}', 'resources')">Resources</button>
+        <a class="tab-btn active" data-tab="prepare" href="#${s.id}-prepare">Prepare</a>
+        <a class="tab-btn" data-tab="session" href="#${s.id}-session">Session</a>
+        <a class="tab-btn" data-tab="reflect" href="#${s.id}-reflect">Reflect</a>
+        <a class="tab-btn" data-tab="portfolio" href="#${s.id}-portfolio">Portfolio</a>
+        <a class="tab-btn" data-tab="resources" href="#${s.id}-resources">Resources</a>
       </div>
 
       <!-- PREPARE TAB -->
-      <div class="tab-pane active" id="tab-${s.id}-prepare">
+      <section class="tab-pane active" id="${s.id}-prepare" data-section="prepare">
         ${renderReadinessChecklist(s)}
 
         <div class="phase-card">
@@ -3476,20 +3543,20 @@ function buildSessions() {
         <div class="readings-card">
           ${readingsHTML}
         </div>
-      </div>
+      </section>
 
       <!-- SESSION TAB -->
-      <div class="tab-pane" id="tab-${s.id}-session">
+      <section class="tab-pane" id="${s.id}-session" data-section="session">
         <div class="section-hd">Learning Goals</div>
         <div class="goals-list">${goalsHTML}</div>
 
         <div class="section-hd">Activities</div>
         <div class="activities-list">${activitiesHTML}</div>
 
-      </div>
+      </section>
 
       <!-- REFLECT TAB -->
-      <div class="tab-pane" id="tab-${s.id}-reflect">
+      <section class="tab-pane" id="${s.id}-reflect" data-section="reflect">
         <div class="reflect-after-card">
           <div class="reflect-after-label">After the Session</div>
           <div class="reflect-after-text">${escapeHTML(s.after)}</div>
@@ -3506,63 +3573,30 @@ function buildSessions() {
         <div class="reflect-prompts">${promptsHTML}</div>
 
         ${connectsHTML}
-      </div>
+      </section>
 
       <!-- PORTFOLIO TAB -->
-      <div class="tab-pane" id="tab-${s.id}-portfolio">
+      <section class="tab-pane" id="${s.id}-portfolio" data-section="portfolio">
         <div class="section-hd">Portfolio Artifact</div>
         ${renderSessionPortfolio(s)}
-      </div>
+      </section>
 
       <!-- RESOURCES TAB -->
-      <div class="tab-pane" id="tab-${s.id}-resources">
+      <section class="tab-pane" id="${s.id}-resources" data-section="resources">
         <div class="section-hd">Resource Hub</div>
         ${renderResourceGroups(s)}
-      </div>
+      </section>
     `;
     wrap.appendChild(panel);
   });
 }
 
 function showSession(id) {
-  activeView = 'session';
-  activeSessionId = id;
-  const dashboard = document.getElementById('dashboardPanel');
-  if (dashboard) dashboard.classList.remove('active');
-  const dashboardBtn = document.getElementById('dashboardNavBtn');
-  if (dashboardBtn) dashboardBtn.classList.remove('active');
-  // Update panels
-  document.querySelectorAll('.session-panel').forEach(p => p.classList.remove('active'));
-  const target = document.getElementById('panel-' + id);
-  if (target) target.classList.add('active');
-
-  // Update nav buttons
-  document.querySelectorAll('.month-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.id === id);
-  });
-
-  // Update topbar
-  const s = SESSIONS.find(s => s.id === id);
-  if (s) {
-    document.getElementById('topbarSession').textContent = s.month + ' — ' + s.title;
-  }
-
-  updateProgressUI();
-
-  // Scroll to top of main
-  document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+  setRoute(id);
 }
 
 function switchTab(btn, sessionId, tab) {
-  // Deactivate all tabs in this session
-  const panel = document.getElementById('panel-' + sessionId);
-  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  panel.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-
-  // Activate selected
-  btn.classList.add('active');
-  const pane = document.getElementById('tab-' + sessionId + '-' + tab);
-  if (pane) pane.classList.add('active');
+  setRoute(`${sessionId}-${tab}`);
 }
 
 const TRACKER_URL = 'https://script.google.com/macros/s/AKfycbx3BBaniqMRRoKOi3-19bheviGIVHOT25OCUreNE_XMn2Nq3dljxhbkypYoZUlZPPOEIA/exec';
@@ -3664,14 +3698,21 @@ function gateCheckName() {
   // Fade out overlay
   const overlay = document.getElementById('gate-overlay');
   overlay.classList.add('fade-out');
-  setTimeout(() => { overlay.style.display = 'none'; }, 500);
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    routeFromHash({ behavior: 'auto' });
+  }, 500);
 }
 
 // Initialize app (runs immediately, hidden until gate clears)
 buildNav();
 buildSessions();
 buildDashboard();
-showDashboard();
+if (!window.location.hash) {
+  history.replaceState(null, '', '#dashboard');
+}
+window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
+routeFromHash({ behavior: 'auto' });
 </script>
 </body>
 </html>
