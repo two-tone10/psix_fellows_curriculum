@@ -1,5 +1,6 @@
 import { CONFIG } from './config.js';
-import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS } from './curriculum.js';
+import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS, CAPSTONE_COMPONENTS } from './curriculum.js';
+import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE } from './samplePortfolio.js';
 import {
   supabaseReady, getSession, onAuthChange, signInWithGoogle, signOut,
   isFacilitatorEmail, fetchMyProgress, syncProgressEvent,
@@ -180,27 +181,27 @@ function renderPortfolioGrid(options = {}) {
   return `<div class="artifact-grid">${PORTFOLIO_ARTIFACTS.map(a => renderArtifactCard(a, options)).join('')}</div>`;
 }
 
+function capstoneComponentSourceLabel(component) {
+  return component.sessionIds
+    .map(sid => SESSIONS.find(s => s.id === sid)?.month)
+    .filter(Boolean)
+    .join(', ');
+}
+
 function renderCapstoneMap() {
-  const pieces = [
-    { title: 'Research plan', source: 'Definition, research provocation, aims, and design rationale' },
-    { title: 'Community partnership documentation', source: 'Partnership philosophy and commitment letter' },
-    { title: 'Grant proposal', source: 'Specific aims, design rationale, and reviewer-ready proposal' },
-    { title: 'Institutional action plan', source: 'Institutional map and 12-month implementation plan' },
-    { title: 'Course or teaching module', source: 'Teaching philosophy, module, and course pathway' },
-    { title: 'Capstone narrative', source: 'June synthesis across the full fellowship arc' },
-  ];
   return `
     <div class="capstone-map">
-      ${pieces.map((p, i) => `
+      ${CAPSTONE_COMPONENTS.map((c, i) => `
         <div class="capstone-row">
           <div class="capstone-num">${i + 1}</div>
           <div>
-            <div class="capstone-title">${escapeHTML(p.title)}</div>
-            <div class="capstone-source">${escapeHTML(p.source)}</div>
+            <div class="capstone-title">${escapeHTML(c.title)}</div>
+            <div class="capstone-source">${escapeHTML(capstoneComponentSourceLabel(c))}</div>
           </div>
         </div>
       `).join('')}
     </div>
+    <button class="dashboard-link-button" style="margin-top:14px;" onclick="showConceptMap()">See the full map →</button>
   `;
 }
 
@@ -422,6 +423,8 @@ function parseRoute() {
   if (!hash || hash === 'dashboard') return { view: 'dashboard' };
   if (hash === 'facilitator') return { view: 'facilitator' };
   if (hash === 'library') return { view: 'library' };
+  if (hash === 'concept-map') return { view: 'conceptmap' };
+  if (hash === 'sample-portfolio') return { view: 'sampleportfolio' };
   const parts = hash.split('-');
   const sessionId = parts[0];
   const section = parts.slice(1).join('-') || 'overview';
@@ -455,11 +458,21 @@ function showLibrary() {
   setRoute('library');
 }
 
+function showConceptMap() {
+  setRoute('concept-map');
+}
+
+function showSamplePortfolio() {
+  setRoute('sample-portfolio');
+}
+
 function scrollToRoute(route, behavior = 'smooth') {
   let target = null;
   if (route.view === 'dashboard') target = document.getElementById('dashboardPanel');
   else if (route.view === 'facilitator') target = null;
   else if (route.view === 'library') target = document.getElementById('libraryPanel');
+  else if (route.view === 'conceptmap') target = document.getElementById('conceptMapPanel');
+  else if (route.view === 'sampleportfolio') target = document.getElementById('samplePortfolioPanel');
   else if (route.section === 'overview') target = document.getElementById('panel-' + route.sessionId);
   else target = document.getElementById(`${route.sessionId}-${route.section}`);
   if (target) {
@@ -490,6 +503,10 @@ function routeFromHash(options = {}) {
     applyDashboardView();
   } else if (route.view === 'library') {
     applyLibraryView();
+  } else if (route.view === 'conceptmap') {
+    applyConceptMapView();
+  } else if (route.view === 'sampleportfolio') {
+    applySamplePortfolioView();
   } else {
     applySessionView(route.sessionId, route.section);
   }
@@ -508,23 +525,28 @@ function applyFellowShell() {
   if (facilitatorShell) facilitatorShell.classList.remove('active');
 }
 
-function deactivateLibrary() {
-  const libraryPanel = document.getElementById('libraryPanel');
-  if (libraryPanel) libraryPanel.classList.remove('active');
-  const libraryBtn = document.getElementById('libraryNavBtn');
-  if (libraryBtn) libraryBtn.classList.remove('active');
+const SECONDARY_PANELS = [
+  { panelId: 'dashboardPanel', btnId: 'dashboardNavBtn' },
+  { panelId: 'libraryPanel', btnId: 'libraryNavBtn' },
+  { panelId: 'conceptMapPanel', btnId: 'conceptMapNavBtn' },
+  { panelId: 'samplePortfolioPanel', btnId: 'samplePortfolioNavBtn' },
+];
+
+function resetAllPanels() {
+  SECONDARY_PANELS.forEach(({ panelId, btnId }) => {
+    document.getElementById(panelId)?.classList.remove('active');
+    document.getElementById(btnId)?.classList.remove('active');
+  });
+  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
+  document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
 }
 
 function applyDashboardView() {
   activeView = 'dashboard';
   activeSessionId = '';
-  const dashboard = document.getElementById('dashboardPanel');
-  if (dashboard) dashboard.classList.add('active');
-  const dashboardBtn = document.getElementById('dashboardNavBtn');
-  if (dashboardBtn) dashboardBtn.classList.add('active');
-  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
-  document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
-  deactivateLibrary();
+  resetAllPanels();
+  document.getElementById('dashboardPanel')?.classList.add('active');
+  document.getElementById('dashboardNavBtn')?.classList.add('active');
   const topbar = document.getElementById('topbarSession');
   if (topbar) topbar.textContent = 'Dashboard';
 }
@@ -532,19 +554,34 @@ function applyDashboardView() {
 function applyLibraryView() {
   activeView = 'library';
   activeSessionId = '';
-  const dashboard = document.getElementById('dashboardPanel');
-  if (dashboard) dashboard.classList.remove('active');
-  const dashboardBtn = document.getElementById('dashboardNavBtn');
-  if (dashboardBtn) dashboardBtn.classList.remove('active');
-  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
-  document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
-  const libraryBtn = document.getElementById('libraryNavBtn');
-  if (libraryBtn) libraryBtn.classList.add('active');
-  const libraryPanel = document.getElementById('libraryPanel');
-  if (libraryPanel) libraryPanel.classList.add('active');
+  resetAllPanels();
+  document.getElementById('libraryPanel')?.classList.add('active');
+  document.getElementById('libraryNavBtn')?.classList.add('active');
   const topbar = document.getElementById('topbarSession');
   if (topbar) topbar.textContent = 'Resource Library';
   buildLibraryPanel();
+}
+
+function applyConceptMapView() {
+  activeView = 'conceptmap';
+  activeSessionId = '';
+  resetAllPanels();
+  document.getElementById('conceptMapPanel')?.classList.add('active');
+  document.getElementById('conceptMapNavBtn')?.classList.add('active');
+  const topbar = document.getElementById('topbarSession');
+  if (topbar) topbar.textContent = 'How Your Portfolio Comes Together';
+  buildConceptMapPanel();
+}
+
+function applySamplePortfolioView() {
+  activeView = 'sampleportfolio';
+  activeSessionId = '';
+  resetAllPanels();
+  document.getElementById('samplePortfolioPanel')?.classList.add('active');
+  document.getElementById('samplePortfolioNavBtn')?.classList.add('active');
+  const topbar = document.getElementById('topbarSession');
+  if (topbar) topbar.textContent = 'Sample Portfolio (Illustrative)';
+  buildSamplePortfolioPanel();
 }
 
 function updateSectionNav(sessionId, section) {
@@ -560,12 +597,7 @@ function updateSectionNav(sessionId, section) {
 function applySessionView(sessionId, section = 'overview') {
   activeView = 'session';
   activeSessionId = sessionId;
-  const dashboard = document.getElementById('dashboardPanel');
-  if (dashboard) dashboard.classList.remove('active');
-  const dashboardBtn = document.getElementById('dashboardNavBtn');
-  if (dashboardBtn) dashboardBtn.classList.remove('active');
-  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
-  deactivateLibrary();
+  resetAllPanels();
   const target = document.getElementById('panel-' + sessionId);
   if (target) target.classList.add('active');
   document.querySelectorAll('.month-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.id === sessionId));
@@ -2036,6 +2068,164 @@ function debounceLibSearch(value) {
 }
 
 // ═══════════════════════════════════════════════════════
+// CONCEPT MAP (theory of change)
+// ═══════════════════════════════════════════════════════
+const _mapOpenChip = {};
+
+function conceptMapChipId(componentId, sessionId) {
+  return `map-chip-${componentId}-${sessionId}`;
+}
+
+function renderConceptMapLane(component) {
+  const items = component.sessionIds
+    .map(sid => ({ session: SESSIONS.find(s => s.id === sid), artifact: PORTFOLIO_ARTIFACTS.find(a => a.sessionId === sid) }))
+    .filter(x => x.session && x.artifact);
+
+  return `
+    <div class="map-lane">
+      <div class="map-lane-header">
+        <div class="map-lane-title">${escapeHTML(component.title)}</div>
+        <div class="map-lane-desc">${escapeHTML(component.description)}</div>
+      </div>
+      <div class="map-chip-row">
+        ${items.map(({ session, artifact }) => {
+          const domain = DOMAINS[session.domain];
+          const chipId = conceptMapChipId(component.id, session.id);
+          return `
+            <button class="map-chip" id="${chipId}-btn" type="button"
+              aria-expanded="false" aria-controls="map-detail-${component.id}"
+              onclick="toggleMapChip('${component.id}','${session.id}')">
+              <span class="map-chip-dot" style="background:${domain.color}"></span>
+              ${escapeHTML(session.month)}
+            </button>
+          `;
+        }).join('')}
+      </div>
+      <div class="map-detail" id="map-detail-${component.id}"></div>
+    </div>
+  `;
+}
+
+function toggleMapChip(componentId, sessionId) {
+  const isOpen = _mapOpenChip[componentId] === sessionId;
+  _mapOpenChip[componentId] = isOpen ? null : sessionId;
+  renderMapLaneDetail(componentId);
+}
+
+function renderMapLaneDetail(componentId) {
+  const component = CAPSTONE_COMPONENTS.find(c => c.id === componentId);
+  const detailEl = document.getElementById('map-detail-' + componentId);
+  if (!component || !detailEl) return;
+  const openSessionId = _mapOpenChip[componentId];
+
+  component.sessionIds.forEach(sid => {
+    const btn = document.getElementById(conceptMapChipId(componentId, sid) + '-btn');
+    if (!btn) return;
+    const isActive = sid === openSessionId;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-expanded', String(isActive));
+  });
+
+  if (!openSessionId) {
+    detailEl.innerHTML = '';
+    detailEl.classList.remove('open');
+    return;
+  }
+
+  const session = SESSIONS.find(s => s.id === openSessionId);
+  const artifact = PORTFOLIO_ARTIFACTS.find(a => a.sessionId === openSessionId);
+  if (!session || !artifact) return;
+  const domain = DOMAINS[session.domain];
+
+  detailEl.classList.add('open');
+  detailEl.innerHTML = `
+    <div class="map-detail-card" role="region" aria-label="${escapeHTML(session.month)} artifact detail">
+      <div class="map-detail-month" style="color:${domain.color}">${escapeHTML(session.month)} · ${escapeHTML(domain.label)}</div>
+      <div class="map-detail-title">${escapeHTML(artifact.label)}</div>
+      <div class="map-detail-purpose">${escapeHTML(artifact.purpose)}</div>
+      <div class="map-detail-prompt-label">The Prompt</div>
+      <div class="map-detail-prompt">${escapeHTML(artifact.prompt)}</div>
+      <button class="map-detail-link" onclick="goToTask('${session.id}','portfolio')">Open ${escapeHTML(session.month)}'s portfolio tab →</button>
+    </div>
+  `;
+}
+
+function buildConceptMapPanel() {
+  const panel = document.getElementById('conceptMapPanel');
+  if (!panel) return;
+  Object.keys(_mapOpenChip).forEach(k => delete _mapOpenChip[k]);
+  panel.innerHTML = `
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">Theory of Change</span></div>
+      <h1 class="session-title">How Your Portfolio Comes Together</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:8px;">
+        Every month produces one artifact. None of it is busywork — each artifact is a building block for one or more of the six pieces that make up your capstone portfolio. Click any month below to see why it's there and what it's building toward.
+      </p>
+    </div>
+    <div class="map-flow-label">12 Monthly Artifacts</div>
+    <div class="map-lanes">
+      ${CAPSTONE_COMPONENTS.map(renderConceptMapLane).join('')}
+    </div>
+    <div class="map-flow-label">↓ Presented at the June Culminating Symposium</div>
+    <div class="map-final-card">
+      <div class="map-final-title">Your Capstone Portfolio</div>
+      <div class="map-final-text">Six components, twelve months of work, one coherent account of the scholar, partner, and teacher you're becoming — presented to Lab of Labs researchers, Purpose Commons partners, and invited guests.</div>
+      <button class="dashboard-link-button" style="margin-top:10px;" onclick="showSamplePortfolio()">See what a finished portfolio looks like →</button>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+// SAMPLE PORTFOLIO (illustrative, fictional)
+// ═══════════════════════════════════════════════════════
+function buildSamplePortfolioPanel() {
+  const panel = document.getElementById('samplePortfolioPanel');
+  if (!panel) return;
+
+  const artifactCards = SAMPLE_ARTIFACTS.map(sample => {
+    const session = SESSIONS.find(s => s.id === sample.sessionId);
+    const artifact = PORTFOLIO_ARTIFACTS.find(a => a.sessionId === sample.sessionId);
+    if (!session || !artifact) return '';
+    const domain = DOMAINS[session.domain];
+    return `
+      <div class="sample-card">
+        <div class="sample-card-header">
+          <span class="sample-card-month" style="color:${domain.color}">${escapeHTML(session.month)}</span>
+          <span class="artifact-chip">${escapeHTML(artifact.component)}</span>
+        </div>
+        <div class="sample-card-title">${escapeHTML(artifact.label)}</div>
+        <div class="sample-card-prompt"><em>Prompt:</em> ${escapeHTML(artifact.prompt)}</div>
+        <div class="sample-card-content">${escapeHTML(sample.content)}</div>
+      </div>
+    `;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="sample-banner">
+      <span class="sample-banner-badge">Illustrative Only</span>
+      <span class="sample-banner-text">This entire portfolio — the fellow, institution, research topic, and community partner — is fictional. It exists to show the structure and depth of finished work, not to be copied. Your portfolio should look nothing like this one.</span>
+    </div>
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">Sample Portfolio</span></div>
+      <h1 class="session-title">A Finished Year, Start to Finish</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:8px;">
+        Meet <strong>${escapeHTML(SAMPLE_FELLOW.name)}</strong> of ${escapeHTML(SAMPLE_FELLOW.institution)}, whose fictional research traces
+        <em>${escapeHTML(SAMPLE_FELLOW.focus)}</em>, in partnership with ${escapeHTML(SAMPLE_FELLOW.partner)}.
+      </p>
+    </div>
+    <div class="sample-grid">${artifactCards}</div>
+    <div class="sample-card sample-card-capstone">
+      <div class="sample-card-header">
+        <span class="sample-card-month" style="color:var(--gold)">June</span>
+        <span class="artifact-chip">Synthesis</span>
+      </div>
+      <div class="sample-card-title">Capstone Portfolio Narrative</div>
+      <div class="sample-card-content">${escapeHTML(SAMPLE_CAPSTONE_NARRATIVE)}</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
 // SHELL SCAFFOLDING
 // ═══════════════════════════════════════════════════════
 function renderShell() {
@@ -2056,6 +2246,12 @@ function renderShell() {
           </button>
           <button class="dashboard-btn" id="libraryNavBtn" onclick="showLibrary()">
             <span class="dashboard-icon" style="background:var(--con)"></span><span>Resource Library</span>
+          </button>
+          <button class="dashboard-btn" id="conceptMapNavBtn" onclick="showConceptMap()">
+            <span class="dashboard-icon" style="background:var(--tea)"></span><span>How It Fits Together</span>
+          </button>
+          <button class="dashboard-btn" id="samplePortfolioNavBtn" onclick="showSamplePortfolio()">
+            <span class="dashboard-icon" style="background:var(--tra)"></span><span>Sample Portfolio</span>
           </button>
         </div>
         <div class="sidebar-section-label">Fellowship Year</div>
@@ -2089,6 +2285,8 @@ function renderShell() {
         <div class="content-wrap" id="contentWrap">
           <section class="dashboard-panel active" id="dashboardPanel" aria-label="Fellowship dashboard"></section>
           <section class="dashboard-panel" id="libraryPanel" aria-label="Resource library"></section>
+          <section class="dashboard-panel" id="conceptMapPanel" aria-label="How your portfolio comes together"></section>
+          <section class="dashboard-panel" id="samplePortfolioPanel" aria-label="Sample portfolio"></section>
           <div id="sessionPanels"></div>
         </div>
       </main>
@@ -2167,6 +2365,7 @@ async function init() {
 // Expose handlers referenced by inline HTML (module scope isn't global).
 Object.assign(window, {
   showDashboard, showSession, goToTask, switchTab, showLibrary,
+  showConceptMap, showSamplePortfolio, toggleMapChip,
   toggleGoal, toggleReading, toggleTaskCheckbox,
   togglePassVisibility, gateCheckPass, gateCheckName,
   showFacilitatorGate, showFellowGate, skipSync,

@@ -495,3 +495,42 @@ export const PORTFOLIO_ARTIFACTS = [
   }
 ];
 
+export const CAPSTONE_COMPONENTS = [
+  {
+    id: 'research-plan',
+    title: 'Research Plan',
+    description: 'The scholarly foundation: what you mean by purpose, the question you are pursuing, and the design that will answer it.',
+    sessionIds: ['jul', 'aug', 'dec', 'jan'],
+  },
+  {
+    id: 'partnership-documentation',
+    title: 'Community Partnership Documentation',
+    description: 'How you work with communities, made concrete in a specific, mutual commitment with a partner.',
+    sessionIds: ['sep', 'nov'],
+  },
+  {
+    id: 'grant-proposal',
+    title: 'Grant Proposal',
+    description: "The fundable version of your research plan, revised through peer, mentor, and reviewer feedback.",
+    sessionIds: ['dec', 'jan', 'apr'],
+  },
+  {
+    id: 'institutional-action-plan',
+    title: 'Institutional Action Plan',
+    description: 'A realistic plan for how the work survives and grows inside your actual institution.',
+    sessionIds: ['feb', 'mar'],
+  },
+  {
+    id: 'teaching-module',
+    title: 'Course or Teaching Module',
+    description: "The fellowship's ideas translated into something you can actually teach.",
+    sessionIds: ['oct', 'may'],
+  },
+  {
+    id: 'capstone-narrative',
+    title: 'Capstone Narrative',
+    description: 'The synthesis that connects every thread above into one account of the scholar, partner, and teacher you are becoming.',
+    sessionIds: ['jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun'],
+  },
+];
+
