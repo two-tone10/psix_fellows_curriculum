@@ -142,9 +142,10 @@ export const STAFF_RESOURCES = [
   {
     id: 'course-syllabus',
     kind: 'Syllabus',
-    title: 'Purpose Science Course Syllabus',
-    description: 'A full course syllabus for teaching a purpose science course.',
-    status: 'pending',
+    title: 'Course Syllabus: Translating the Science of Purpose in Life',
+    description: 'The full Spring 2026 Cornell syllabus this curriculum draws from — course description, objectives, grading, and a week-by-week reading schedule.',
+    status: 'ready',
     routeKey: null,
+    url: './src/assets/resources/purpose-science-course-syllabus.pdf',
   },
 ];

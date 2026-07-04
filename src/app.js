@@ -2291,6 +2291,16 @@ function buildArtifactGuidePanel() {
 
 function renderStaffResourceCard(resource) {
   const isReady = resource.status === 'ready';
+  const isDownload = isReady && !!resource.url;
+  const badgeLabel = isDownload ? 'PSiX Resource' : 'PSiX Sample';
+  let action;
+  if (isDownload) {
+    action = `<a class="lib-card-action" href="${escapeHTML(resource.url)}" target="_blank" rel="noopener" download>Download →</a>`;
+  } else if (isReady) {
+    action = `<button class="lib-card-action" onclick="showSecondaryView('${resource.routeKey}')">Read →</button>`;
+  } else {
+    action = `<span class="lib-card-action" style="color:var(--text-lt);cursor:default;">Pending</span>`;
+  }
   return `
     <div class="lib-card staff-resource-card">
       <div class="lib-card-icon">${resource.kind === 'Syllabus' ? '📘' : '📝'}</div>
@@ -2299,14 +2309,12 @@ function renderStaffResourceCard(resource) {
         <div class="lib-card-desc">${escapeHTML(resource.description)}</div>
         <div class="lib-card-meta">
           <span class="lib-card-type">${escapeHTML(resource.kind)}</span>
-          <span class="staff-resource-badge">PSiX Sample</span>
+          <span class="staff-resource-badge">${badgeLabel}</span>
           ${!isReady ? '<span class="lib-card-size">Coming soon</span>' : ''}
         </div>
       </div>
       <div class="lib-card-actions">
-        ${isReady
-          ? `<button class="lib-card-action" onclick="showSecondaryView('${resource.routeKey}')">Read →</button>`
-          : `<span class="lib-card-action" style="color:var(--text-lt);cursor:default;">Pending</span>`}
+        ${action}
       </div>
     </div>
   `;
