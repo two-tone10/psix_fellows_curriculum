@@ -1,0 +1,3718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSiX Fellow's Journey Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:       #1B3A5C;
+  --navy-lt:    #E8EEF5;
+  --navy-dk:    #122840;
+  --gold:       #A87820;
+  --gold-lt:    #FEF7E8;
+  --gold-pale:  #FDF3D8;
+  --white:      #FFFFFF;
+  --off-white:  #F8F7F4;
+  --text:       #1A1A1A;
+  --text-med:   #444444;
+  --text-lt:    #7A7A7A;
+  --border:     #E2E2E2;
+  --con:   #1B5E8A; --con-lt: #E5EFF6;
+  --tra:   #2D6B4E; --tra-lt: #E5F0EA;
+  --gra:   #6B2738; --gra-lt: #F2E8EB;
+  --tea:   #4A3570; --tea-lt: #EDE9F5;
+  --all:   #2B4040; --all-lt: #E5EEED;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--off-white);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────── */
+.sidebar {
+  width: 230px;
+  min-width: 230px;
+  background: var(--navy-dk);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  z-index: 200;
+}
+
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.sidebar-brand {
+  padding: 28px 22px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.brand-eyebrow {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 6px;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.brand-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 5px;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-section-label {
+  padding: 18px 22px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+}
+
+.dashboard-nav { padding: 10px 10px 0; }
+
+.dashboard-btn {
+  width: 100%;
+  border: none;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.82);
+  border-radius: 7px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dashboard-btn:hover,
+.dashboard-btn.active { background: rgba(255,255,255,0.13); color: var(--white); }
+
+.dashboard-icon {
+  width: 9px; height: 9px;
+  border-radius: 3px;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+
+.month-nav { padding: 0 10px 4px; }
+
+.month-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 7px;
+  text-align: left;
+  margin-bottom: 1px;
+  gap: 10px;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.month-btn:hover { background: rgba(255,255,255,0.07); }
+.month-btn.active { background: rgba(255,255,255,0.12); }
+.month-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gold);
+}
+
+.month-dot {
+  width: 9px; height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.month-btn-info { flex: 1; min-width: 0; }
+
+.month-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.2;
+}
+
+.month-btn.active .month-name { color: rgba(255,255,255,0.95); font-weight: 600; }
+
+.month-session-title {
+  font-size: 10px;
+  color: rgba(255,255,255,0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+
+.month-status {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.32);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.month-inperson {
+  font-size: 9px;
+  color: #F5A623;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.month-progress {
+  font-size: 10px;
+  color: rgba(255,255,255,0.34);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.month-btn.complete .month-progress { color: var(--gold); }
+
+.month-btn.month-status-preparing .month-status { color: #BFD8EC; }
+.month-btn.month-status-ready .month-status { color: #BFE5CF; }
+.month-btn.month-status-reflect .month-status { color: #F4D19A; }
+.month-btn.month-status-complete .month-status { color: var(--gold); }
+
+.sidebar-progress {
+  margin: 16px 10px 0;
+  padding: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+}
+
+.sidebar-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.42);
+  margin-bottom: 9px;
+}
+
+.sidebar-progress-track {
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sidebar-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.sidebar-legend {
+  margin: 16px 10px 20px;
+  padding: 14px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.legend-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.legend-item:last-child { margin-bottom: 0; }
+
+.legend-swatch {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.3;
+}
+
+/* ─── TOPBAR ────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 230px;
+  right: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  padding: 0 48px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+
+.topbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+}
+
+.topbar-session {
+  font-size: 13px;
+  color: var(--text-lt);
+  font-style: italic;
+}
+
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-print {
+  padding: 7px 16px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s;
+}
+.btn-print:hover { opacity: 0.82; }
+
+.btn-outline {
+  padding: 7px 14px;
+  background: none;
+  color: var(--navy);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.btn-outline:hover { border-color: var(--navy); }
+
+/* ─── MAIN ──────────────────────────────────────────── */
+.main {
+  margin-left: 230px;
+  padding-top: 54px;
+  flex: 1;
+  min-height: 100vh;
+}
+
+.content-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 48px 96px;
+}
+
+.dashboard-panel {
+  display: none;
+  padding-top: 34px;
+  animation: fadeUp 0.22s ease;
+  scroll-margin-top: 74px;
+}
+.dashboard-panel.active { display: block; }
+
+.dashboard-hero {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 26px 28px;
+  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 28px;
+  align-items: center;
+}
+
+.dashboard-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.dashboard-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--navy);
+  font-size: 31px;
+  font-weight: 700;
+  line-height: 1.16;
+  margin-bottom: 9px;
+}
+
+.dashboard-subtitle {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.65;
+  max-width: 620px;
+}
+
+.dashboard-meter-card {
+  background: var(--navy-lt);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.dashboard-meter-count {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.dashboard-meter-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+  margin-bottom: 10px;
+}
+
+.dashboard-track {
+  height: 8px;
+  background: rgba(27,58,92,0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dashboard-fill {
+  height: 100%;
+  width: 0;
+  background: var(--navy);
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.dashboard-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+
+.dashboard-card + .dashboard-card { margin-top: 18px; }
+
+.dashboard-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.dashboard-card-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+}
+
+.dashboard-card-note {
+  font-size: 12px;
+  color: var(--text-lt);
+}
+
+.focus-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 25px;
+  color: var(--navy);
+  line-height: 1.22;
+  margin-bottom: 8px;
+}
+
+.focus-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.focus-pill {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--navy-lt);
+  color: var(--navy);
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-not-started { background: #F0F0F0; color: #6C6C6C; }
+.status-preparing { background: var(--con-lt); color: var(--con); }
+.status-ready { background: var(--tra-lt); color: var(--tra); }
+.status-reflect { background: var(--gold-lt); color: var(--gold); }
+.status-complete { background: var(--navy); color: var(--white); }
+
+.status-summary {
+  color: var(--text-med);
+  font-size: 13px;
+  line-height: 1.58;
+  margin: 2px 0 16px;
+}
+
+.month-status-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.month-status-row {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #F2F2F2;
+  padding: 8px 0;
+}
+.month-status-row:last-child { border-bottom: none; }
+
+.month-status-name {
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.month-status-title {
+  color: var(--text-lt);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.month-status-meta {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+.focus-inquiry {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-style: italic;
+  color: var(--navy);
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dashboard-action {
+  border: none;
+  border-radius: 6px;
+  padding: 9px 13px;
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboard-action.secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--navy);
+}
+
+.readiness-list,
+.portfolio-list,
+.convening-list,
+.quick-link-list,
+.resource-hub-list {
+  display: grid;
+  gap: 10px;
+}
+
+.readiness-item,
+.portfolio-item,
+.convening-item,
+.quick-link-item,
+.resource-hub-item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  font-size: 13px;
+  color: var(--text-med);
+  line-height: 1.5;
+}
+
+.readiness-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 22px;
+}
+
+.readiness-panel-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--navy);
+  font-size: 23px;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.readiness-panel-text {
+  color: var(--text-med);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.readiness-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.readiness-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--navy-lt);
+  overflow: hidden;
+}
+
+.readiness-fill {
+  height: 100%;
+  width: 0;
+  background: var(--tra);
+  border-radius: inherit;
+}
+
+.readiness-count {
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.readiness-checklist {
+  display: grid;
+  gap: 10px;
+}
+
+.readiness-check {
+  display: grid;
+  grid-template-columns: 76px 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 11px 0;
+  border-bottom: 1px solid #F2F2F2;
+}
+.readiness-check:last-child { border-bottom: none; }
+
+.readiness-kind {
+  color: var(--text-lt);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-top: 4px;
+}
+
+.readiness-mark {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #CCD5E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+
+.readiness-check.done .readiness-mark {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+}
+
+.readiness-check.ready .readiness-mark {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.readiness-check-title {
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.readiness-check-detail {
+  color: var(--text-med);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.readiness-check-status {
+  display: inline-flex;
+  margin-top: 7px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #F0F0F0;
+  color: #6C6C6C;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.readiness-check.done .readiness-check-status { background: var(--navy); color: var(--white); }
+.readiness-check.ready .readiness-check-status { background: var(--gold-lt); color: var(--gold); }
+
+.readiness-dot,
+.portfolio-dot,
+.convening-dot,
+.quick-link-dot,
+.resource-hub-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid #CCD5E0;
+  margin-top: 1px;
+}
+
+.readiness-item.done .readiness-dot,
+.portfolio-item.done .portfolio-dot {
+  background: var(--navy);
+  border-color: var(--navy);
+  position: relative;
+}
+
+.readiness-item.done .readiness-dot::after,
+.portfolio-item.done .portfolio-dot::after {
+  content: '✓';
+  position: absolute;
+  inset: -2px 0 0;
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.convening-dot { border: none; border-radius: 4px; background: var(--gold); }
+.quick-link-dot { border: none; border-radius: 4px; background: var(--navy-lt); }
+.resource-hub-dot { border: none; border-radius: 4px; background: var(--tra-lt); }
+
+.dashboard-empty {
+  color: var(--text-lt);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dashboard-link-button {
+  border: none;
+  background: none;
+  color: var(--navy);
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.resource-summary {
+  color: var(--text-lt);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.portfolio-overview {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+
+.portfolio-overview-title {
+  font-family: 'Playfair Display', serif;
+  color: var(--navy);
+  font-size: 24px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+
+.portfolio-overview-text {
+  color: var(--text-med);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.portfolio-meter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.portfolio-track {
+  height: 8px;
+  background: var(--navy-lt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.portfolio-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+  border-radius: inherit;
+}
+
+.portfolio-count {
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-card .portfolio-overview {
+  border: none;
+  padding: 0;
+  margin-bottom: 14px;
+}
+
+.artifact-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 17px;
+}
+
+.artifact-card.active {
+  border-color: #D9C188;
+  box-shadow: 0 5px 18px rgba(168,120,32,0.12);
+}
+
+.artifact-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.artifact-month {
+  color: var(--text-lt);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.artifact-title {
+  color: var(--navy);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 8px;
+}
+
+.artifact-purpose {
+  color: var(--text-med);
+  font-size: 13px;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.artifact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.artifact-chip {
+  border-radius: 999px;
+  background: var(--navy-lt);
+  color: var(--navy);
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.artifact-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 13px;
+}
+
+.artifact-action {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--navy);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.artifact-action.primary {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+
+.artifact-action.pending {
+  color: var(--text-lt);
+  cursor: default;
+}
+
+.artifact-status {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.artifact-not-started { background: #F0F0F0; color: #6C6C6C; }
+.artifact-in-progress { background: var(--con-lt); color: var(--con); }
+.artifact-ready { background: var(--gold-lt); color: var(--gold); }
+.artifact-complete { background: var(--navy); color: var(--white); }
+
+.capstone-map {
+  display: grid;
+  gap: 10px;
+}
+
+.capstone-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.capstone-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--gold-lt);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.capstone-title {
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.capstone-source {
+  color: var(--text-lt);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.overview-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.overview-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+  margin-bottom: 6px;
+}
+
+.overview-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.25;
+}
+
+.overview-meta {
+  font-size: 12px;
+  color: var(--text-lt);
+  margin-top: 4px;
+}
+
+.overview-meter {
+  min-width: 190px;
+}
+
+.overview-count {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+.overview-track {
+  height: 8px;
+  background: var(--navy-lt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.overview-fill {
+  height: 100%;
+  width: 0;
+  background: var(--navy);
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.next-action-card {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 24px 0 30px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.next-action-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.next-action-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.86);
+  line-height: 1.55;
+}
+
+.next-action-btn {
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.12);
+  color: var(--white);
+  border-radius: 6px;
+  padding: 9px 13px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.next-action-btn:hover { background: rgba(255,255,255,0.2); }
+
+/* ─── SESSION PANELS ──────────────────────────────── */
+.session-panel {
+  display: none;
+  animation: fadeUp 0.22s ease;
+}
+.session-panel.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── SESSION HEADER ──────────────────────────────── */
+.session-header { padding: 48px 0 0; }
+
+.session-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.session-month-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+}
+
+.domain-pill {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--white);
+}
+
+.inperson-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: #FFF3E0;
+  border: 1px solid #F5A623;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #A06010;
+  letter-spacing: 0.05em;
+}
+
+.session-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.18;
+  margin-bottom: 24px;
+}
+
+.session-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -12px 0 24px;
+}
+
+.session-status-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -10px 0 24px;
+}
+
+.session-status-text {
+  font-size: 13px;
+  color: var(--text-lt);
+  line-height: 1.45;
+}
+
+.session-progress-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-lt);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.session-progress-track {
+  flex: 1;
+  height: 7px;
+  background: var(--navy-lt);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.session-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--gold);
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+/* ─── INQUIRY BLOCK ───────────────────────────────── */
+.inquiry-block {
+  border-left: 5px solid var(--gold);
+  background: var(--gold-pale);
+  border-radius: 0 10px 10px 0;
+  padding: 28px 32px 24px;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.inquiry-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.inquiry-question {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.48;
+}
+
+/* ─── DESCRIPTION ─────────────────────────────────── */
+.session-description {
+  font-size: 15px;
+  color: var(--text-med);
+  line-height: 1.78;
+  margin-bottom: 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── TABS ────────────────────────────────────────── */
+.tabs-bar {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 32px;
+  gap: 2px;
+}
+
+.tab-btn {
+  padding: 10px 22px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-lt);
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--navy); }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+.tab-pane {
+  display: block;
+  scroll-margin-top: 82px;
+  padding-top: 4px;
+}
+.tab-pane + .tab-pane {
+  margin-top: 38px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── SECTION HEADER ──────────────────────────────── */
+.section-hd {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── GOALS ───────────────────────────────────────── */
+.goals-list { margin-bottom: 40px; }
+
+.goal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #F2F2F2;
+  cursor: pointer;
+}
+.goal-item:last-child { border-bottom: none; }
+.goal-item:hover .goal-circle { border-color: var(--navy); }
+
+.goal-circle {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid #CCD5E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.15s;
+  font-size: 12px;
+  color: transparent;
+}
+.goal-item.done .goal-circle {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: white;
+}
+
+.goal-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.58;
+  transition: color 0.15s;
+}
+.goal-item.done .goal-text { color: var(--text-lt); text-decoration: line-through; }
+
+/* ─── ACTIVITIES ──────────────────────────────────── */
+.activities-list { margin-bottom: 24px; }
+
+.activity-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+.activity-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); transform: translateY(-1px); }
+
+.act-num {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--navy-lt);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.act-body { flex: 1; }
+
+.act-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.badge-time {
+  font-size: 11px;
+  color: var(--text-lt);
+  background: #F0F0F0;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.act-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.6;
+}
+
+/* ─── PREPARE TAB ─────────────────────────────────── */
+.phase-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.phase-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #F2F2F2;
+}
+
+.phase-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.phase-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.phase-task-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.72;
+}
+
+.task-check-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #F2F2F2;
+}
+
+.task-check-wrap input[type=checkbox] {
+  width: 17px; height: 17px;
+  margin-top: 2px;
+  accent-color: var(--navy);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.task-check-label {
+  font-size: 13px;
+  color: var(--text-lt);
+  font-style: italic;
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+/* ─── READINGS ────────────────────────────────────── */
+.readings-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.reading-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+.reading-row:last-child { border-bottom: none; }
+.reading-row.read .read-check { color: var(--gold); }
+.reading-row.read .reading-text { color: var(--text-lt); text-decoration: line-through; }
+.reading-row:hover { background: rgba(0,0,0,0.02); }
+
+.reading-bullet {
+  color: var(--gold);
+  font-size: 16px;
+  line-height: 1.3;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.reading-text {
+  font-size: 13px;
+  color: var(--text-lt);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.resource-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.resource-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--navy-lt);
+  color: var(--navy);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.resource-link {
+  color: var(--navy);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.resource-link:hover { text-decoration: underline; }
+
+.resource-link.disabled {
+  color: var(--text-lt);
+  cursor: default;
+  opacity: 0.7;
+}
+
+.resource-link.disabled:hover { text-decoration: none; }
+
+/* ─── RESOURCES ───────────────────────────────────── */
+.resource-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+
+.resource-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #F2F2F2;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.resource-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.resource-section-note {
+  font-size: 12px;
+  color: var(--text-lt);
+}
+
+.resource-list {
+  display: grid;
+}
+
+.resource-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid #F5F5F5;
+}
+.resource-item:last-child { border-bottom: none; }
+
+.resource-item-main {
+  min-width: 0;
+}
+
+.resource-item-title {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.resource-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.resource-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--navy-lt);
+  color: var(--navy);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.resource-action {
+  align-self: start;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--navy);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.resource-action:hover {
+  border-color: var(--navy);
+}
+
+.resource-action.pending {
+  color: var(--text-lt);
+  cursor: default;
+}
+
+.resource-action.pending:hover {
+  border-color: var(--border);
+}
+
+/* ─── REFLECT TAB ─────────────────────────────────── */
+.reflect-after-card {
+  background: var(--gold-lt);
+  border: 1px solid #EDD9A0;
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+}
+
+.reflect-after-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.reflect-after-text {
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.72;
+}
+
+.reflect-complete {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #EDD9A0;
+}
+
+.reflect-prompts {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.reflect-prompt-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #F2F2F2;
+  font-size: 14px;
+  color: var(--text-med);
+  line-height: 1.6;
+}
+.reflect-prompt-item:last-child { border-bottom: none; }
+
+.prompt-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-lt);
+  background: #F0F0F0;
+  border-radius: 50%;
+  width: 20px; height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ─── CONNECTS FORWARD ────────────────────────────── */
+.connects-forward {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--navy-lt);
+  border-left: 4px solid var(--navy);
+  border-radius: 0 8px 8px 0;
+  padding: 18px 22px;
+  margin-top: 36px;
+}
+
+.connects-arrow {
+  font-size: 18px;
+  color: var(--navy);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.connects-body { flex: 1; }
+
+.connects-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy);
+  opacity: 0.6;
+  margin-bottom: 5px;
+}
+
+.connects-text {
+  font-size: 14px;
+  color: var(--navy);
+  font-style: italic;
+  line-height: 1.65;
+}
+
+/* ─── PRINT ───────────────────────────────────────── */
+@media print {
+  @page { margin: 0.75in; }
+  .sidebar, .topbar { display: none !important; }
+  .main { margin-left: 0 !important; padding-top: 0 !important; }
+  body { background: white; }
+  .dashboard-panel { display: none !important; }
+  .session-panel { display: block !important; page-break-after: always; animation: none; }
+  .tabs-bar { display: none; }
+  .tab-pane { display: block !important; }
+  .activity-card { break-inside: avoid; box-shadow: none; }
+  .phase-card, .reflect-after-card, .readings-card { break-inside: avoid; }
+  .content-wrap { padding: 0; max-width: 100%; }
+  .session-header { padding: 24px 0 0; }
+}
+
+/* ─── ACCESS GATE OVERLAY ────────────────────────────── */
+#gate-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--navy-dk);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0;
+  transition: opacity 0.5s ease;
+}
+#gate-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+.gate-brand {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.gate-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 12px;
+}
+.gate-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 600;
+  color: #fff; line-height: 1.3;
+  margin-bottom: 6px;
+}
+.gate-subtitle {
+  font-size: 13px; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+}
+.gate-divider {
+  width: 48px; height: 2px;
+  background: var(--gold); opacity: 0.5;
+  margin: 24px auto;
+}
+
+.gate-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 40px 48px;
+  width: 380px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.gate-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 2px;
+}
+.gate-input {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px; color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.gate-input:focus { border-color: var(--gold); }
+.gate-input::placeholder { color: rgba(255,255,255,0.2); }
+.gate-input-wrap {
+  position: relative;
+}
+.gate-input-wrap .gate-input {
+  padding-right: 78px;
+}
+.gate-pass-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.72);
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.gate-pass-toggle:hover {
+  color: var(--white);
+  border-color: rgba(255,255,255,0.22);
+}
+.gate-btn {
+  width: 100%;
+  background: var(--gold);
+  border: none; border-radius: 8px;
+  padding: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: #fff; cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.2s, transform 0.1s;
+}
+.gate-btn:hover { background: #c49030; }
+.gate-btn:active { transform: scale(0.98); }
+.gate-error {
+  font-size: 12px; color: #e07070;
+  text-align: center; min-height: 16px;
+}
+
+#gate-step-name { display: none; }
+
+@media screen and (max-width: 900px) {
+  body { display: block; }
+  .sidebar {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    max-height: none;
+  }
+  .month-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .sidebar-legend { display: none; }
+  .topbar {
+    position: sticky;
+    left: 0;
+    padding: 0 18px;
+  }
+  .topbar-session,
+  .topbar-divider,
+  #fellow-greeting { display: none; }
+  .main {
+    margin-left: 0;
+    padding-top: 0;
+  }
+  .content-wrap { padding: 0 20px 72px; }
+  .dashboard-hero,
+  .dashboard-grid,
+  .overview-card,
+  .next-action-card {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-title { font-size: 27px; }
+  .dashboard-panel { padding-top: 24px; }
+  .dashboard-card + .dashboard-card { margin-top: 14px; }
+  .overview-meter { min-width: 0; }
+  .overview-count { text-align: left; }
+  .session-title { font-size: 29px; }
+  .resource-row { grid-template-columns: 24px minmax(0, 1fr); }
+  .resource-type,
+  .resource-link { grid-column: 2; }
+  .resource-section-header,
+  .resource-item {
+    grid-template-columns: 1fr;
+  }
+  .resource-section-header {
+    display: grid;
+    gap: 4px;
+  }
+  .resource-action {
+    justify-self: start;
+  }
+  .artifact-grid {
+    grid-template-columns: 1fr;
+  }
+  .portfolio-meter {
+    grid-template-columns: 1fr;
+  }
+  .readiness-progress,
+  .readiness-check {
+    grid-template-columns: 1fr;
+  }
+  .readiness-kind {
+    padding-top: 0;
+  }
+  #gate-overlay {
+    padding: 24px;
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+  .gate-brand {
+    margin: 44px 0 28px;
+  }
+  .gate-card {
+    width: min(100%, 380px);
+    padding: 28px 24px;
+  }
+  .gate-title {
+    font-size: 25px;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     ACCESS GATE
+════════════════════════════════════════════════════ -->
+<div id="gate-overlay">
+  <div class="gate-brand">
+    <div class="gate-eyebrow">Purpose Commons · BCTR at Cornell</div>
+    <div class="gate-title">PSiX Fellow's<br>Journey Companion</div>
+    <div class="gate-subtitle">Translational Fellowship in Purpose Science</div>
+    <div class="gate-divider"></div>
+  </div>
+
+  <!-- Step 1: Passcode -->
+  <div id="gate-step-pass">
+    <div class="gate-card">
+      <div>
+        <div class="gate-label">Access Code</div>
+        <div class="gate-input-wrap">
+          <input id="gate-pass-input" class="gate-input" type="password"
+                 placeholder="Enter your cohort passcode"
+                 autocomplete="off"
+                 onkeydown="if(event.key==='Enter')gateCheckPass()">
+          <button class="gate-pass-toggle" type="button" onclick="togglePassVisibility()">Show</button>
+        </div>
+      </div>
+      <div id="gate-pass-error" class="gate-error"></div>
+      <button class="gate-btn" onclick="gateCheckPass()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Name -->
+  <div id="gate-step-name">
+    <div class="gate-card">
+      <div>
+        <div class="gate-label">Your Name</div>
+        <input id="gate-name-input" class="gate-input" type="text"
+               placeholder="First and last name"
+               onkeydown="if(event.key==='Enter')gateCheckName()">
+      </div>
+      <div id="gate-name-error" class="gate-error"></div>
+      <button class="gate-btn" onclick="gateCheckName()">Enter the Fellowship →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-eyebrow">Research Fellowship</div>
+    <div class="brand-name">Translational Fellowship in Purpose Science</div>
+    <div class="brand-sub">PSiX · Purpose Commons · BCTR</div>
+  </div>
+
+  <div class="dashboard-nav">
+    <button class="dashboard-btn active" id="dashboardNavBtn" onclick="showDashboard()">
+      <span class="dashboard-icon"></span>
+      <span>Dashboard</span>
+    </button>
+  </div>
+
+  <div class="sidebar-section-label">Fellowship Year</div>
+
+  <nav class="month-nav" id="monthNav">
+    <!-- rendered by JS -->
+  </nav>
+
+  <div class="sidebar-progress" aria-label="Fellowship progress">
+    <div class="sidebar-progress-label">
+      <span>Year Progress</span>
+      <span id="sidebarProgressText">0%</span>
+    </div>
+    <div class="sidebar-progress-track">
+      <div class="sidebar-progress-fill" id="sidebarProgressFill"></div>
+    </div>
+  </div>
+
+  <div class="sidebar-legend">
+    <div class="legend-title">Domains</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#1B5E8A"></div><div class="legend-label">Purpose Science Content</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2D6B4E"></div><div class="legend-label">Translational & Community</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#6B2738"></div><div class="legend-label">Grant Development</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4A3570"></div><div class="legend-label">Course Design & Teaching</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2B4040"></div><div class="legend-label">All Four Domains</div></div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-title">Fellow's Journey Companion</div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-session" id="topbarSession">Select a session →</div>
+  </div>
+  <div class="topbar-actions">
+    <div id="fellow-greeting" style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);letter-spacing:0.04em;margin-right:8px;"></div>
+    <button class="btn-outline" onclick="window.print()">⎙ Print Session</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════ -->
+<main class="main">
+  <div class="content-wrap" id="contentWrap">
+    <section class="dashboard-panel active" id="dashboardPanel" aria-label="Fellowship dashboard">
+      <!-- rendered by JS -->
+    </section>
+    <div id="sessionPanels">
+      <!-- session panels rendered by JS -->
+    </div>
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const DOMAINS = {
+  content:       { color: '#1B5E8A', lt: '#E5EFF6', label: 'Purpose Science Content' },
+  translational: { color: '#2D6B4E', lt: '#E5F0EA', label: 'Translational & Community' },
+  grant:         { color: '#6B2738', lt: '#F2E8EB', label: 'Grant Development' },
+  teaching:      { color: '#4A3570', lt: '#EDE9F5', label: 'Course Design & Teaching' },
+  all:           { color: '#2B4040', lt: '#E5EEED', label: 'All Four Domains' },
+};
+
+const SESSIONS = [
+  {
+    id: 'jul', month: 'July', domain: 'content', inPerson: false,
+    title: 'Foundations of Purpose Science',
+    inquiry: "What do we mean when we say 'purpose,' and what is at stake in how we define it?",
+    before: "Read one foundational purpose science text and write a paragraph: how does this definition fit (or not fit) what you have observed in your own work?",
+    after: "Post a 200-word reflection to the cohort forum: how has the session sharpened, complicated, or changed your working definition of purpose? What question is more pressing for you now than before?",
+    description: "The fellowship year opens with a dive into the scientific foundations of purpose. Fellows establish a shared conceptual vocabulary, survey the landmark empirical literature, and situate purpose science within the broader landscape of positive youth development and developmental psychology. This session ensures that fellows, regardless of their prior proximity to purpose science, enter the year with a rigorous and common intellectual foundation.",
+    goals: [
+      "Articulate a clear, research-grounded definition of purpose and distinguish it from related constructs (meaning, identity, motivation, goal pursuit)",
+      "Survey the landmark empirical literature on purpose, including key longitudinal and intervention studies",
+      "Identify open questions and contested debates that represent opportunities for new scholarship",
+      "Begin developing a personal intellectual map of where your research interests intersect with the purpose science field",
+    ],
+    activities: [
+      { text: "Guided reading and annotation of 4–6 foundational purpose science texts, with structured reflection prompts", time: "20 min" },
+      { text: "Small group discussion: Where does your prior scholarship connect to purpose science? Where does it diverge?", time: "25 min" },
+      { text: "'Purpose Science Landscape' mapping exercise: fellows collaboratively chart the field's major themes, methods, populations studied, and gaps", time: "30 min" },
+      { text: "Guest presentation by a senior Lab of Labs researcher on the state of the field and its most pressing unanswered questions", time: "20 min" },
+      { text: "Personal Purpose Positioning — Write a 150-word statement on your own relationship to purpose as a scholar or practitioner, then pair-share. Surfaces prior assumptions before literature engagement.", time: "20 min", isNew: true },
+      { text: "Contested Definitions Fishbowl — Fellows are assigned different definitional frameworks (Damon; McKnight & Kashdan; Bronk) and defend them in a rotating fishbowl. Surfaces the stakes embedded in how we define the construct.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Damon, W., Menon, J., & Bronk, K. C. (2003). The development of purpose during adolescence",
+      "Burrow, A. L., & Hill, P. L. (2011). Purpose as a form of identity capital for positive youth adjustment",
+      "McKnight, P. E., & Kashdan, T. B. (2009). Purpose in life as a system that creates and sustains health and well-being",
+    ],
+    reflectPrompts: [
+      "Which definition of purpose felt most aligned with what you observe in your own work — and why?",
+      "What assumptions about who has purpose (and who doesn't) did you notice in the texts?",
+      "What is one thing you believe about purpose that the literature hasn't yet confirmed?",
+    ],
+    connectsTo: "As you build a shared vocabulary for purpose, begin noticing: whose definitions have shaped the literature — and whose haven't? That question anchors August.",
+  },
+
+  {
+    id: 'aug', month: 'August', domain: 'content', inPerson: false,
+    title: 'Purpose Across Contexts: Culture, Identity, and Equity',
+    inquiry: "Whose purpose is represented in the literature — and whose is not?",
+    before: "Select a purpose science study and examine its sample: who participated, who was excluded, and what assumptions about purpose are embedded in its measures? Bring a one-page analysis.",
+    after: "Identify one gap in the purpose literature that your home institution or community context is uniquely positioned to address. Write a brief research provocation (150–200 words) and share it with the cohort.",
+    description: "Purpose science has historically concentrated on certain populations and institutional contexts. This session expands the frame, exploring how purpose is shaped by cultural context, racial and ethnic identity, socioeconomic circumstance, and structural inequality. Fellows examine both what the existing literature tells us about purpose across diverse populations and where critical gaps remain — gaps their own research programs may be uniquely positioned to address.",
+    goals: [
+      "Analyze how cultural context shapes the development, expression, and measurement of purpose",
+      "Critically evaluate the existing literature on purpose across diverse racial, ethnic, and socioeconomic groups",
+      "Identify ways in which standard purpose measures may carry cultural assumptions that limit generalizability",
+      "Connect equity considerations to your own emerging research questions and community partnerships",
+    ],
+    activities: [
+      { text: "Critical reading exercise: Fellows review 2–3 purpose studies and analyze sample characteristics, measurement tools, and generalizability claims", time: "25 min" },
+      { text: "Panel discussion with Community Research Mentors on how purpose shows up — and is talked about — in the communities they serve", time: "30 min" },
+      { text: "Reflective writing: How might your home institution's community context shape the purpose questions worth asking?", time: "15 min" },
+      { text: "Introduction to culturally responsive research design principles", time: "20 min" },
+      { text: "'Whose Study Is This?' Protocol — Fellows apply a structured four-lens critique (sample, measures, context, assumptions) to three studies, building a shared analytical template for the year.", time: "30 min", isNew: true },
+      { text: "Community-Centered Research Question Charrette — Small groups draft what a study designed by and for their community partner's constituents might look like, then compare across groups.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Sumner, R., Burrow, A. L., & Hill, P. L. (2018). The development of purpose in life among adolescents who experience marginalization",
+      "Selected readings on culturally responsive research methods in developmental science",
+      "Purpose Commons National Purpose Survey co-design documentation (internal)",
+    ],
+    reflectPrompts: [
+      "What assumptions about 'universal' purpose did you find embedded in the studies you examined?",
+      "Whose voice or experience is most conspicuously absent from the literature — and why does that matter for your research?",
+      "What would it mean to let community context reshape your research question, not just your sample?",
+    ],
+    connectsTo: "Clarity about equity gaps in the literature becomes the foundation for asking: what does research partnership look like when designed around those gaps? That is September's opening question.",
+  },
+
+  {
+    id: 'sep', month: 'September', domain: 'translational', inPerson: false,
+    title: 'Translational Research Methods and Community-Based Design',
+    inquiry: "What does it mean to study purpose with communities rather than on them?",
+    before: "Listen to or read one practitioner account of a research partnership gone well — and one that didn't. Come prepared to discuss: what made the difference, and what does that mean for how you want to work?",
+    after: "Draft your researcher-practitioner partnership philosophy: a one-page statement of how you intend to show up in community partnerships, what you will offer, and what you will genuinely be willing to learn. Share with your assigned mentor.",
+    description: "This session provides fellows with a rigorous introduction to translational research methods — the scientific and relational practices that allow academic knowledge to move into and be shaped by real-world contexts. Fellows learn frameworks for community-based participatory research, examine the continuum from basic to applied science, and begin developing their own researcher-practitioner partnership philosophy.",
+    goals: [
+      "Distinguish between basic, applied, and translational research and articulate the value and demands of each",
+      "Understand core principles of CBPR and how they apply to purpose science",
+      "Identify the relational competencies — trust-building, communication across difference, navigating power — required for effective community partnerships",
+      "Begin drafting a personal researcher-practitioner partnership philosophy statement",
+    ],
+    activities: [
+      { text: "BCTR-led workshop: Introduction to the translational research continuum and community-engaged research frameworks", time: "30 min" },
+      { text: "Case study analysis: Two real-world examples of community-engaged research in youth development — one successful, one that encountered significant challenges", time: "25 min" },
+      { text: "Dyadic reflection with assigned Lab of Labs mentor: What does your current scholarship look like on the translational continuum, and where do you want it to go?", time: "20 min" },
+      { text: "Introduction to the co-design process used by Purpose Commons Design Teams", time: "15 min" },
+      { text: "Partnership Values Inventory — Fellows complete a self-assessment ranking their priorities in partnership work (speed vs. depth, control vs. co-ownership) and discuss how those priorities align — or create tension — with community norms.", time: "20 min", isNew: true },
+      { text: "Power Mapping Exercise — Using a structured diagram, fellows map themselves in a hypothetical community-university partnership, identifying where authority concentrates and how to distribute it intentionally.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Israel, B. A., et al. (1998). Review of community-based research: Assessing partnership approaches to improve public health",
+      "BCTR Translational Research Framework documentation (internal)",
+      "Selected readings on research-practice partnerships in education and youth development",
+    ],
+    reflectPrompts: [
+      "Where do you sit on the translational continuum right now — and where do you want to be by the end of the fellowship year?",
+      "What values or habits from your academic training might create friction in community partnership? How will you manage that?",
+      "What would you need to genuinely learn from a community partner, not just learn about?",
+    ],
+    connectsTo: "Knowing how to partner with communities is half the work. The other half is knowing how to communicate what you learn there — in language different audiences can act on. That is October's focus.",
+  },
+
+  {
+    id: 'oct', month: 'October', domain: 'translational', inPerson: false,
+    title: 'Communicating Across Boundaries: Writing, Speaking, and Translating Science',
+    inquiry: "What makes knowledge about purpose usable — and for whom?",
+    before: "Find one example of purpose science research communicated effectively to a non-academic audience. Analyze what makes it work: what was translated, what was preserved, and what — if anything — was lost?",
+    after: "Draft a one-page research brief on your emerging project, written for a YSO program director with no social science background. Have a colleague or community partner read it and give you honest feedback before November's convening.",
+    description: "Translational researchers must be multilingual in a professional sense — able to write for peer-reviewed journals, speak to practitioners in plain language, and communicate findings to youth, families, and policymakers. This session builds those communication competencies directly, with particular attention to skills that are rarely taught in doctoral programs but are essential for the kind of scholarship this fellowship cultivates.",
+    goals: [
+      "Develop practical skills for writing about purpose science for non-academic audiences",
+      "Practice translating research findings into actionable recommendations for youth-serving organizations",
+      "Understand how to build a public scholarship presence that extends the reach of purpose science",
+      "Prepare for the November Community Engagement Intensive by developing a clear, accessible summary of your emerging research direction",
+    ],
+    activities: [
+      { text: "Writing workshop: Draft a 300-word plain-language summary of a purpose science finding and receive structured peer feedback", time: "25 min" },
+      { text: "Guest practitioner session: A YSO leader discusses what they actually need from researchers — what's useful, what isn't, and how communication style affects trust", time: "25 min" },
+      { text: "Practice presentation: Fellows deliver a 5-minute accessible overview of their research interests to a simulated practitioner audience", time: "30 min" },
+      { text: "Pre-Intensive preparation: Fellows refine their research summaries and develop 2–3 discussion questions for YSO partners", time: "15 min" },
+      { text: "The Multilingual Translation Challenge — Translate the same research finding into three forms: a 280-character social post, a YSO staff brief (one paragraph), and a 30-second parent explanation. Compare what survived each translation.", time: "25 min", isNew: true },
+      { text: "Research Communication Audit — Bring one page of your own academic writing and annotate what would need to change (vocabulary, framing, structure) for a non-academic practitioner audience. Generates a personal translation checklist.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Selected readings on public scholarship and researcher communication",
+      "Examples of effective research-to-practice briefs from the BCTR and Purpose Commons archives",
+    ],
+    reflectPrompts: [
+      "What do you lose — scientifically or intellectually — in the act of translation? Is that loss acceptable? Necessary?",
+      "Who is the hardest audience for you to communicate with effectively — and what does that reveal?",
+      "What would it mean for your scholarship to be genuinely useful to the communities you study?",
+    ],
+    connectsTo: "These communication skills will be tested immediately at the November Community Engagement Intensive. Arrive ready to use them in real partnership conversations.",
+  },
+
+  {
+    id: 'nov', month: 'November', domain: 'translational', inPerson: true,
+    title: 'Community Engagement Intensive',
+    inquiry: "What questions are worth pursuing when researchers and communities decide together?",
+    before: "Review the Community Fellows' refined research question summaries (distributed in advance). For each, write one sentence on what excites you scientifically and one sentence on what you might need to learn or do differently to pursue it well.",
+    after: "Within two weeks of the convening, send a personal follow-up to at least one YSO partner you met. Reflect in the cohort forum: what did you commit to, and what will it require of you?",
+    description: "November's in-person Community Engagement Intensive brings Research Fellows together with Community Fellows, additional researchers, youth, and YSO leaders for a multi-day immersive convening. Fellows present their collaborative and individual research projects, receive feedback from the broader network, and deepen the researcher-practitioner relationships that will sustain their work beyond the fellowship year.",
+    goals: [
+      "Share early-stage research projects and receive substantive feedback from researchers, practitioners, and youth",
+      "Deepen relationships with Community Fellows and YSO partners from the Purpose Commons network",
+      "Identify emerging themes in the purpose science-practice ecosystem that may inform future research directions",
+      "Develop or refine co-design agreements with community partners for ongoing research collaboration",
+    ],
+    activities: [
+      { text: "Research project presentations with structured feedback from mixed researcher-practitioner-youth panels", time: "Varies" },
+      { text: "Facilitated cross-track dialogue: What are Community Fellows learning that Research Fellows should know? And vice versa?", time: "45 min" },
+      { text: "YSO partnership development sessions: Fellows meet with potential and current community partners to advance formal agreements", time: "60 min" },
+      { text: "Network-wide theme identification: Participants collectively surface emerging questions for future fellowship cohorts and the broader field", time: "30 min" },
+      { text: "Asset Mapping in Cross-Track Pairs — Research and Community Fellows partner and complete the same structured asset map. They then compare: what unique knowledge, relationships, and access does each bring that the other does not?", time: "30 min", isNew: true },
+      { text: "Commitment Letter Draft — Draft a brief formal letter of intent to one YSO partner, specifying one concrete collaboration offer, a realistic timeline, and what you are asking in return. Makes partnership intentions concrete and accountable.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Pre-reading: Community Fellows' refined research question summaries (distributed in advance of the convening)",
+    ],
+    reflectPrompts: [
+      "What surprised you most in hearing how community partners and youth talk about purpose?",
+      "What commitment did you make at the convening — and what will it actually require of you to keep it?",
+      "What did you learn from a Community Fellow that you couldn't have learned from a peer in your discipline?",
+    ],
+    connectsTo: "The questions that emerge in community partnership are not just research questions — they are the foundation of a fundable agenda. December begins that work.",
+  },
+
+  {
+    id: 'dec', month: 'December', domain: 'grant', inPerson: false,
+    title: 'Grant Development I: Landscape, Strategy, and the Fundable Question',
+    inquiry: "What makes a research question fundable — and what makes it worth funding?",
+    before: "Read one funded grant abstract in purpose science or a closely adjacent field. Identify the moves the writer makes: how is the problem framed, how is significance established, and how is the question positioned as both important and answerable?",
+    after: "Draft your specific aims page or project summary and share it with your Lab of Labs mentor before January's session. In your cover note, identify the one thing you are most uncertain about and the one thing you believe most strongly.",
+    description: "The first of two dedicated grant development sessions focuses on the strategic dimensions of research funding: how to read the funding landscape, how to identify alignment between a funder's priorities and your research questions, and how to articulate a research vision that is both scientifically compelling and fundable. Fellows begin developing the conceptual architecture of a grant proposal, grounded in a question co-developed with their community partner.",
+    goals: [
+      "Navigate the purpose science funding landscape, including federal, foundation, and private sources",
+      "Identify 2–3 viable funding opportunities aligned with your emerging research agenda",
+      "Understand the anatomy of a competitive grant proposal and what reviewers look for",
+      "Draft a preliminary specific aims or project summary that integrates a community-sourced question",
+    ],
+    activities: [
+      { text: "Funding landscape workshop: Survey NIH, NSF, private foundation, and purpose-specific opportunities with guidance from PSiX grant development staff", time: "25 min" },
+      { text: "Funder analysis exercise: Select one funding opportunity and analyze its priorities, review criteria, and fit with your research direction", time: "20 min" },
+      { text: "Aims drafting workshop: With mentor feedback, draft a preliminary specific aims page or project summary", time: "30 min" },
+      { text: "Peer review exercise: Exchange drafts and provide structured critique using a simplified reviewer rubric", time: "20 min" },
+      { text: "Funder Persona Role-Play — Fellows are assigned distinct funder personas (NIH study section member, family foundation officer, purpose-specific funder) and evaluate each other's aims from that perspective. Surfaces how framing shifts based on audience.", time: "25 min", isNew: true },
+      { text: "Grant Autopsy — Fellows examine a sanitized declined proposal and diagnose reasons for non-funding using a structured protocol. Normalizes revision and builds critical analytical skills.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Selected successful grant abstracts from purpose science and adjacent fields (provided by PSiX)",
+      "NIH and foundation guidance on proposal writing for early-career researchers",
+      "Purpose Commons funding landscape brief (internal)",
+    ],
+    reflectPrompts: [
+      "What is the difference between the question you most want to ask and the question you believe a funder will fund? How will you navigate that?",
+      "What makes your community partnership a scientific asset, not just an ethical commitment? How does your aims page reflect that?",
+      "What would it mean to build a grant pipeline, not just write one proposal?",
+    ],
+    connectsTo: "A fundable question is only as strong as the method behind it. January will push you to interrogate the design choices embedded in your specific aims.",
+  },
+
+  {
+    id: 'jan', month: 'January', domain: 'content', inPerson: false,
+    title: 'Research Design, Measurement, and Rigor in Purpose Science',
+    inquiry: "How do our design choices shape what we can — and cannot — know about purpose?",
+    before: "Select a purpose science study and write a one-page methodological critique: what could this design reveal, and what did its choices foreclose? What would you have done differently, and why?",
+    after: "Revisit your emerging research project and write a one-page design rationale: why this method, for this question, with this community? Submit to your mentor as a living document to return to in April.",
+    description: "This methodologically focused session deepens fellows' technical competency in purpose science research design. Fellows examine the range of methods used in the field — from survey-based cross-sectional designs to longitudinal, experimental, and qualitative approaches — and explore how to select and justify design choices in the context of community-engaged research. Special attention is given to measurement and instrument validity across diverse populations.",
+    goals: [
+      "Evaluate the methodological strengths and limitations of major research designs used in purpose science",
+      "Critically assess the most widely used purpose measurement instruments and their applicability across populations",
+      "Understand how community partnership contexts shape and constrain research design choices",
+      "Apply design principles to your own developing research project, with attention to rigor and feasibility",
+    ],
+    activities: [
+      { text: "Methodological deep dive: Select and present a purpose science study, analyzing its design choices and what those choices allow and foreclose", time: "30 min" },
+      { text: "Measurement workshop: Hands-on review of the Youth Purpose Survey, Claremont Purpose Scale, and other widely used instruments — what do they measure well, and for whom?", time: "25 min" },
+      { text: "Research design consultation with assigned Lab of Labs mentor: Applying methodological principles to your own project", time: "20 min" },
+      { text: "Community partner check-in: How does your research design fit the organizational context and timeline of your YSO partner?", time: "15 min" },
+      { text: "Method Speed Dating — Rotate through five method stations (survey, interview, longitudinal, experimental, CBPR) and apply each to the same research question for 5 minutes per station. Surfaces hidden methodological assumptions.", time: "30 min", isNew: true },
+      { text: "Measure Adaptation Workshop — Take a validated purpose scale and adapt it for a specific community (e.g., rural youth, English Language Learners). What changes? What breaks? What requires co-design with community?", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Bronk, K. C. (2011). The role of purpose in life in healthy identity formation: A grounded model",
+      "Selected psychometric studies on purpose measurement instruments",
+      "Readings on mixed-methods and qualitative approaches in community-engaged developmental research",
+    ],
+    reflectPrompts: [
+      "What does your choice of method assume about where purpose 'lives' — in the person, the context, the relationship?",
+      "What is the riskiest design choice in your current project — and what makes it worth that risk?",
+      "How does your community partner's reality constrain your ideal design? How have you responded to that constraint?",
+    ],
+    connectsTo: "The design rationale you write this month is the document you will bring to the February Mid-Year Convening for honest assessment.",
+  },
+
+  {
+    id: 'feb', month: 'February', domain: 'grant', inPerson: true,
+    title: 'Research Fellow Mid-Year Convening',
+    inquiry: "What is working — and what needs to change?",
+    before: "Complete a mid-year self-assessment against your individualized learning plan. Identify one thing you are proud of, one thing that has been harder than expected, and one specific ask you have of the group or your mentors.",
+    after: "Update your individualized learning plan based on mid-year feedback. Share with PSiX staff within two weeks.",
+    description: "The February Mid-Year Convening is a dedicated checkpoint for Research Fellows — a moment to step back, assess progress, recalibrate learning plans, and workshop grant proposals in a structured peer and mentor environment. This convening is explicitly designed as a feedback and iteration space, not a showcase. Fellows are expected to bring works-in-progress and genuine questions.",
+    goals: [
+      "Assess progress against individualized learning plan goals and identify areas requiring additional support",
+      "Receive structured feedback on developing grant proposals from Lab of Labs mentors and peers",
+      "Recalibrate research timelines and community partnership plans for the second half of the fellowship year",
+      "Build cohort trust and peer support structures that extend beyond the formal fellowship year",
+    ],
+    activities: [
+      { text: "Grant proposal workshop: Fellows present developing proposals; structured feedback using a reviewer rubric from Lab of Labs mentors", time: "60 min" },
+      { text: "Learning plan review: Individual check-ins with PSiX staff to assess progress and adjust goals for the remainder of the year", time: "30 min" },
+      { text: "Peer consultation circles: Small groups workshop shared challenges — institutional resistance, partnership friction, methodology questions", time: "40 min" },
+      { text: "Field-building dialogue: What does this cohort want to contribute to purpose science, and how does this fellowship get them there?", time: "30 min" },
+      { text: "The Honest Dashboard — Create a three-color (green/yellow/red) visual of your key fellowship milestones and share openly. Normalizes struggle, makes support needs visible, and creates permission for honest conversation.", time: "20 min", isNew: true },
+      { text: "Revised Success Criteria — Revisit success criteria from your original learning plan and renegotiate any that no longer fit the reality of your work. Distinguishes growth from original intentions.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Fellows' own draft grant materials (peer review preparation)",
+      "BCTR reflective practice framework documentation (internal)",
+    ],
+    reflectPrompts: [
+      "What has been genuinely harder than you expected — and what does that tell you about what you still need to learn?",
+      "What is the most important thing you would tell yourself at the beginning of the fellowship year?",
+      "What specific support do you need in the second half — and who will you ask for it?",
+    ],
+    connectsTo: "Research rigor is necessary but not sufficient. The Mid-Year Convening makes clear that where you work matters as much as how you work. March turns to the institutional terrain.",
+  },
+
+  {
+    id: 'mar', month: 'March', domain: 'translational', inPerson: false,
+    title: 'Institutional Navigation: Building a Purpose Science Program at Your Home Institution',
+    inquiry: "What is possible within my institution — and how might I expand those possibilities?",
+    before: "Draw a simple map of your institution: who are the people, structures, and norms that shape what you can do? Mark where purpose science work currently fits — and where you want it to fit.",
+    after: "Share your 12-month institutional action plan with one trusted colleague at your home institution. Note their reaction: what encouraged them, what surprised them, what raised concerns? Bring those observations to April's session.",
+    description: "This session addresses one of the most practical and underestimated challenges facing early-career faculty: navigating the institutional terrain of their own university. Building a purpose science research program requires understanding promotion and tenure structures, cultivating internal champions, managing teaching loads, and making the case for community-engaged scholarship to colleagues who may be skeptical.",
+    goals: [
+      "Map the institutional landscape at your home university — who are the allies, the skeptics, and the gatekeepers?",
+      "Understand how to make the case for community-engaged scholarship within traditional academic evaluation frameworks",
+      "Develop a personalized institutional action plan for the year following the fellowship",
+      "Build peer support structures with cohort members facing similar institutional contexts",
+    ],
+    activities: [
+      { text: "Institutional mapping exercise: Diagram the key relationships, structures, and decision points relevant to building a purpose science program at your home institution", time: "25 min" },
+      { text: "Case studies: Senior researchers share their experiences navigating institutional resistance and support for community-engaged scholarship", time: "25 min" },
+      { text: "Action planning workshop: Draft a 12-month institutional action plan, reviewed by PSiX staff and mentors", time: "30 min" },
+      { text: "Peer consultation: Fellows with similar institutional contexts workshop shared strategies", time: "20 min" },
+      { text: "Ally Interview Debrief — Between sessions, conduct a 20-minute structured conversation with a senior colleague about how community-engaged scholarship is perceived at your institution. Session opens with cross-cohort debrief of findings.", time: "20 min", isNew: true },
+      { text: "The Skeptic's Pitch — Practice a 3-minute case for purpose science and community-engaged scholarship to a resistant colleague, with peers playing the skeptic role. Builds persuasive fluency and resilience across disciplinary difference.", time: "25 min", isNew: true },
+    ],
+    readings: [
+      "Selected readings on tenure and promotion for community-engaged scholars",
+      "Boyer, E. L. (1996). The scholarship of engagement",
+      "PSiX institutional navigation brief (internal)",
+    ],
+    reflectPrompts: [
+      "Who at your institution has the most power to help your purpose science work — and do they know you well enough to advocate for you?",
+      "What is the most significant institutional constraint you face, and what is your strategy for navigating it?",
+      "What would you need to do or demonstrate in the next 12 months to make community-engaged scholarship legible as rigorous scholarship in your context?",
+    ],
+    connectsTo: "Your institutional action plan and your grant proposal are not separate projects — they are the same argument addressed to different audiences. April brings both together.",
+  },
+
+  {
+    id: 'apr', month: 'April', domain: 'grant', inPerson: false,
+    title: 'Grant Development II: Writing, Revising, and Submitting',
+    inquiry: "What does it take to move from idea to compelling proposal — and what does that process reveal about what you actually believe?",
+    before: "Circulate your near-complete grant proposal to your cohort peers and mentor at least one week before the session. In your cover note, identify the section you are least confident about and the central argument you most want to pressure-test.",
+    after: "Revise and finalize your grant proposal incorporating workshop feedback. Identify your submission target and submit — or commit to a submission date — within 60 days of the session.",
+    description: "The second grant development session shifts from strategy to craft. Fellows bring substantially developed proposals and work through the writing, revision, and submission process with intensive peer and mentor support. The session addresses the specific writing demands of grant proposals — clarity of argument, specificity of design, responsiveness to reviewer concerns — and prepares fellows to submit a competitive proposal within or immediately following the fellowship year.",
+    goals: [
+      "Produce a substantially complete, reviewer-ready grant proposal in purpose science",
+      "Develop skills in responding to reviewer feedback and revising proposals for resubmission",
+      "Understand the administrative and institutional requirements for grant submission at your home institution",
+      "Build a sustainable grant development practice — not just one proposal, but a pipeline",
+    ],
+    activities: [
+      { text: "Full proposal workshop: Fellows circulate near-complete proposals in advance; session devoted to line-by-line feedback from mentors and peers", time: "60 min" },
+      { text: "Revision sprint: Focused time revising based on workshop feedback with real-time support available", time: "25 min" },
+      { text: "Submission preparation: PSiX grant development staff walk fellows through institutional submission requirements, IRB considerations, and budget development", time: "20 min" },
+      { text: "Pipeline planning: Identify 2–3 additional funding opportunities and develop a 12-month submission calendar", time: "15 min" },
+      { text: "Simulated Panel Review — Form mock study sections and score each other's proposals using an actual NIH or foundation review rubric. Debrief from both sides of the table: what did it feel like to review, and what did that reveal about your own proposal?", time: "30 min", isNew: true },
+      { text: "Resubmission Resilience Memo — Draft a 'response to anticipated reviewer concerns' memo for your own proposal, pre-empting likely critiques. Builds strategic thinking and normalizes revision as part of the process.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Fellows' own grant proposals (peer review preparation)",
+      "Selected readings on grant writing craft and common reviewer critiques",
+      "NIH review criteria guidance and foundation RFP examples",
+    ],
+    reflectPrompts: [
+      "What central claim are you making in this proposal — and do you genuinely believe it?",
+      "What is the most likely reason a reviewer would decline your proposal? How have you addressed that in the revision?",
+      "What does it mean to build a grant pipeline, not just write one proposal? What is your next submission after this one?",
+    ],
+    connectsTo: "The grant you are drafting is the research program you want to teach. May's session will ask you to make that connection explicit — and to begin building the course that carries your scholarship forward.",
+  },
+
+  {
+    id: 'may', month: 'May', domain: 'teaching', inPerson: false,
+    title: 'Course Design and Teaching Purpose Science',
+    inquiry: "How can I teach purpose in a way that enables others to build — not just understand?",
+    before: "Think of a course you took that changed how you think — not just what you know. What did the instructor do? How was it designed? Write a paragraph on what you want to carry forward into your own teaching of purpose science.",
+    after: "Finalize your capstone portfolio — research plan, community partnership documentation, grant proposal, institutional action plan, and course syllabus — in preparation for the June Culminating Symposium. Share a draft with your mentor before the symposium.",
+    description: "The final monthly session is devoted to the teaching mission — the downstream multiplier that distinguishes this fellowship from others. Fellows finalize their purpose science course syllabus or module, practice teaching core concepts to peer audiences, and develop strategies for getting new courses approved at their home institutions. This session also serves as capstone preparation.",
+    goals: [
+      "Complete a full, implementation-ready syllabus or course module in purpose science for your home institution",
+      "Develop and practice teaching at least one core purpose science concept to a non-specialist audience",
+      "Identify the pathway to course approval and implementation at your home institution",
+      "Synthesize the year's learning in preparation for the Culminating Symposium capstone presentation",
+    ],
+    activities: [
+      { text: "Syllabus workshop: Share draft syllabi; structured peer and mentor feedback on content, sequencing, and pedagogical approach", time: "30 min" },
+      { text: "Teaching demonstration: Each fellow delivers a 10-minute micro-lesson on a purpose science concept; cohort provides feedback using a structured observation protocol", time: "40 min" },
+      { text: "Institutional pathway planning: Map the specific steps required to get your course approved and scheduled at your home institution", time: "20 min" },
+      { text: "Capstone preparation: Develop your Culminating Symposium presentation, integrating research plan, community partnership, grant proposal, and course design into a coherent vision", time: "25 min" },
+      { text: "Purpose Science Teaching Philosophy Statement — Draft a 250-word teaching philosophy specific to purpose science, articulating what you believe students should be able to do — not just know — by the end of your course.", time: "20 min", isNew: true },
+      { text: "Letter to Next Year's Fellow — Write a 300-word letter to an incoming Research Fellow, sharing what you wish you had known at the start and what the fellowship most changed in your thinking, research practice, or sense of yourself as a scholar.", time: "20 min", isNew: true },
+    ],
+    readings: [
+      "Selected readings on course design in the social sciences",
+      "Examples of purpose science syllabi from PSiX network institutions (internal)",
+      "Fink, L. D. (2003). Creating Significant Learning Experiences — selected chapters",
+    ],
+    reflectPrompts: [
+      "What do you believe students should be able to do — not just know — after taking a course in purpose science?",
+      "What is the most important thing you learned this year that you want to teach forward?",
+      "Who will you be as a scholar-practitioner one year from now? What will you be building?",
+    ],
+    connectsTo: "Everything produced this year — research plan, community partnerships, grant proposal, course syllabus — comes together in June. The Culminating Symposium is the first audience for your full vision.",
+  },
+
+  {
+    id: 'jun', month: 'June', domain: 'all', inPerson: true,
+    title: 'Culminating Symposium',
+    inquiry: "What am I now positioned to build next?",
+    before: "Review your individualized learning plan from the start of the year alongside your capstone portfolio. Write a two-page narrative: How have you changed as a scholar and practitioner? What do you now believe that you did not before?",
+    after: "This is the final inquiry — but it is not the last question. The Culminating Symposium marks the beginning of the next phase of your work. Carry your guiding inquiry forward.",
+    description: "The June Culminating Symposium marks the close of the formal fellowship year and the opening of everything the fellowship has been building toward. Fellows present their capstone portfolios — integrating their translational research statement, community partnership documentation, grant proposal, institutional action plan, and course syllabus — to an audience of Lab of Labs researchers, Purpose Commons partners, BCTR colleagues, and invited guests. The symposium is not a defense. It is a demonstration.",
+    goals: [
+      "Present a coherent capstone portfolio integrating all four fellowship domains",
+      "Receive feedback from the broader PSiX network — researchers, practitioners, and community partners — on the work as a whole",
+      "Articulate a clear vision of the scholarship and teaching program you are now positioned to build",
+      "Celebrate one year of rigorous, purposeful, community-grounded work with your cohort",
+    ],
+    activities: [
+      { text: "Capstone portfolio presentations: Research plan, community partnership documentation, grant proposal, institutional action plan, and course syllabus", time: "Varies" },
+      { text: "Structured feedback from Lab of Labs researchers, Purpose Commons partners, and BCTR colleagues", time: "Varies" },
+      { text: "Network reception: Fellows and mentors across cohort years share work and build enduring connections", time: "Open" },
+      { text: "Cohort reflection: What has this year produced — individually and collectively — for the purpose science field?", time: "30 min" },
+    ],
+    readings: [
+      "Fellows' own capstone portfolios (distributed in advance to reviewers)",
+    ],
+    reflectPrompts: [
+      "Looking at the full arc of the year: what question are you leaving with that you didn't arrive with?",
+      "What does your capstone portfolio say about who you are as a scholar? Does it feel true?",
+      "What will you build in the next year that would not have been possible without this fellowship?",
+    ],
+    connectsTo: null,
+  },
+];
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+
+const STORAGE_PREFIX = 'psixJourneyProgress:v2';
+let activeSessionId = 'jul';
+let activeView = 'dashboard';
+
+const PORTFOLIO_ARTIFACTS = [
+  {
+    sessionId: 'jul',
+    label: 'Working definition of purpose',
+    component: 'Conceptual foundation',
+    purpose: 'Names the definition of purpose you are willing to use, critique, and defend in your own work.',
+    prompt: 'Write a concise working definition of purpose and note what it includes, excludes, and makes possible.'
+  },
+  {
+    sessionId: 'aug',
+    label: 'Equity-centered research provocation',
+    component: 'Research question',
+    purpose: 'Identifies a gap in the field that your context, population, or partnership can help the fellowship take seriously.',
+    prompt: 'Frame one literature gap and explain whose experience becomes more visible if the field studies it well.'
+  },
+  {
+    sessionId: 'sep',
+    label: 'Partnership philosophy statement',
+    component: 'Translation stance',
+    purpose: 'Clarifies how you want to work with communities, not only what you want to study in them.',
+    prompt: 'Describe your commitments around trust, power, pace, reciprocity, and shared decision-making.'
+  },
+  {
+    sessionId: 'oct',
+    label: 'Research translation checklist',
+    component: 'Communication practice',
+    purpose: 'Turns your scholarship into language that practitioners, families, youth, and institutional partners can use.',
+    prompt: 'Create a personal checklist for translating one piece of academic writing into public or practitioner-facing language.'
+  },
+  {
+    sessionId: 'nov',
+    label: 'Community partnership commitment letter',
+    component: 'Partnership evidence',
+    purpose: 'Makes one collaboration concrete by naming the offer, ask, timeline, and mutual value.',
+    prompt: 'Draft a brief letter of intent to a current or potential YSO partner.'
+  },
+  {
+    sessionId: 'dec',
+    label: 'Specific aims or project summary draft',
+    component: 'Funding architecture',
+    purpose: 'Begins translating the partnership-sourced question into a fundable scholarly project.',
+    prompt: 'Draft a one-page aims page or project summary and mark the claim you most want feedback on.'
+  },
+  {
+    sessionId: 'jan',
+    label: 'Research design rationale',
+    component: 'Methodological warrant',
+    purpose: 'Explains why this method fits this question, this community, and this stage of the work.',
+    prompt: 'Write a one-page rationale for your proposed method, measures, sample, and partnership constraints.'
+  },
+  {
+    sessionId: 'feb',
+    label: 'Revised learning plan',
+    component: 'Mid-year recalibration',
+    purpose: 'Turns feedback and lived experience into a realistic plan for the second half of the fellowship.',
+    prompt: 'Update your learning plan with revised priorities, support needs, and concrete next steps.'
+  },
+  {
+    sessionId: 'mar',
+    label: 'Institutional action plan',
+    component: 'Local implementation',
+    purpose: 'Maps how the work can survive and grow inside your actual institutional context.',
+    prompt: 'Draft a 12-month action plan naming allies, constraints, decision points, and near-term moves.'
+  },
+  {
+    sessionId: 'apr',
+    label: 'Reviewer-ready grant proposal',
+    component: 'Funding product',
+    purpose: 'Produces the strongest version of the proposal you are prepared to submit or revise into submission.',
+    prompt: 'Revise the proposal using peer, mentor, and reviewer-style feedback.'
+  },
+  {
+    sessionId: 'may',
+    label: 'Purpose science course module',
+    component: 'Teaching product',
+    purpose: 'Builds the course, module, or teaching unit that carries the fellowship work into your classroom.',
+    prompt: 'Finalize a teachable module or syllabus segment with learning goals, sequence, and assignments.'
+  },
+  {
+    sessionId: 'jun',
+    label: 'Capstone portfolio narrative',
+    component: 'Synthesis',
+    purpose: 'Connects the artifacts into a coherent account of the scholar, partner, teacher, and field-builder you are becoming.',
+    prompt: 'Write the narrative that explains what your portfolio demonstrates and what you are positioned to build next.'
+  }
+];
+
+function escapeHTML(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getReadingData(reading) {
+  if (typeof reading === 'object') {
+    return {
+      title: reading.title || reading.text || 'Resource',
+      url: reading.url || '',
+      type: reading.type || 'Reading'
+    };
+  }
+  const match = String(reading).match(/(https?:\/\/[^\s)]+)/);
+  return {
+    title: String(reading).replace(match ? match[0] : '', '').trim(),
+    url: match ? match[0] : '',
+    type: 'Reading'
+  };
+}
+
+function getPortfolioArtifact(session) {
+  const artifact = PORTFOLIO_ARTIFACTS.find(item => item.sessionId === session.id);
+  return artifact || {
+    sessionId: session.id,
+    label: `${session.month} portfolio artifact`,
+    component: 'Portfolio evidence',
+    purpose: 'Captures the work produced during this month.',
+    prompt: session.after
+  };
+}
+
+function getArtifactStatus(artifact) {
+  const session = SESSIONS.find(item => item.id === artifact.sessionId);
+  if (!session) {
+    return { label: 'Pending', key: 'not-started' };
+  }
+  const sessionStatus = getSessionStatus(session);
+  const progress = getSessionProgress(session);
+  if (sessionStatus.key === 'complete') return { label: 'Complete', key: 'complete' };
+  if (sessionStatus.key === 'reflect') return { label: 'Ready to Submit', key: 'ready' };
+  if (progress.complete > 0) return { label: 'In Progress', key: 'in-progress' };
+  return { label: 'Not Started', key: 'not-started' };
+}
+
+function getArtifactStatusClass(status) {
+  return `artifact-${status.key}`;
+}
+
+function getPortfolioStats() {
+  const complete = PORTFOLIO_ARTIFACTS.filter(artifact => getArtifactStatus(artifact).key === 'complete').length;
+  const ready = PORTFOLIO_ARTIFACTS.filter(artifact => getArtifactStatus(artifact).key === 'ready').length;
+  return {
+    complete,
+    ready,
+    total: PORTFOLIO_ARTIFACTS.length,
+    percent: Math.round((complete / PORTFOLIO_ARTIFACTS.length) * 100)
+  };
+}
+
+function renderArtifactCard(artifact, options = {}) {
+  const session = SESSIONS.find(item => item.id === artifact.sessionId);
+  const status = getArtifactStatus(artifact);
+  const isActive = options.activeSessionId && artifact.sessionId === options.activeSessionId;
+  return `
+    <article class="artifact-card ${isActive ? 'active' : ''}">
+      <div class="artifact-topline">
+        <div>
+          <div class="artifact-month">${escapeHTML(session ? session.month : '')}</div>
+        </div>
+        <span class="artifact-status ${getArtifactStatusClass(status)}" data-artifact-status="${escapeHTML(artifact.sessionId)}">${escapeHTML(status.label)}</span>
+      </div>
+      <div class="artifact-title">${escapeHTML(artifact.label)}</div>
+      <div class="artifact-purpose">${escapeHTML(artifact.purpose)}</div>
+      <div class="artifact-meta">
+        <span class="artifact-chip">${escapeHTML(artifact.component)}</span>
+        <span class="artifact-chip">${session ? escapeHTML(DOMAINS[session.domain].label) : 'Portfolio'}</span>
+      </div>
+      <div class="artifact-actions">
+        ${session ? `<button class="artifact-action primary" onclick="goToTask('${session.id}', 'portfolio')">Open Artifact</button>` : ''}
+        <span class="artifact-action pending">Submission Link Pending</span>
+      </div>
+    </article>
+  `;
+}
+
+function renderPortfolioOverview(activeSessionId = '') {
+  const stats = getPortfolioStats();
+  return `
+    <div class="portfolio-overview">
+      <div class="portfolio-overview-title">Your capstone portfolio is built one month at a time.</div>
+      <div class="portfolio-overview-text">Each artifact captures a piece of your fellowship work: conceptual grounding, partnership practice, funding strategy, research design, institutional navigation, teaching, and synthesis.</div>
+      <div class="portfolio-meter">
+        <div class="portfolio-track">
+          <div class="portfolio-fill" style="width:${stats.percent}%"></div>
+        </div>
+        <div class="portfolio-count">${stats.complete}/${stats.total} complete</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderPortfolioGrid(options = {}) {
+  return `
+    <div class="artifact-grid">
+      ${PORTFOLIO_ARTIFACTS.map(artifact => renderArtifactCard(artifact, options)).join('')}
+    </div>
+  `;
+}
+
+function renderCapstoneMap() {
+  const capstonePieces = [
+    { title: 'Research plan', source: 'Definition, research provocation, aims, and design rationale' },
+    { title: 'Community partnership documentation', source: 'Partnership philosophy and commitment letter' },
+    { title: 'Grant proposal', source: 'Specific aims, design rationale, and reviewer-ready proposal' },
+    { title: 'Institutional action plan', source: 'Institutional map and 12-month implementation plan' },
+    { title: 'Course or teaching module', source: 'Teaching philosophy, module, and course pathway' },
+    { title: 'Capstone narrative', source: 'June synthesis across the full fellowship arc' }
+  ];
+  return `
+    <div class="capstone-map">
+      ${capstonePieces.map((piece, index) => `
+        <div class="capstone-row">
+          <div class="capstone-num">${index + 1}</div>
+          <div>
+            <div class="capstone-title">${escapeHTML(piece.title)}</div>
+            <div class="capstone-source">${escapeHTML(piece.source)}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderSessionPortfolio(session) {
+  const artifact = getPortfolioArtifact(session);
+  const status = getArtifactStatus(artifact);
+  return `
+    <div class="portfolio-overview">
+      <div class="portfolio-overview-title">${escapeHTML(artifact.label)}</div>
+      <div class="portfolio-overview-text">${escapeHTML(artifact.purpose)}</div>
+      <div class="artifact-meta" style="margin-top:14px;">
+        <span class="artifact-chip">${escapeHTML(artifact.component)}</span>
+        <span class="artifact-status ${getArtifactStatusClass(status)}" data-artifact-status="${escapeHTML(artifact.sessionId)}">${escapeHTML(status.label)}</span>
+      </div>
+    </div>
+
+    <section class="resource-section">
+      <div class="resource-section-header">
+        <div class="resource-section-title">Artifact Prompt</div>
+        <div class="resource-section-note">${escapeHTML(session.month)}</div>
+      </div>
+      <div class="portfolio-overview-text">${escapeHTML(artifact.prompt)}</div>
+      <div class="artifact-actions">
+        <span class="artifact-action pending">Submission Link Pending</span>
+        <span class="artifact-action pending">View Draft Pending</span>
+      </div>
+    </section>
+
+    <section class="resource-section">
+      <div class="resource-section-header">
+        <div class="resource-section-title">Capstone Contribution</div>
+        <div class="resource-section-note">How this month carries forward</div>
+      </div>
+      ${renderCapstoneMap()}
+    </section>
+  `;
+}
+
+function getResourceGroups(session) {
+  const readings = session.readings.map(reading => {
+    const data = getReadingData(reading);
+    return {
+      title: data.title,
+      type: data.type,
+      status: data.url ? 'Available' : 'Pending',
+      url: data.url,
+      audience: 'Fellows'
+    };
+  });
+
+  return [
+    {
+      title: 'Core Readings',
+      note: 'Complete before the session',
+      items: readings
+    },
+    {
+      title: 'Session Materials',
+      note: 'For live work together',
+      items: [
+        { title: `${session.month} session slide deck`, type: 'Slides', status: 'Pending', url: '', audience: 'Fellows' },
+        { title: `${session.month} working worksheet`, type: 'Worksheet', status: 'Pending', url: '', audience: 'Fellows' },
+        { title: 'Session agenda and activity flow', type: 'Agenda', status: 'Pending', url: '', audience: 'Fellows' }
+      ]
+    },
+    {
+      title: 'Submit or Share',
+      note: 'Where the month becomes evidence',
+      items: [
+        { title: getPortfolioArtifact(session).label, type: 'Artifact', status: 'Pending', url: '', audience: 'Fellows' },
+        { title: `${session.month} reflection post`, type: 'Forum', status: 'Pending', url: '', audience: 'Cohort' },
+        { title: 'Mentor submission folder', type: 'Submission', status: 'Pending', url: '', audience: 'Mentor' }
+      ]
+    },
+    {
+      title: 'Mentor and Support',
+      note: 'Use when you need feedback or orientation',
+      items: [
+        { title: 'Mentor check-in notes', type: 'Mentor', status: 'Pending', url: '', audience: 'Private' },
+        { title: 'Office hours and support channel', type: 'Support', status: 'Pending', url: '', audience: 'Fellows' }
+      ]
+    },
+    {
+      title: 'Optional Deeper Dives',
+      note: 'For fellows who want more',
+      items: [
+        { title: `Additional ${DOMAINS[session.domain].label.toLowerCase()} resources`, type: 'Optional', status: 'Pending', url: '', audience: 'Optional' }
+      ]
+    }
+  ];
+}
+
+function countResources(session) {
+  const groups = getResourceGroups(session);
+  const items = groups.flatMap(group => group.items);
+  return {
+    total: items.length,
+    available: items.filter(item => item.url).length,
+    pending: items.filter(item => !item.url).length
+  };
+}
+
+function renderResourceAction(item) {
+  if (item.url) {
+    return `<a class="resource-action" href="${escapeHTML(item.url)}" target="_blank" rel="noopener">Open</a>`;
+  }
+  return '<span class="resource-action pending">Pending</span>';
+}
+
+function renderResourceGroups(session) {
+  return getResourceGroups(session).map(group => `
+    <section class="resource-section">
+      <div class="resource-section-header">
+        <div class="resource-section-title">${escapeHTML(group.title)}</div>
+        <div class="resource-section-note">${escapeHTML(group.note)}</div>
+      </div>
+      <div class="resource-list">
+        ${group.items.map(item => `
+          <div class="resource-item">
+            <div class="resource-item-main">
+              <div class="resource-item-title">${escapeHTML(item.title)}</div>
+              <div class="resource-item-meta">
+                <span class="resource-chip">${escapeHTML(item.type)}</span>
+                <span class="resource-chip">${escapeHTML(item.status)}</span>
+                <span class="resource-chip">${escapeHTML(item.audience)}</span>
+              </div>
+            </div>
+            ${renderResourceAction(item)}
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+function taskKey(sessionId, type, index) {
+  return `${STORAGE_PREFIX}:${sessionId}:${type}:${index}`;
+}
+
+function isComplete(sessionId, type, index) {
+  return localStorage.getItem(taskKey(sessionId, type, index)) === '1';
+}
+
+function setComplete(sessionId, type, index, complete) {
+  const key = taskKey(sessionId, type, index);
+  if (complete) localStorage.setItem(key, '1');
+  else localStorage.removeItem(key);
+}
+
+function getSessionTasks(session) {
+  return [
+    { type: 'before', index: 0, tab: 'prepare', label: 'Finish the preparation task', text: session.before },
+    ...session.readings.map((reading, index) => {
+      const data = getReadingData(reading);
+      return { type: 'reading', index, tab: 'prepare', label: 'Complete assigned reading', text: data.title };
+    }),
+    ...session.goals.map((goal, index) => ({
+      type: 'goal', index, tab: 'session', label: 'Review learning goal', text: goal
+    })),
+    { type: 'after', index: 0, tab: 'reflect', label: 'Complete the reflection task', text: session.after }
+  ];
+}
+
+function getSessionProgress(session) {
+  const tasks = getSessionTasks(session);
+  const complete = tasks.filter(task => isComplete(session.id, task.type, task.index)).length;
+  return { complete, total: tasks.length, percent: Math.round((complete / tasks.length) * 100) };
+}
+
+function getReadinessItems(session) {
+  const readingsDone = session.readings.every((reading, index) => isComplete(session.id, 'reading', index));
+  const goalsDone = session.goals.every((goal, index) => isComplete(session.id, 'goal', index));
+  const beforeDone = isComplete(session.id, 'before', 0);
+  const afterDone = isComplete(session.id, 'after', 0);
+  const artifact = getPortfolioArtifact(session);
+  const artifactStatus = getArtifactStatus(artifact);
+  return [
+    {
+      kind: 'Do',
+      title: 'Complete the preparation task',
+      detail: session.before,
+      done: beforeDone,
+      ready: false,
+      actionTab: 'prepare'
+    },
+    {
+      kind: 'Read',
+      title: `Finish ${session.readings.length} assigned reading${session.readings.length === 1 ? '' : 's'}`,
+      detail: session.readings.map(reading => getReadingData(reading).title).join('; '),
+      done: readingsDone,
+      ready: beforeDone && !readingsDone,
+      actionTab: 'prepare'
+    },
+    {
+      kind: 'Bring',
+      title: artifact.label,
+      detail: artifact.prompt,
+      done: artifactStatus.key === 'complete',
+      ready: beforeDone && readingsDone && artifactStatus.key !== 'complete',
+      actionTab: 'portfolio'
+    },
+    {
+      kind: 'Join',
+      title: 'Come ready for the live session',
+      detail: `${session.goals.length} learning goals and ${session.activities.length} planned activities anchor this month.`,
+      done: goalsDone,
+      ready: beforeDone && readingsDone && !goalsDone,
+      actionTab: 'session'
+    },
+    {
+      kind: 'Submit',
+      title: 'Complete the reflection task',
+      detail: session.after,
+      done: afterDone,
+      ready: goalsDone && !afterDone,
+      actionTab: 'reflect'
+    }
+  ];
+}
+
+function getReadinessProgress(session) {
+  const items = getReadinessItems(session);
+  const complete = items.filter(item => item.done).length;
+  return {
+    complete,
+    total: items.length,
+    percent: Math.round((complete / items.length) * 100)
+  };
+}
+
+function renderReadinessChecklist(session, options = {}) {
+  const progress = getReadinessProgress(session);
+  const showIntro = options.showIntro !== false;
+  return `
+    <div class="readiness-panel">
+      ${showIntro ? `
+        <div class="readiness-panel-title">Session readiness</div>
+        <div class="readiness-panel-text">Use this as the quick check before ${escapeHTML(session.month)}. It separates what to do, what to read, what to bring, and what to submit after the session.</div>
+      ` : ''}
+      <div class="readiness-progress">
+        <div class="readiness-track">
+          <div class="readiness-fill" style="width:${progress.percent}%"></div>
+        </div>
+        <div class="readiness-count">${progress.complete}/${progress.total} ready</div>
+      </div>
+      <div class="readiness-checklist">
+        ${getReadinessItems(session).map((item, index) => `
+          <div class="readiness-check ${item.done ? 'done' : item.ready ? 'ready' : ''}" data-readiness-session="${session.id}" data-readiness-index="${index}">
+            <div class="readiness-kind">${escapeHTML(item.kind)}</div>
+            <div class="readiness-mark">${item.done ? '✓' : item.ready ? '•' : ''}</div>
+            <div>
+              <div class="readiness-check-title">${escapeHTML(item.title)}</div>
+              <div class="readiness-check-detail">${escapeHTML(item.detail)}</div>
+              <span class="readiness-check-status">${item.done ? 'Done' : item.ready ? 'Ready' : 'Waiting'}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function getOverallProgress() {
+  let complete = 0;
+  let total = 0;
+  SESSIONS.forEach(session => {
+    const progress = getSessionProgress(session);
+    complete += progress.complete;
+    total += progress.total;
+  });
+  return { complete, total, percent: total ? Math.round((complete / total) * 100) : 0 };
+}
+
+function getNextAction(session) {
+  return getSessionTasks(session).find(task => !isComplete(session.id, task.type, task.index));
+}
+
+function getFocusSession() {
+  return SESSIONS.find(session => getSessionStatus(session).key !== 'complete') || SESSIONS[SESSIONS.length - 1];
+}
+
+function getSessionStatus(session) {
+  const prepTasks = getSessionTasks(session).filter(task => task.tab === 'prepare' || task.tab === 'resources');
+  const prepDone = prepTasks.every(task => isComplete(session.id, task.type, task.index));
+  const afterDone = isComplete(session.id, 'after', 0);
+  const progress = getSessionProgress(session);
+  const goalsDone = session.goals.every((goal, index) => isComplete(session.id, 'goal', index));
+  if (afterDone || progress.complete === progress.total) {
+    return {
+      label: 'Complete',
+      key: 'complete',
+      summary: 'This month is wrapped. You can return to it anytime as part of your portfolio thread.'
+    };
+  }
+  if (goalsDone) {
+    return {
+      label: 'Reflection Due',
+      key: 'reflect',
+      summary: 'The session work has moved into synthesis. Finish the reflection so the month can close cleanly.'
+    };
+  }
+  if (prepDone) {
+    return {
+      label: 'Ready for Session',
+      key: 'ready',
+      summary: 'The preparation work is complete. You are ready to participate in the live session.'
+    };
+  }
+  if (progress.complete > 0) {
+    return {
+      label: 'Preparing',
+      key: 'preparing',
+      summary: 'You have started the month. Keep moving through preparation and readings before the session.'
+    };
+  }
+  return {
+    label: 'Not Started',
+    key: 'not-started',
+    summary: 'This month is waiting for you. Begin with the preparation task and assigned readings.'
+  };
+}
+
+function getStatusClass(status) {
+  return `status-${status.key}`;
+}
+
+const SECTION_TABS = ['prepare', 'session', 'reflect', 'portfolio', 'resources'];
+
+function parseRoute() {
+  const hash = (window.location.hash || '#dashboard').replace(/^#/, '');
+  if (!hash || hash === 'dashboard') return { view: 'dashboard' };
+  const parts = hash.split('-');
+  const sessionId = parts[0];
+  const section = parts.slice(1).join('-') || 'overview';
+  const session = SESSIONS.find(item => item.id === sessionId);
+  if (!session) return { view: 'dashboard' };
+  return {
+    view: 'session',
+    sessionId,
+    section: SECTION_TABS.includes(section) ? section : 'overview'
+  };
+}
+
+function setRoute(hash) {
+  const cleanHash = hash.replace(/^#/, '');
+  if (window.location.hash === '#' + cleanHash) {
+    routeFromHash({ behavior: 'smooth' });
+  } else {
+    window.location.hash = cleanHash;
+  }
+}
+
+function goToTask(sessionId, tab) {
+  setRoute(`${sessionId}-${tab}`);
+}
+
+function buildDashboard() {
+  const dashboard = document.getElementById('dashboardPanel');
+  const focus = getFocusSession();
+  const focusProgress = getSessionProgress(focus);
+  const focusStatus = getSessionStatus(focus);
+  const nextAction = getNextAction(focus);
+  const focusReadings = focus.readings.slice(0, 3).map(getReadingData);
+  const portfolioStats = getPortfolioStats();
+
+  dashboard.innerHTML = `
+    <div class="dashboard-hero">
+      <div>
+        <div class="dashboard-eyebrow">Fellowship Home</div>
+        <div class="dashboard-title">Welcome back${fellowName ? ', ' + escapeHTML(fellowName.split(' ')[0]) : ''}.</div>
+        <div class="dashboard-subtitle">Your current focus is <strong>${escapeHTML(focus.month)}</strong>. Prepare for the session, keep track of your readings and reflections, and let the year build toward your capstone portfolio.</div>
+      </div>
+      <div class="dashboard-meter-card">
+        <div class="dashboard-meter-count" id="dashboardMeterCount">0%</div>
+        <div class="dashboard-meter-label">Year Complete</div>
+        <div class="dashboard-track">
+          <div class="dashboard-fill" id="dashboardFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-header">
+            <div class="dashboard-card-title">Current Focus</div>
+            <div class="dashboard-card-note">${focusProgress.complete} of ${focusProgress.total} complete</div>
+          </div>
+          <div class="focus-meta">
+            <span class="focus-pill">${escapeHTML(focus.month)}</span>
+            <span class="focus-pill">${escapeHTML(DOMAINS[focus.domain].label)}</span>
+            <span class="status-pill ${getStatusClass(focusStatus)}">${escapeHTML(focusStatus.label)}</span>
+          </div>
+          <div class="focus-title">${escapeHTML(focus.title)}</div>
+          <div class="status-summary">${escapeHTML(focusStatus.summary)}</div>
+          <div class="focus-inquiry">${escapeHTML(focus.inquiry)}</div>
+          <div class="dashboard-actions">
+            <button class="dashboard-action" onclick="goToTask('${focus.id}', '${nextAction ? nextAction.tab : 'reflect'}')">${nextAction ? 'Continue' : 'Review Month'}</button>
+            <button class="dashboard-action secondary" onclick="showSession('${focus.id}')">Open Full Session</button>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-card-header">
+            <div class="dashboard-card-title">Month Status</div>
+            <div class="dashboard-card-note">Year at a glance</div>
+          </div>
+          <div class="month-status-grid">
+            ${SESSIONS.map(session => {
+              const status = getSessionStatus(session);
+              return `
+                <div class="month-status-row">
+                  <div class="month-status-name">${escapeHTML(session.month)}</div>
+                  <div>
+                    <div class="month-status-title">${escapeHTML(session.title)}</div>
+                    ${session.inPerson ? '<div class="month-status-meta">In-person convening</div>' : ''}
+                  </div>
+                  <span class="status-pill ${getStatusClass(status)}">${escapeHTML(status.label)}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-card-header">
+            <div class="dashboard-card-title">Portfolio Thread</div>
+            <div class="dashboard-card-note">${portfolioStats.complete}/${portfolioStats.total} complete</div>
+          </div>
+          ${renderPortfolioOverview(focus.id)}
+          ${renderPortfolioGrid({ activeSessionId: focus.id })}
+        </div>
+      </div>
+
+      <div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-header">
+            <div class="dashboard-card-title">Quick Access</div>
+          </div>
+          <div class="quick-link-list">
+            <div class="quick-link-item">
+              <div class="quick-link-dot"></div>
+              <button class="dashboard-link-button" onclick="goToTask('${focus.id}', 'prepare')">Preparation and readings</button>
+            </div>
+            <div class="quick-link-item">
+              <div class="quick-link-dot"></div>
+              <button class="dashboard-link-button" onclick="goToTask('${focus.id}', 'reflect')">Reflection prompts</button>
+            </div>
+            ${focusReadings.map(reading => `
+              <div class="quick-link-item">
+                <div class="quick-link-dot"></div>
+                <div>${escapeHTML(reading.title)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-card-header">
+            <div class="dashboard-card-title">Capstone Assembly</div>
+            <div class="dashboard-card-note">Where artifacts lead</div>
+          </div>
+          ${renderCapstoneMap()}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function updateDashboard() {
+  if (!document.getElementById('dashboardPanel')) return;
+  buildDashboard();
+  const overall = getOverallProgress();
+  const fill = document.getElementById('dashboardFill');
+  const count = document.getElementById('dashboardMeterCount');
+  if (fill) fill.style.width = overall.percent + '%';
+  if (count) count.textContent = overall.percent + '%';
+}
+
+function showDashboard() {
+  setRoute('dashboard');
+}
+
+function applyDashboardView() {
+  activeView = 'dashboard';
+  activeSessionId = '';
+  const dashboard = document.getElementById('dashboardPanel');
+  if (dashboard) dashboard.classList.add('active');
+  const dashboardBtn = document.getElementById('dashboardNavBtn');
+  if (dashboardBtn) dashboardBtn.classList.add('active');
+  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
+  document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
+  const topbar = document.getElementById('topbarSession');
+  if (topbar) topbar.textContent = 'Dashboard';
+}
+
+function updateSectionNav(sessionId, section) {
+  const panel = document.getElementById('panel-' + sessionId);
+  if (!panel) return;
+  const activeSection = SECTION_TABS.includes(section) ? section : 'prepare';
+  panel.querySelectorAll('.tab-btn').forEach(link => {
+    link.classList.toggle('active', link.dataset.tab === activeSection);
+  });
+}
+
+function applySessionView(sessionId, section = 'overview') {
+  activeView = 'session';
+  activeSessionId = sessionId;
+  const dashboard = document.getElementById('dashboardPanel');
+  if (dashboard) dashboard.classList.remove('active');
+  const dashboardBtn = document.getElementById('dashboardNavBtn');
+  if (dashboardBtn) dashboardBtn.classList.remove('active');
+  document.querySelectorAll('.session-panel').forEach(panel => panel.classList.remove('active'));
+  const target = document.getElementById('panel-' + sessionId);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.month-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.id === sessionId);
+  });
+  const session = SESSIONS.find(item => item.id === sessionId);
+  const topbar = document.getElementById('topbarSession');
+  if (session && topbar) topbar.textContent = session.month + ' — ' + session.title;
+  updateSectionNav(sessionId, section);
+}
+
+function scrollToRoute(route, behavior = 'smooth') {
+  let target = null;
+  if (route.view === 'dashboard') {
+    target = document.getElementById('dashboardPanel');
+  } else if (route.section === 'overview') {
+    target = document.getElementById('panel-' + route.sessionId);
+  } else {
+    target = document.getElementById(`${route.sessionId}-${route.section}`);
+  }
+  if (target) {
+    target.scrollIntoView({ behavior, block: 'start' });
+    return;
+  }
+  const main = document.querySelector('.main');
+  if (main) main.scrollTo({ top: 0, behavior });
+  window.scrollTo({ top: 0, behavior });
+}
+
+function routeFromHash(options = {}) {
+  const route = parseRoute();
+  const behavior = options.behavior || 'smooth';
+  if (route.view === 'dashboard') {
+    applyDashboardView();
+  } else {
+    applySessionView(route.sessionId, route.section);
+  }
+  updateProgressUI();
+  requestAnimationFrame(() => scrollToRoute(route, behavior));
+  setTimeout(() => scrollToRoute(route, behavior), 120);
+}
+
+function updateProgressUI() {
+  const overall = getOverallProgress();
+  const overviewFill = document.getElementById('overviewFill');
+  const overviewCount = document.getElementById('overviewCount');
+  const overviewMeta = document.getElementById('overviewMeta');
+  const sidebarFill = document.getElementById('sidebarProgressFill');
+  const sidebarText = document.getElementById('sidebarProgressText');
+
+  if (overviewFill) overviewFill.style.width = overall.percent + '%';
+  if (overviewCount) overviewCount.textContent = overall.percent + '%';
+  if (overviewMeta) overviewMeta.textContent = `${overall.complete} of ${overall.total} companion steps complete across the fellowship year.`;
+  if (sidebarFill) sidebarFill.style.width = overall.percent + '%';
+  if (sidebarText) sidebarText.textContent = overall.percent + '%';
+  updateDashboard();
+
+  SESSIONS.forEach(session => {
+    const progress = getSessionProgress(session);
+    const status = getSessionStatus(session);
+    const navBtn = document.querySelector(`.month-btn[data-id="${session.id}"]`);
+    if (navBtn) {
+      navBtn.classList.toggle('complete', status.key === 'complete');
+      navBtn.classList.remove('month-status-not-started', 'month-status-preparing', 'month-status-ready', 'month-status-reflect', 'month-status-complete');
+      navBtn.classList.add(`month-status-${status.key}`);
+      const navProgress = navBtn.querySelector('.month-progress');
+      if (navProgress) navProgress.textContent = `${progress.complete}/${progress.total}`;
+      const navStatus = navBtn.querySelector('.month-status');
+      if (navStatus) navStatus.textContent = status.label;
+    }
+
+    const panel = document.getElementById('panel-' + session.id);
+    if (!panel) return;
+    const fill = panel.querySelector('.session-progress-fill');
+    const text = panel.querySelector('.session-progress-text');
+    const statusPill = panel.querySelector('.session-status-pill');
+    const statusText = panel.querySelector('.session-status-text');
+    if (fill) fill.style.width = progress.percent + '%';
+    if (text) text.textContent = `${progress.complete} of ${progress.total} complete`;
+    if (statusPill) {
+      statusPill.className = `session-status-pill status-pill ${getStatusClass(status)}`;
+      statusPill.textContent = status.label;
+    }
+    if (statusText) statusText.textContent = status.summary;
+
+    const readinessProgress = getReadinessProgress(session);
+    panel.querySelectorAll('.readiness-fill').forEach(el => {
+      el.style.width = readinessProgress.percent + '%';
+    });
+    panel.querySelectorAll('.readiness-count').forEach(el => {
+      el.textContent = `${readinessProgress.complete}/${readinessProgress.total} ready`;
+    });
+    getReadinessItems(session).forEach((item, index) => {
+      panel.querySelectorAll(`[data-readiness-session="${session.id}"][data-readiness-index="${index}"]`).forEach(el => {
+        el.classList.toggle('done', item.done);
+        el.classList.toggle('ready', !item.done && item.ready);
+        const mark = el.querySelector('.readiness-mark');
+        const statusLabel = el.querySelector('.readiness-check-status');
+        if (mark) mark.textContent = item.done ? '✓' : item.ready ? '•' : '';
+        if (statusLabel) statusLabel.textContent = item.done ? 'Done' : item.ready ? 'Ready' : 'Waiting';
+      });
+    });
+
+    document.querySelectorAll(`[data-artifact-status="${session.id}"]`).forEach(el => {
+      const artifact = getPortfolioArtifact(session);
+      const artifactStatus = getArtifactStatus(artifact);
+      el.className = `artifact-status ${getArtifactStatusClass(artifactStatus)}`;
+      el.dataset.artifactStatus = session.id;
+      el.textContent = artifactStatus.label;
+    });
+
+    panel.querySelectorAll('[data-progress-type]').forEach(el => {
+      const type = el.dataset.progressType;
+      const index = Number(el.dataset.progressIndex || 0);
+      const complete = isComplete(session.id, type, index);
+      if (el.matches('input[type="checkbox"]')) el.checked = complete;
+      el.classList.toggle('done', complete);
+      el.classList.toggle('read', complete);
+    });
+
+    const nextAction = getNextAction(session);
+    const nextText = panel.querySelector('.next-action-text');
+    const nextBtn = panel.querySelector('.next-action-btn');
+    if (nextText && nextBtn) {
+      if (nextAction) {
+        nextText.textContent = `${nextAction.label}: ${nextAction.text}`;
+        nextBtn.textContent = nextAction.tab === 'prepare' ? 'Prepare' : nextAction.tab === 'session' ? 'Session' : 'Reflect';
+        nextBtn.onclick = () => goToTask(session.id, nextAction.tab);
+      } else {
+        nextText.textContent = 'This month is complete. You are ready to carry the work forward.';
+        nextBtn.textContent = 'Review';
+        nextBtn.onclick = () => goToTask(session.id, 'reflect');
+      }
+    }
+  });
+}
+
+function buildNav() {
+  const nav = document.getElementById('monthNav');
+  nav.innerHTML = '';
+  SESSIONS.forEach((s, i) => {
+    const d = DOMAINS[s.domain];
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (i === 0 ? ' active' : '');
+    btn.dataset.id = s.id;
+    btn.innerHTML = `
+      <div class="month-dot" style="background:${d.color}"></div>
+      <div class="month-btn-info">
+        <div class="month-name">${s.month}</div>
+        <div class="month-session-title">${s.title}</div>
+        <div class="month-status">Not Started</div>
+      </div>
+      <span class="month-progress">0/0</span>
+      ${s.inPerson ? '<span class="month-inperson">●</span>' : ''}
+    `;
+    btn.onclick = () => showSession(s.id);
+    nav.appendChild(btn);
+  });
+}
+
+function buildSessions() {
+  const wrap = document.getElementById('sessionPanels');
+  wrap.innerHTML = '';
+  SESSIONS.forEach(s => {
+    const d = DOMAINS[s.domain];
+    const panel = document.createElement('div');
+    panel.className = 'session-panel';
+    panel.id = 'panel-' + s.id;
+
+    // Activities HTML
+    const activitiesHTML = s.activities.map((a, i) => `
+      <div class="activity-card">
+        <div class="act-num">${i + 1}</div>
+        <div class="act-body">
+          <div class="act-meta">
+            ${a.time ? `<span class="badge-time">${escapeHTML(a.time)}</span>` : ''}
+          </div>
+          <div class="act-text">${escapeHTML(a.text)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Readings HTML
+    const readingsHTML = s.readings.map((r, i) => {
+      const data = getReadingData(r);
+      return `<div class="reading-row resource-row" onclick="toggleReading(this)"
+        data-progress-type="reading" data-progress-index="${i}"
+        data-sid="${s.id}" data-stitle="${escapeHTML(s.title)}" data-task="${escapeHTML(data.title)}">
+        <span class="reading-bullet read-check">✓</span>
+        <span class="reading-text">${escapeHTML(data.title)}</span>
+        <span class="resource-type">${escapeHTML(data.type)}</span>
+        ${data.url
+          ? `<a class="resource-link" href="${escapeHTML(data.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open</a>`
+          : '<span class="resource-link disabled">Pending</span>'}
+      </div>`;
+    }).join('');
+
+    // Goals HTML
+    const goalsHTML = s.goals.map((g, i) => {
+      return `<div class="goal-item" onclick="toggleGoal(this)"
+        data-progress-type="goal" data-progress-index="${i}"
+        data-sid="${s.id}" data-stitle="${escapeHTML(s.title)}" data-task="${escapeHTML(g)}">
+        <div class="goal-circle">✓</div>
+        <div class="goal-text">${escapeHTML(g)}</div>
+      </div>`;
+    }).join('');
+
+    // Reflect prompts HTML
+    const promptsHTML = (s.reflectPrompts || []).map((p, i) => `
+      <div class="reflect-prompt-item">
+        <div class="prompt-num">${i + 1}</div>
+        <div>${escapeHTML(p)}</div>
+      </div>
+    `).join('');
+
+    // Connects forward
+    const connectsHTML = s.connectsTo ? `
+      <div class="connects-forward">
+        <div class="connects-arrow">→</div>
+        <div class="connects-body">
+          <div class="connects-label">Connects Forward</div>
+          <div class="connects-text">${escapeHTML(s.connectsTo)}</div>
+        </div>
+      </div>
+    ` : '';
+
+    panel.innerHTML = `
+      <div class="session-header">
+        <div class="session-eyebrow">
+          <span class="session-month-label">${s.month}</span>
+          <span class="domain-pill" style="background:${d.color}">${d.label}</span>
+          ${s.inPerson ? '<span class="inperson-badge">In-Person Convening</span>' : ''}
+        </div>
+        <h1 class="session-title">${escapeHTML(s.title)}</h1>
+        <div class="session-status-line">
+          <span class="session-status-pill status-pill status-not-started">Not Started</span>
+          <span class="session-status-text">This month is waiting for you. Begin with the preparation task and assigned readings.</span>
+        </div>
+        <div class="session-progress-row" aria-label="${s.month} progress">
+          <div class="session-progress-text">0 of 0 complete</div>
+          <div class="session-progress-track">
+            <div class="session-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="next-action-card">
+        <div>
+          <div class="next-action-label">Next Step</div>
+          <div class="next-action-text">Loading your next step...</div>
+        </div>
+        <button class="next-action-btn" type="button">Go</button>
+      </div>
+
+      <div class="inquiry-block">
+        <div class="inquiry-label">Guiding Inquiry</div>
+        <div class="inquiry-question">${escapeHTML(s.inquiry)}</div>
+      </div>
+
+      <p class="session-description">${escapeHTML(s.description)}</p>
+
+      <div class="tabs-bar">
+        <a class="tab-btn active" data-tab="prepare" href="#${s.id}-prepare">Prepare</a>
+        <a class="tab-btn" data-tab="session" href="#${s.id}-session">Session</a>
+        <a class="tab-btn" data-tab="reflect" href="#${s.id}-reflect">Reflect</a>
+        <a class="tab-btn" data-tab="portfolio" href="#${s.id}-portfolio">Portfolio</a>
+        <a class="tab-btn" data-tab="resources" href="#${s.id}-resources">Resources</a>
+      </div>
+
+      <!-- PREPARE TAB -->
+      <section class="tab-pane active" id="${s.id}-prepare" data-section="prepare">
+        ${renderReadinessChecklist(s)}
+
+        <div class="phase-card">
+          <div class="phase-card-header">
+            <div class="phase-icon" style="background:${d.color}22; color:${d.color}; font-size:16px;">◆</div>
+            <div class="phase-card-title">Before the Session</div>
+          </div>
+          <div class="phase-task-text">${escapeHTML(s.before)}</div>
+          <div class="task-check-wrap">
+            <input type="checkbox" id="check-before-${s.id}"
+              data-progress-type="before" data-progress-index="0"
+              data-task="${escapeHTML(s.before)}"
+              onchange="toggleTaskCheckbox(this, '${s.id}', 'Before Session')">
+            <label for="check-before-${s.id}">Mark complete when done</label>
+          </div>
+        </div>
+
+        <div class="section-hd" style="margin-top:24px">Assigned Readings</div>
+        <div class="readings-card">
+          ${readingsHTML}
+        </div>
+      </section>
+
+      <!-- SESSION TAB -->
+      <section class="tab-pane" id="${s.id}-session" data-section="session">
+        <div class="section-hd">Learning Goals</div>
+        <div class="goals-list">${goalsHTML}</div>
+
+        <div class="section-hd">Activities</div>
+        <div class="activities-list">${activitiesHTML}</div>
+
+      </section>
+
+      <!-- REFLECT TAB -->
+      <section class="tab-pane" id="${s.id}-reflect" data-section="reflect">
+        <div class="reflect-after-card">
+          <div class="reflect-after-label">After the Session</div>
+          <div class="reflect-after-text">${escapeHTML(s.after)}</div>
+          <div class="task-check-wrap reflect-complete">
+            <input type="checkbox" id="check-after-${s.id}"
+              data-progress-type="after" data-progress-index="0"
+              data-task="${escapeHTML(s.after)}"
+              onchange="toggleTaskCheckbox(this, '${s.id}', 'After Session')">
+            <label for="check-after-${s.id}">Mark reflection complete</label>
+          </div>
+        </div>
+
+        <div class="section-hd">Reflection Prompts</div>
+        <div class="reflect-prompts">${promptsHTML}</div>
+
+        ${connectsHTML}
+      </section>
+
+      <!-- PORTFOLIO TAB -->
+      <section class="tab-pane" id="${s.id}-portfolio" data-section="portfolio">
+        <div class="section-hd">Portfolio Artifact</div>
+        ${renderSessionPortfolio(s)}
+      </section>
+
+      <!-- RESOURCES TAB -->
+      <section class="tab-pane" id="${s.id}-resources" data-section="resources">
+        <div class="section-hd">Resource Hub</div>
+        ${renderResourceGroups(s)}
+      </section>
+    `;
+    wrap.appendChild(panel);
+  });
+}
+
+function showSession(id) {
+  setRoute(id);
+}
+
+function switchTab(btn, sessionId, tab) {
+  setRoute(`${sessionId}-${tab}`);
+}
+
+const TRACKER_URL = 'https://script.google.com/macros/s/AKfycbx3BBaniqMRRoKOi3-19bheviGIVHOT25OCUreNE_XMn2Nq3dljxhbkypYoZUlZPPOEIA/exec';
+
+function trackProgress(sessionId, sessionTitle, taskType, taskText, action) {
+  if (!fellowName) return;
+  fetch(TRACKER_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fellow_name:   fellowName,
+      session_id:    sessionId,
+      session_title: sessionTitle,
+      task_type:     taskType,
+      task_text:     taskText,
+      action:        action
+    })
+  }).catch(() => {});
+}
+
+function toggleGoal(el) {
+  const index = Number(el.dataset.progressIndex || 0);
+  const nextValue = !isComplete(el.dataset.sid, 'goal', index);
+  setComplete(el.dataset.sid, 'goal', index, nextValue);
+  const action = nextValue ? 'checked' : 'unchecked';
+  trackProgress(
+    el.dataset.sid, el.dataset.stitle,
+    'Learning Goal', el.dataset.task, action
+  );
+  updateProgressUI();
+}
+
+function toggleReading(el) {
+  const index = Number(el.dataset.progressIndex || 0);
+  const nextValue = !isComplete(el.dataset.sid, 'reading', index);
+  setComplete(el.dataset.sid, 'reading', index, nextValue);
+  const action = nextValue ? 'checked' : 'unchecked';
+  trackProgress(
+    el.dataset.sid, el.dataset.stitle,
+    'Reading', el.dataset.task, action
+  );
+  updateProgressUI();
+}
+
+function toggleTaskCheckbox(el, sessionId, taskType) {
+  const type = el.dataset.progressType;
+  const index = Number(el.dataset.progressIndex || 0);
+  setComplete(sessionId, type, index, el.checked);
+  const session = SESSIONS.find(s => s.id === sessionId);
+  trackProgress(
+    sessionId,
+    session ? session.title : sessionId,
+    taskType,
+    el.dataset.task || taskType,
+    el.checked ? 'checked' : 'unchecked'
+  );
+  updateProgressUI();
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+// ─── ACCESS GATE LOGIC ──────────────────────────────
+const PASSCODE = 'psixfellows_2026';
+let fellowName = '';
+
+function togglePassVisibility() {
+  const input = document.getElementById('gate-pass-input');
+  const toggle = document.querySelector('.gate-pass-toggle');
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  if (toggle) toggle.textContent = showing ? 'Show' : 'Hide';
+  input.focus();
+}
+
+function gateCheckPass() {
+  const val = document.getElementById('gate-pass-input').value.trim();
+  if (val === PASSCODE) {
+    document.getElementById('gate-step-pass').style.display = 'none';
+    document.getElementById('gate-step-name').style.display = 'block';
+    setTimeout(() => document.getElementById('gate-name-input').focus(), 50);
+  } else {
+    document.getElementById('gate-pass-error').textContent = 'Incorrect passcode. Please try again.';
+    document.getElementById('gate-pass-input').value = '';
+  }
+}
+
+function gateCheckName() {
+  const val = document.getElementById('gate-name-input').value.trim();
+  if (val.length < 2) {
+    document.getElementById('gate-name-error').textContent = 'Please enter your full name.';
+    return;
+  }
+  fellowName = val;
+  // Update topbar greeting
+  const greeting = document.getElementById('fellow-greeting');
+  if (greeting) greeting.textContent = 'Welcome, ' + fellowName.split(' ')[0];
+  // Fade out overlay
+  const overlay = document.getElementById('gate-overlay');
+  overlay.classList.add('fade-out');
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    routeFromHash({ behavior: 'auto' });
+  }, 500);
+}
+
+// Initialize app (runs immediately, hidden until gate clears)
+buildNav();
+buildSessions();
+buildDashboard();
+if (!window.location.hash) {
+  history.replaceState(null, '', '#dashboard');
+}
+window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
+routeFromHash({ behavior: 'auto' });
+</script>
+</body>
+</html>
