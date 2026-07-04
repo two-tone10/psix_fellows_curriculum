@@ -1,5 +1,5 @@
 import { CONFIG } from './config.js';
-import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS, CAPSTONE_COMPONENTS } from './curriculum.js';
+import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS, CAPSTONE_COMPONENTS, DOSSIER_SECTIONS, FUNDING_OPPORTUNITIES } from './curriculum.js';
 import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE } from './samplePortfolio.js';
 import {
   supabaseReady, getSession, onAuthChange, signInWithGoogle, signOut,
@@ -605,9 +605,8 @@ function parseRoute() {
   const hash = (window.location.hash || '#dashboard').replace(/^#/, '');
   if (!hash || hash === 'dashboard') return { view: 'dashboard' };
   if (hash === 'facilitator') return { view: 'facilitator' };
-  if (hash === 'library') return { view: 'library' };
-  if (hash === 'concept-map') return { view: 'conceptmap' };
-  if (hash === 'sample-portfolio') return { view: 'sampleportfolio' };
+  const secondary = SECONDARY_VIEWS.find(v => v.hash === hash);
+  if (secondary) return { view: secondary.key };
   const parts = hash.split('-');
   const sessionId = parts[0];
   const section = parts.slice(1).join('-') || 'overview';
@@ -637,25 +636,24 @@ function showDashboard() {
   setRoute('dashboard');
 }
 
-function showLibrary() {
-  setRoute('library');
+function showSecondaryView(key) {
+  const view = SECONDARY_VIEWS.find(v => v.key === key);
+  if (view) setRoute(view.hash);
 }
 
-function showConceptMap() {
-  setRoute('concept-map');
-}
-
-function showSamplePortfolio() {
-  setRoute('sample-portfolio');
-}
+function showLibrary() { showSecondaryView('library'); }
+function showConceptMap() { showSecondaryView('conceptmap'); }
+function showSamplePortfolio() { showSecondaryView('sampleportfolio'); }
+function showCvDossier() { showSecondaryView('cvdossier'); }
+function showFunding() { showSecondaryView('funding'); }
 
 function scrollToRoute(route, behavior = 'smooth') {
   let target = null;
   if (route.view === 'dashboard') target = document.getElementById('dashboardPanel');
   else if (route.view === 'facilitator') target = null;
-  else if (route.view === 'library') target = document.getElementById('libraryPanel');
-  else if (route.view === 'conceptmap') target = document.getElementById('conceptMapPanel');
-  else if (route.view === 'sampleportfolio') target = document.getElementById('samplePortfolioPanel');
+  else if (SECONDARY_VIEWS.some(v => v.key === route.view)) {
+    target = document.getElementById(SECONDARY_VIEWS.find(v => v.key === route.view).panelId);
+  }
   else if (route.section === 'overview') target = document.getElementById('panel-' + route.sessionId);
   else target = document.getElementById(`${route.sessionId}-${route.section}`);
   if (target) {
@@ -684,12 +682,8 @@ function routeFromHash(options = {}) {
   applyFellowShell();
   if (route.view === 'dashboard') {
     applyDashboardView();
-  } else if (route.view === 'library') {
-    applyLibraryView();
-  } else if (route.view === 'conceptmap') {
-    applyConceptMapView();
-  } else if (route.view === 'sampleportfolio') {
-    applySamplePortfolioView();
+  } else if (SECONDARY_VIEWS.some(v => v.key === route.view)) {
+    applySecondaryView(route.view);
   } else {
     applySessionView(route.sessionId, route.section);
   }
@@ -708,15 +702,21 @@ function applyFellowShell() {
   if (facilitatorShell) facilitatorShell.classList.remove('active');
 }
 
-const SECONDARY_PANELS = [
-  { panelId: 'dashboardPanel', btnId: 'dashboardNavBtn' },
-  { panelId: 'libraryPanel', btnId: 'libraryNavBtn' },
-  { panelId: 'conceptMapPanel', btnId: 'conceptMapNavBtn' },
-  { panelId: 'samplePortfolioPanel', btnId: 'samplePortfolioNavBtn' },
+// Each secondary (non-session, non-dashboard) view registers itself here:
+// key = route.view value, hash = URL hash, panelId/btnId = DOM ids,
+// topbar = topbar label, build = the function that (re)renders the panel.
+const SECONDARY_VIEWS = [
+  { key: 'library', hash: 'library', panelId: 'libraryPanel', btnId: 'libraryNavBtn', topbar: 'Resource Library', build: () => buildLibraryPanel() },
+  { key: 'conceptmap', hash: 'concept-map', panelId: 'conceptMapPanel', btnId: 'conceptMapNavBtn', topbar: 'How Your Portfolio Comes Together', build: () => buildConceptMapPanel() },
+  { key: 'sampleportfolio', hash: 'sample-portfolio', panelId: 'samplePortfolioPanel', btnId: 'samplePortfolioNavBtn', topbar: 'Sample Portfolio (Illustrative)', build: () => buildSamplePortfolioPanel() },
+  { key: 'cvdossier', hash: 'cv-dossier', panelId: 'cvDossierPanel', btnId: 'cvDossierNavBtn', topbar: 'CV & Dossier Tools', build: () => buildCvDossierPanel() },
+  { key: 'funding', hash: 'funding', panelId: 'fundingPanel', btnId: 'fundingNavBtn', topbar: 'Funding Opportunities', build: () => buildFundingPanel() },
 ];
 
 function resetAllPanels() {
-  SECONDARY_PANELS.forEach(({ panelId, btnId }) => {
+  document.getElementById('dashboardPanel')?.classList.remove('active');
+  document.getElementById('dashboardNavBtn')?.classList.remove('active');
+  SECONDARY_VIEWS.forEach(({ panelId, btnId }) => {
     document.getElementById(panelId)?.classList.remove('active');
     document.getElementById(btnId)?.classList.remove('active');
   });
@@ -734,37 +734,17 @@ function applyDashboardView() {
   if (topbar) topbar.textContent = 'Dashboard';
 }
 
-function applyLibraryView() {
-  activeView = 'library';
+function applySecondaryView(key) {
+  const view = SECONDARY_VIEWS.find(v => v.key === key);
+  if (!view) return;
+  activeView = key;
   activeSessionId = '';
   resetAllPanels();
-  document.getElementById('libraryPanel')?.classList.add('active');
-  document.getElementById('libraryNavBtn')?.classList.add('active');
+  document.getElementById(view.panelId)?.classList.add('active');
+  document.getElementById(view.btnId)?.classList.add('active');
   const topbar = document.getElementById('topbarSession');
-  if (topbar) topbar.textContent = 'Resource Library';
-  buildLibraryPanel();
-}
-
-function applyConceptMapView() {
-  activeView = 'conceptmap';
-  activeSessionId = '';
-  resetAllPanels();
-  document.getElementById('conceptMapPanel')?.classList.add('active');
-  document.getElementById('conceptMapNavBtn')?.classList.add('active');
-  const topbar = document.getElementById('topbarSession');
-  if (topbar) topbar.textContent = 'How Your Portfolio Comes Together';
-  buildConceptMapPanel();
-}
-
-function applySamplePortfolioView() {
-  activeView = 'sampleportfolio';
-  activeSessionId = '';
-  resetAllPanels();
-  document.getElementById('samplePortfolioPanel')?.classList.add('active');
-  document.getElementById('samplePortfolioNavBtn')?.classList.add('active');
-  const topbar = document.getElementById('topbarSession');
-  if (topbar) topbar.textContent = 'Sample Portfolio (Illustrative)';
-  buildSamplePortfolioPanel();
+  if (topbar) topbar.textContent = view.topbar;
+  view.build();
 }
 
 function updateSectionNav(sessionId, section) {
@@ -2462,6 +2442,184 @@ function buildSamplePortfolioPanel() {
 }
 
 // ═══════════════════════════════════════════════════════
+// CV & DOSSIER TOOLS
+// ═══════════════════════════════════════════════════════
+function getCvDetails() {
+  const defaults = { cohortYear: '', researchTitle: '', partnerOrg: '', courseTitle: '' };
+  const raw = localStorage.getItem(`${STORAGE_PREFIX}:cvdetails`);
+  if (!raw) return defaults;
+  try {
+    return { ...defaults, ...JSON.parse(raw) };
+  } catch (err) {
+    return defaults;
+  }
+}
+
+function saveCvDetails(details) {
+  localStorage.setItem(`${STORAGE_PREFIX}:cvdetails`, JSON.stringify(details));
+}
+
+function hasArtifactContent(sessionId) {
+  const draft = getArtifactDraft(sessionId);
+  if (!draft) return false;
+  if (draft.format === 'aims') return draft.aims.some(a => (a.text || '').trim()) || (draft.note || '').trim();
+  if (draft.format === 'timeline') return Boolean((draft.allies || '').trim() || (draft.constraints || '').trim() || (draft.moves || '').trim());
+  if (draft.format === 'slides') return draft.slides.some(s => (s.title || '').trim());
+  return Boolean((draft.text || '').trim());
+}
+
+function buildCvLines(details) {
+  const year = details.cohortYear.trim() || '[cohort year]';
+  const researchTitle = details.researchTitle.trim() || '[your research project title]';
+  const partnerOrg = details.partnerOrg.trim() || '[community partner organization]';
+  const courseTitle = details.courseTitle.trim() || '[course/module title]';
+
+  const lines = [
+    { id: 'fellowship', section: 'Honors & Fellowships', text: `Purpose Science & Innovation Exchange (PSiX) Fellow, Purpose Commons, ${year}` },
+  ];
+  if (hasArtifactContent('dec') || hasArtifactContent('apr')) {
+    lines.push({ id: 'grant', section: 'Grants Submitted', text: `"${researchTitle}," developed through the Purpose Science & Innovation Exchange (PSiX) Fellowship, ${year}` });
+  }
+  if (hasArtifactContent('nov')) {
+    lines.push({ id: 'partnership', section: 'Community-Engaged Research', text: `Established community-engaged research partnership with ${partnerOrg}, Purpose Science & Innovation Exchange (PSiX) Fellowship, ${year}` });
+  }
+  if (hasArtifactContent('may')) {
+    lines.push({ id: 'course', section: 'Teaching / Course Development', text: `Designed and developed "${courseTitle}," a purpose science course module, as part of the PSiX Fellowship teaching requirement, ${year}` });
+  }
+  lines.push({ id: 'professional-dev', section: 'Professional Development', text: `Completed year-long fellowship in translational research, community-engaged methods, grant writing, and course design (Purpose Science & Innovation Exchange), Purpose Commons, ${year}` });
+  return lines;
+}
+
+function renderCvLines() {
+  const listEl = document.getElementById('cv-lines-list');
+  if (!listEl) return;
+  const lines = buildCvLines(getCvDetails());
+  listEl.innerHTML = lines.map(l => `
+    <div class="cv-line">
+      <div class="cv-line-body">
+        <div class="cv-line-section">${escapeHTML(l.section)}</div>
+        <div class="cv-line-text">${escapeHTML(l.text)}</div>
+      </div>
+      <button class="cv-line-copy" onclick="copyCvLine(this, '${l.id}')">Copy</button>
+    </div>
+  `).join('');
+}
+
+function handleCvDetailsInput() {
+  saveCvDetails({
+    cohortYear: document.getElementById('cv-year')?.value || '',
+    researchTitle: document.getElementById('cv-research')?.value || '',
+    partnerOrg: document.getElementById('cv-partner')?.value || '',
+    courseTitle: document.getElementById('cv-course')?.value || '',
+  });
+  renderCvLines();
+}
+
+async function copyCvLine(btn, id) {
+  const line = buildCvLines(getCvDetails()).find(l => l.id === id);
+  if (!line) return;
+  try {
+    await navigator.clipboard.writeText(line.text);
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  } catch (err) {
+    // clipboard unavailable — nothing to do
+  }
+}
+
+async function copyAllCvLines() {
+  const lines = buildCvLines(getCvDetails());
+  const statusEl = document.getElementById('cv-copy-status');
+  try {
+    await navigator.clipboard.writeText(lines.map(l => l.text).join('\n'));
+    if (statusEl) {
+      statusEl.textContent = 'Copied all lines to clipboard.';
+      setTimeout(() => { statusEl.textContent = ''; }, 2200);
+    }
+  } catch (err) {
+    if (statusEl) statusEl.textContent = 'Could not copy automatically — select and copy manually.';
+  }
+}
+
+function buildCvDossierPanel() {
+  const panel = document.getElementById('cvDossierPanel');
+  if (!panel) return;
+  const details = getCvDetails();
+  panel.innerHTML = `
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">For Early-Career Faculty</span></div>
+      <h1 class="session-title">CV &amp; Dossier Tools</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:8px;">
+        Turn this year's fellowship work into CV lines and dossier-ready language — the translation work that usually happens the week before a deadline.
+      </p>
+    </div>
+    <section class="resource-section">
+      <div class="resource-section-header">
+        <div class="resource-section-title">CV Line Generator</div>
+        <div class="resource-section-note">Fill in a few details once</div>
+      </div>
+      <div class="cv-form-grid">
+        <div><label class="lib-label">Cohort Year</label><input class="lib-input" id="cv-year" type="text" placeholder="2025–2026" value="${escapeHTML(details.cohortYear)}" oninput="handleCvDetailsInput()"></div>
+        <div><label class="lib-label">Research Project Title</label><input class="lib-input" id="cv-research" type="text" placeholder="Your project's working title" value="${escapeHTML(details.researchTitle)}" oninput="handleCvDetailsInput()"></div>
+        <div><label class="lib-label">Community Partner Org</label><input class="lib-input" id="cv-partner" type="text" placeholder="e.g., a local youth-serving organization" value="${escapeHTML(details.partnerOrg)}" oninput="handleCvDetailsInput()"></div>
+        <div><label class="lib-label">Course / Module Title</label><input class="lib-input" id="cv-course" type="text" placeholder="e.g., your course module's title" value="${escapeHTML(details.courseTitle)}" oninput="handleCvDetailsInput()"></div>
+      </div>
+      <div id="cv-lines-list" class="cv-lines-list"></div>
+      <button class="lib-add-btn" style="margin-top:14px;" onclick="copyAllCvLines()">Copy All Lines</button>
+      <span id="cv-copy-status" class="cv-copy-status"></span>
+    </section>
+    <section class="resource-section">
+      <div class="resource-section-header">
+        <div class="resource-section-title">Tenure Dossier Bridge</div>
+        <div class="resource-section-note">Where each artifact belongs in a standard dossier</div>
+      </div>
+      <div class="dossier-grid">
+        ${DOSSIER_SECTIONS.map(d => {
+          const component = CAPSTONE_COMPONENTS.find(c => c.id === d.componentId);
+          return `
+            <div class="dossier-card">
+              <div class="dossier-card-from">${escapeHTML(component ? component.title : '')}</div>
+              <div class="dossier-card-arrow">↓</div>
+              <div class="dossier-card-to">${escapeHTML(d.dossierSection)}</div>
+              <div class="dossier-card-guidance">${escapeHTML(d.guidance)}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </section>
+  `;
+  renderCvLines();
+}
+
+// ═══════════════════════════════════════════════════════
+// FUNDING OPPORTUNITIES
+// ═══════════════════════════════════════════════════════
+function buildFundingPanel() {
+  const panel = document.getElementById('fundingPanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">Grant Writing</span></div>
+      <h1 class="session-title">Funding Opportunities</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:8px;">
+        A starting list of funders whose priorities commonly align with purpose science and community-engaged developmental research. Always confirm current deadlines and requirements directly with the funder before you rely on anything here.
+      </p>
+    </div>
+    <div class="funding-grid">
+      ${FUNDING_OPPORTUNITIES.map(f => `
+        <div class="funding-card">
+          <div class="funding-card-name">${escapeHTML(f.name)}</div>
+          <div class="funding-card-fit">${escapeHTML(f.fit)}</div>
+          <div class="funding-card-cadence"><em>Cadence:</em> ${escapeHTML(f.cadence)}</div>
+          ${f.link ? `<a class="lib-card-action" href="${escapeHTML(f.link)}" target="_blank" rel="noopener">Visit →</a>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
 // SHELL SCAFFOLDING
 // ═══════════════════════════════════════════════════════
 function renderShell() {
@@ -2488,6 +2646,12 @@ function renderShell() {
           </button>
           <button class="dashboard-btn" id="samplePortfolioNavBtn" onclick="showSamplePortfolio()">
             <span class="dashboard-icon" style="background:var(--tra)"></span><span>Sample Portfolio</span>
+          </button>
+          <button class="dashboard-btn" id="cvDossierNavBtn" onclick="showCvDossier()">
+            <span class="dashboard-icon" style="background:var(--gra)"></span><span>CV &amp; Dossier Tools</span>
+          </button>
+          <button class="dashboard-btn" id="fundingNavBtn" onclick="showFunding()">
+            <span class="dashboard-icon" style="background:var(--all)"></span><span>Funding Opportunities</span>
           </button>
         </div>
         <div class="sidebar-section-label">Fellowship Year</div>
@@ -2523,6 +2687,8 @@ function renderShell() {
           <section class="dashboard-panel" id="libraryPanel" aria-label="Resource library"></section>
           <section class="dashboard-panel" id="conceptMapPanel" aria-label="How your portfolio comes together"></section>
           <section class="dashboard-panel" id="samplePortfolioPanel" aria-label="Sample portfolio"></section>
+          <section class="dashboard-panel" id="cvDossierPanel" aria-label="CV and dossier tools"></section>
+          <section class="dashboard-panel" id="fundingPanel" aria-label="Funding opportunities"></section>
           <div id="sessionPanels"></div>
         </div>
       </main>
@@ -2602,7 +2768,8 @@ async function init() {
 // Expose handlers referenced by inline HTML (module scope isn't global).
 Object.assign(window, {
   showDashboard, showSession, goToTask, switchTab, showLibrary,
-  showConceptMap, showSamplePortfolio, toggleMapChip,
+  showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding,
+  handleCvDetailsInput, copyCvLine, copyAllCvLines,
   toggleGoal, toggleReading, toggleTaskCheckbox,
   togglePassVisibility, gateCheckPass, gateCheckName,
   showFacilitatorGate, showFellowGate, skipSync,

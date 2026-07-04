@@ -537,3 +537,75 @@ export const CAPSTONE_COMPONENTS = [
   },
 ];
 
+export const DOSSIER_SECTIONS = [
+  {
+    componentId: 'research-plan',
+    dossierSection: 'Research Statement',
+    guidance: "Your research statement needs a clear throughline: what you study, why it matters, and what you're positioned to do next. Your definition (July), research question (August), specific aims (December), and design rationale (January) are the raw material for that throughline — most of the intellectual work of a research statement is already sitting in these four artifacts.",
+  },
+  {
+    componentId: 'partnership-documentation',
+    dossierSection: 'Community Engagement / Broader Impacts',
+    guidance: 'Many institutions now have a formal engagement or broader-impacts section — some require it for tenure. Your partnership philosophy (September) and commitment letter (November) are direct evidence of sustained, reciprocal community engagement, not just a single outreach event.',
+  },
+  {
+    componentId: 'grant-proposal',
+    dossierSection: 'Grants & Funding (CV section + Research Statement)',
+    guidance: 'List the proposal itself on your CV under "Grants Submitted" or "Grants Awarded," and use the revision story — what a reviewer flagged, what you changed — as evidence in your research statement of a fundable, field-tested research plan.',
+  },
+  {
+    componentId: 'institutional-action-plan',
+    dossierSection: 'Service Statement',
+    guidance: 'Institutional and departmental service is notoriously hard to document well. Your action plan (March) already names the allies, constraints, and concrete moves — reframe this as your service narrative: what you changed or built inside your institution, not just what committees you sat on.',
+  },
+  {
+    componentId: 'teaching-module',
+    dossierSection: 'Teaching Statement / Teaching Portfolio',
+    guidance: 'Your translation checklist (October) and course module (May) are teaching artifacts, not just fellowship artifacts. Most teaching statements stay vague about pedagogy — yours can point to an actual designed unit with learning goals and assignments.',
+  },
+  {
+    componentId: 'capstone-narrative',
+    dossierSection: 'Cover / Personal Statement',
+    guidance: 'Many dossiers open with a short narrative connecting research, teaching, and service into one account of who you are as a scholar. Your capstone narrative (June) is a first draft of exactly that document — written a year before you actually need it.',
+  },
+];
+
+export const FUNDING_OPPORTUNITIES = [
+  {
+    name: 'NIH R21 (Exploratory/Developmental Research Grant)',
+    fit: 'Early-stage, high-risk/high-reward studies — a good fit for a first study on an understudied population or mechanism.',
+    cadence: 'Standard NIH due dates: Feb 16, Jun 16, Oct 16 each year (check the specific funding opportunity announcement for exact dates).',
+    link: 'https://grants.nih.gov/grants/funding/r21.htm',
+  },
+  {
+    name: 'NIH R01 (Research Project Grant)',
+    fit: 'The standard NIH mechanism for a fully-powered research program — typically pursued after pilot data (e.g., from an R21 or foundation grant).',
+    cadence: 'Standard NIH due dates: Feb 5, Jun 5, Oct 5 (new submissions); check cycle-specific FOAs.',
+    link: 'https://grants.nih.gov/grants/how-to-apply-application-guide/due-dates-and-submission-policies/due-dates.htm',
+  },
+  {
+    name: 'NSF Developmental Sciences / Human Networks & Data Science',
+    fit: 'Basic research on developmental processes, including purpose, identity, and motivation — no clinical/health framing required.',
+    cadence: 'NSF programs typically post target dates or windows annually; check the specific program page each cycle.',
+    link: 'https://www.nsf.gov/funding',
+  },
+  {
+    name: 'William T. Grant Foundation',
+    fit: 'Research on reducing inequality or improving the use of research evidence — strong fit for community-partnered, equity-centered purpose research.',
+    cadence: 'Letters of inquiry typically due in the spring and fall; check the foundation site for the current cycle.',
+    link: 'https://wtgrantfoundation.org/',
+  },
+  {
+    name: 'Spencer Foundation',
+    fit: 'Education research broadly construed — a strong fit for purpose-in-education and youth-development framings.',
+    cadence: 'Small and large research grant programs run on rolling or annual cycles; check current guidelines.',
+    link: 'https://www.spencer.org/',
+  },
+  {
+    name: 'Local/institutional seed grants',
+    fit: "Nearly every university has some form of internal seed funding (office of research, college-level, or center-specific). Often the fastest path to pilot funding, and usually the most winnable given local competition.",
+    cadence: 'Varies by institution — check your office of research.',
+    link: '',
+  },
+];
+

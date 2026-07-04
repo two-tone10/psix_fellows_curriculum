@@ -2204,6 +2204,93 @@ body {
 .artifact-preview:empty { display: none; }
 .artifact-preview { margin-top: 16px; }
 
+/* ═══════════════════════════════════════════════════
+   CV & DOSSIER TOOLS
+════════════════════════════════════════════════════ */
+.cv-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.cv-lines-list { display: grid; gap: 10px; }
+
+.cv-line {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.cv-line-body { flex: 1; min-width: 0; }
+.cv-line-section { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-dk); margin-bottom: 4px; }
+.cv-line-text { font-size: 13.5px; color: var(--text); line-height: 1.5; }
+
+.cv-line-copy {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cv-line-copy:hover { border-color: var(--navy); }
+
+.cv-copy-status { margin-left: 12px; font-size: 12.5px; color: var(--text-lt); font-style: italic; }
+
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.dossier-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.dossier-card-from {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+  background: var(--navy-lt);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.dossier-card-arrow { color: var(--gold); font-size: 14px; margin: 6px 0; }
+.dossier-card-to { font-family: 'EB Garamond', serif; font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.dossier-card-guidance { font-size: 13px; color: var(--text-med); line-height: 1.55; }
+
+/* ═══════════════════════════════════════════════════
+   FUNDING OPPORTUNITIES
+════════════════════════════════════════════════════ */
+.funding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.funding-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.funding-card-name { font-family: 'EB Garamond', serif; font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.funding-card-fit { font-size: 13px; color: var(--text-med); line-height: 1.55; margin-bottom: 10px; }
+.funding-card-cadence { font-size: 12px; color: var(--text-lt); line-height: 1.5; margin-bottom: 12px; }
+
 @media print {
   @page { margin: 0.75in; }
   .sidebar, .topbar { display: none !important; }
