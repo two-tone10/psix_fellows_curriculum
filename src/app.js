@@ -924,17 +924,20 @@ function toggleTaskCheckbox(el, sessionId) {
 // ═══════════════════════════════════════════════════════
 // ACCESS GATE
 // ═══════════════════════════════════════════════════════
+const LOGO_LIGHT = './src/assets/psix-logo-light.png';
+const LOGO_DARK = './src/assets/psix-logo-dark.png';
+
 function gateRoleCopy() {
   if (gateRole === 'facilitator') {
     return {
       eyebrow: 'Purpose Commons · BCTR at Cornell',
-      title: "PSiX Facilitator<br>Dashboard",
+      title: 'Facilitator Dashboard',
       subtitle: 'Fellow progress, session coverage, and live activity',
     };
   }
   return {
     eyebrow: 'Purpose Commons · BCTR at Cornell',
-    title: "PSiX Fellow's<br>Journey Companion",
+    title: "Fellow's Journey Companion",
     subtitle: 'Translational Fellowship in Purpose Science',
   };
 }
@@ -1017,6 +1020,7 @@ function renderGate() {
   overlay.innerHTML = `
     <div class="gate-brand">
       <div class="gate-eyebrow">${copy.eyebrow}</div>
+      <img class="gate-logo" src="${LOGO_LIGHT}" alt="Purpose Science & Innovation Exchange" />
       <div class="gate-title">${copy.title}</div>
       <div class="gate-subtitle">${copy.subtitle}</div>
       <div class="gate-divider"></div>
@@ -1146,7 +1150,7 @@ function buildFacilitatorShell() {
   if (!shell) return;
   shell.innerHTML = `
     <div class="fac-topbar">
-      <div class="fac-topbar-logo">PSIX</div>
+      <img class="fac-topbar-logo-img" src="${LOGO_LIGHT}" alt="Purpose Science & Innovation Exchange" />
       <div class="fac-topbar-sep"></div>
       <div class="fac-topbar-title">Facilitator Dashboard</div>
       <span class="fac-badge">🔒 FACILITATOR ONLY</span>
@@ -1360,8 +1364,9 @@ function renderShell() {
       <aside class="sidebar">
         <div class="sidebar-brand">
           <div class="brand-eyebrow">Research Fellowship</div>
+          <img class="sidebar-logo" src="${LOGO_LIGHT}" alt="Purpose Science & Innovation Exchange" />
           <div class="brand-name">Translational Fellowship in Purpose Science</div>
-          <div class="brand-sub">PSiX · Purpose Commons · BCTR</div>
+          <div class="brand-sub">Purpose Commons · BCTR</div>
         </div>
         <div class="dashboard-nav">
           <button class="dashboard-btn active" id="dashboardNavBtn" onclick="showDashboard()">
