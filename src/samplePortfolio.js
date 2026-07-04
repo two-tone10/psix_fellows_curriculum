@@ -38,7 +38,13 @@ export const SAMPLE_ARTIFACTS = [
   },
   {
     sessionId: 'dec',
-    content: "Specific Aim 1: Characterize how purpose forms among youth transitioning out of foster care in the absence of stable family scaffolding. Specific Aim 2: Identify the peer- and program-based supports that substitute for that scaffolding. Specific Aim 3: Co-design, with Bridgeline youth, a light-touch program component that supports purpose formation during the transition year. The claim I most want feedback on: that 'family scaffolding' can be meaningfully substituted by program-based relationships — the literature is thin here and I'm not certain this claim survives scrutiny.",
+    format: 'aims',
+    content: "The claim I most want feedback on: that 'family scaffolding' can be meaningfully substituted by program-based relationships — the literature is thin here and I'm not certain this claim survives scrutiny.",
+    aims: [
+      { title: 'Aim 1', text: 'Characterize how purpose forms among youth transitioning out of foster care in the absence of stable family scaffolding.' },
+      { title: 'Aim 2', text: 'Identify the peer- and program-based supports that substitute for that scaffolding.' },
+      { title: 'Aim 3', text: 'Co-design, with Bridgeline youth, a light-touch program component that supports purpose formation during the transition year.' },
+    ],
   },
   {
     sessionId: 'jan',
@@ -50,7 +56,12 @@ export const SAMPLE_ARTIFACTS = [
   },
   {
     sessionId: 'mar',
-    content: "Allies: my department chair (research-friendly, but the IRB is unfamiliar with foster-youth-specific consent complexities) and the university's community-engagement office (can co-sign partnership MOUs). Constraint: no existing IRB precedent at my institution for compensating minor co-researchers — this is a 6-8 week timeline risk. Near-term move: meet with the IRB chair in April, before survey fielding, bringing Bridgeline's youth compensation policy as a template.",
+    format: 'timeline',
+    timeline: [
+      { when: 'March', label: 'Name the allies', detail: "Department chair (research-friendly, but IRB unfamiliar with foster-youth consent complexities) and the community-engagement office (can co-sign partnership MOUs)." },
+      { when: 'March–April', label: 'Manage the constraint', detail: 'No existing IRB precedent at my institution for compensating minor co-researchers — a 6–8 week timeline risk.', risk: true },
+      { when: 'April', label: 'Near-term move', detail: "Meet with the IRB chair before survey fielding, bringing Bridgeline's youth compensation policy as a template." },
+    ],
   },
   {
     sessionId: 'apr',
@@ -58,7 +69,14 @@ export const SAMPLE_ARTIFACTS = [
   },
   {
     sessionId: 'may',
-    content: "Module: 'Whose Purpose Gets Studied?' — a three-week undergraduate unit. Week 1: canonical purpose literature and its sampling assumptions. Week 2: guest panel with a youth-serving organization, adapted from my own partnership experience. Week 3: students draft a one-page research provocation identifying a population underrepresented in a construct of their choosing — modeled directly on my own August artifact.",
+    format: 'slides',
+    content: "Module: 'Whose Purpose Gets Studied?' — a three-week undergraduate unit.",
+    slides: [
+      { title: 'Whose Purpose Gets Studied?', bullets: ['A 3-week undergraduate unit', 'Purpose Science Course Module'] },
+      { title: 'Week 1 — The Literature', bullets: ['Canonical purpose literature', "Its sampling assumptions — who's in the studies, who isn't"] },
+      { title: 'Week 2 — The Practitioner View', bullets: ['Guest panel: a youth-serving organization', "Adapted from my own partnership experience"] },
+      { title: 'Week 3 — Your Provocation', bullets: ['Draft a 1-page research provocation', 'Pick a population underrepresented in a construct of your choosing', 'Modeled on my own August artifact'] },
+    ],
   },
 ];
 

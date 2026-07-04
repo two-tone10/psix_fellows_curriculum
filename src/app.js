@@ -4,7 +4,7 @@ import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE } from './sa
 import {
   supabaseReady, getSession, onAuthChange, signInWithGoogle, signOut,
   isFacilitatorEmail, fetchMyProgress, syncProgressEvent,
-  fetchAllProgressForFacilitators,
+  fetchAllProgressForFacilitators, fetchMyArtifacts, syncArtifact,
   fetchMessages, postMessage, updateMessage, deleteMessage, addVote, removeVote,
   fetchResources, addLinkResource, uploadFileResource, deleteResource,
 } from './supabase.js';
@@ -97,6 +97,48 @@ async function pullRemoteProgress() {
   const rows = await fetchMyProgress(currentUserId);
   rows.forEach(row => {
     setLocalOnly(row.session_id, row.task_type, row.task_index, row.action === 'checked');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// ARTIFACT DRAFTS (localStorage cache + optional Supabase sync)
+// ═══════════════════════════════════════════════════════
+function artifactKey(sessionId) {
+  return `${STORAGE_PREFIX}:artifact:${sessionId}`;
+}
+
+function getArtifactDraft(sessionId) {
+  const raw = localStorage.getItem(artifactKey(sessionId));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    return null;
+  }
+}
+
+function saveArtifactDraft(sessionId, data) {
+  localStorage.setItem(artifactKey(sessionId), JSON.stringify(data));
+  if (currentUserId) {
+    const artifact = PORTFOLIO_ARTIFACTS.find(a => a.sessionId === sessionId);
+    syncArtifact({
+      userId: currentUserId,
+      fellowName,
+      fellowEmail: currentUserEmail,
+      sessionId,
+      artifactLabel: artifact ? artifact.label : sessionId,
+      response: JSON.stringify(data),
+    });
+  }
+}
+
+async function pullRemoteArtifacts() {
+  if (!currentUserId) return;
+  const rows = await fetchMyArtifacts(currentUserId);
+  rows.forEach(row => {
+    if (!localStorage.getItem(artifactKey(row.session_id)) && row.response) {
+      localStorage.setItem(artifactKey(row.session_id), row.response);
+    }
   });
 }
 
@@ -205,9 +247,152 @@ function renderCapstoneMap() {
   `;
 }
 
+const _artifactSaveTimers = {};
+
+function collectArtifactFormData(sessionId, format) {
+  if (format === 'aims') {
+    const aims = [0, 1, 2].map(i => ({
+      title: `Aim ${i + 1}`,
+      text: document.getElementById(`artifact-aim-${i}-${sessionId}`)?.value || '',
+    }));
+    const note = document.getElementById(`artifact-aim-note-${sessionId}`)?.value || '';
+    return { format: 'aims', aims, note };
+  }
+  if (format === 'timeline') {
+    return {
+      format: 'timeline',
+      allies: document.getElementById(`artifact-allies-${sessionId}`)?.value || '',
+      constraints: document.getElementById(`artifact-constraints-${sessionId}`)?.value || '',
+      moves: document.getElementById(`artifact-moves-${sessionId}`)?.value || '',
+    };
+  }
+  if (format === 'slides') {
+    const slides = [0, 1, 2, 3].map(i => ({
+      title: document.getElementById(`artifact-slide-title-${i}-${sessionId}`)?.value || '',
+      bullets: document.getElementById(`artifact-slide-bullets-${i}-${sessionId}`)?.value || '',
+    }));
+    return { format: 'slides', slides };
+  }
+  return { format: 'text', text: document.getElementById(`artifact-text-${sessionId}`)?.value || '' };
+}
+
+function renderArtifactPreview(format, data) {
+  if (format === 'aims') {
+    const hasContent = data.aims.some(a => a.text.trim()) || (data.note || '').trim();
+    if (!hasContent) return '';
+    return renderSampleAims({ aims: data.aims, content: data.note });
+  }
+  if (format === 'timeline') {
+    const items = [
+      { when: 'Allies', label: 'Name the allies', detail: data.allies },
+      { when: 'Constraints', label: 'Manage the constraint', detail: data.constraints, risk: true },
+      { when: 'Near-Term', label: 'Near-term moves', detail: data.moves },
+    ].filter(t => (t.detail || '').trim());
+    if (!items.length) return '';
+    return renderSampleTimeline({ timeline: items });
+  }
+  if (format === 'slides') {
+    const slides = data.slides
+      .map(s => ({ title: s.title, bullets: (s.bullets || '').split('\n').map(b => b.trim()).filter(Boolean) }))
+      .filter(s => s.title.trim() || s.bullets.length);
+    if (!slides.length) return '';
+    return renderSampleSlides({ slides });
+  }
+  return '';
+}
+
+function handleArtifactInput(sessionId) {
+  const artifact = PORTFOLIO_ARTIFACTS.find(a => a.sessionId === sessionId);
+  const format = artifact?.format || 'text';
+  const data = collectArtifactFormData(sessionId, format);
+  const previewEl = document.getElementById('artifact-preview-' + sessionId);
+  if (previewEl) previewEl.innerHTML = renderArtifactPreview(format, data);
+  const statusEl = document.getElementById('artifact-status-' + sessionId);
+  if (statusEl) statusEl.textContent = 'Saving…';
+  clearTimeout(_artifactSaveTimers[sessionId]);
+  _artifactSaveTimers[sessionId] = setTimeout(() => {
+    saveArtifactDraft(sessionId, data);
+    if (statusEl) statusEl.textContent = 'Saved';
+  }, 500);
+}
+
+function renderTextEditor(sessionId, artifact, draft) {
+  const text = draft ? draft.text : '';
+  return `
+    <textarea class="artifact-editor-textarea" id="artifact-text-${sessionId}"
+      placeholder="Draft your ${escapeHTML(artifact.label.toLowerCase())} here…"
+      oninput="handleArtifactInput('${sessionId}')">${escapeHTML(text)}</textarea>
+  `;
+}
+
+function renderAimsEditor(sessionId, draft) {
+  const aims = draft && draft.aims ? draft.aims : [
+    { title: 'Aim 1', text: '' }, { title: 'Aim 2', text: '' }, { title: 'Aim 3', text: '' },
+  ];
+  const note = draft ? (draft.note || '') : '';
+  return `
+    <div class="artifact-editor-grid">
+      ${aims.map((a, i) => `
+        <div class="artifact-editor-box">
+          <label class="lib-label">${escapeHTML(a.title)}</label>
+          <textarea class="artifact-editor-textarea small" id="artifact-aim-${i}-${sessionId}"
+            placeholder="What is Aim ${i + 1}?" oninput="handleArtifactInput('${sessionId}')">${escapeHTML(a.text)}</textarea>
+        </div>
+      `).join('')}
+    </div>
+    <label class="lib-label" style="margin-top:12px;display:block;">Claim You Most Want Feedback On</label>
+    <textarea class="artifact-editor-textarea small" id="artifact-aim-note-${sessionId}"
+      placeholder="What are you least sure will survive scrutiny?" oninput="handleArtifactInput('${sessionId}')">${escapeHTML(note)}</textarea>
+  `;
+}
+
+function renderTimelineEditor(sessionId, draft) {
+  const d = draft || {};
+  const fields = [
+    { key: 'allies', label: 'Allies', placeholder: 'Who is already on your side inside your institution?' },
+    { key: 'constraints', label: 'Constraints', placeholder: 'What could slow this down or block it?' },
+    { key: 'moves', label: 'Near-Term Moves', placeholder: 'What will you actually do in the next 4-6 weeks?' },
+  ];
+  return fields.map(f => `
+    <label class="lib-label" style="margin-top:10px;display:block;">${escapeHTML(f.label)}</label>
+    <textarea class="artifact-editor-textarea small" id="artifact-${f.key}-${sessionId}"
+      placeholder="${escapeHTML(f.placeholder)}" oninput="handleArtifactInput('${sessionId}')">${escapeHTML(d[f.key] || '')}</textarea>
+  `).join('');
+}
+
+function renderSlidesEditor(sessionId, draft) {
+  const slides = draft && draft.slides ? draft.slides : [0, 1, 2, 3].map(() => ({ title: '', bullets: '' }));
+  return `
+    <div class="artifact-editor-grid">
+      ${slides.map((s, i) => `
+        <div class="artifact-editor-box">
+          <label class="lib-label">Slide ${i + 1} Title</label>
+          <input class="lib-input" id="artifact-slide-title-${i}-${sessionId}" type="text"
+            value="${escapeHTML(s.title)}" placeholder="Slide ${i + 1} title" oninput="handleArtifactInput('${sessionId}')">
+          <label class="lib-label" style="margin-top:8px;display:block;">Bullets (one per line)</label>
+          <textarea class="artifact-editor-textarea small" id="artifact-slide-bullets-${i}-${sessionId}"
+            placeholder="One idea per line" oninput="handleArtifactInput('${sessionId}')">${escapeHTML(s.bullets)}</textarea>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderArtifactEditor(session, artifact, draft) {
+  const format = artifact.format || 'text';
+  if (format === 'aims') return renderAimsEditor(session.id, draft);
+  if (format === 'timeline') return renderTimelineEditor(session.id, draft);
+  if (format === 'slides') return renderSlidesEditor(session.id, draft);
+  return renderTextEditor(session.id, artifact, draft);
+}
+
 function renderSessionPortfolio(session) {
   const artifact = getPortfolioArtifact(session);
   const status = getArtifactStatus(artifact);
+  const format = artifact.format || 'text';
+  const rawDraft = getArtifactDraft(session.id);
+  const draft = rawDraft && rawDraft.format === format ? rawDraft : null;
+  const initialPreview = draft ? renderArtifactPreview(format, draft) : '';
   return `
     <div class="portfolio-overview">
       <div class="portfolio-overview-title">${escapeHTML(artifact.label)}</div>
@@ -219,14 +404,12 @@ function renderSessionPortfolio(session) {
     </div>
     <section class="resource-section">
       <div class="resource-section-header">
-        <div class="resource-section-title">Artifact Prompt</div>
-        <div class="resource-section-note">${escapeHTML(session.month)}</div>
+        <div class="resource-section-title">Draft Your Artifact</div>
+        <div class="resource-section-note" id="artifact-status-${session.id}">Autosaves as you type</div>
       </div>
-      <div class="portfolio-overview-text">${escapeHTML(artifact.prompt)}</div>
-      <div class="artifact-actions">
-        <span class="artifact-action pending">Submission Link Pending</span>
-        <span class="artifact-action pending">View Draft Pending</span>
-      </div>
+      <div class="portfolio-overview-text" style="margin-bottom:14px;">${escapeHTML(artifact.prompt)}</div>
+      ${renderArtifactEditor(session, artifact, draft)}
+      <div class="artifact-preview" id="artifact-preview-${session.id}">${initialPreview}</div>
     </section>
     <section class="resource-section">
       <div class="resource-section-header">
@@ -655,16 +838,21 @@ function buildDashboard() {
             <div class="dashboard-card-title">Month Status</div>
             <div class="dashboard-card-note">Year at a glance</div>
           </div>
-          <div class="month-status-grid">
+          <div class="month-status-grid" role="img" aria-label="Completion percentage for each month of the fellowship year">
             ${SESSIONS.map(session => {
               const status = getSessionStatus(session);
+              const progress = getSessionProgress(session);
+              const domain = DOMAINS[session.domain];
               return `
-                <div class="month-status-row">
-                  <div class="month-status-name">${escapeHTML(session.month)}</div>
-                  <div>
-                    <div class="month-status-title">${escapeHTML(session.title)}</div>
-                    ${session.inPerson ? '<div class="month-status-meta">In-person convening</div>' : ''}
+                <div class="month-status-row" role="button" tabindex="0"
+                  aria-label="${escapeHTML(session.month)}: ${escapeHTML(session.title)}, ${progress.complete} of ${progress.total} complete, ${status.label}"
+                  title="${progress.complete}/${progress.total} complete (${progress.percent}%)"
+                  onclick="showSession('${session.id}')" onkeydown="if(event.key==='Enter')showSession('${session.id}')">
+                  <div class="month-status-name">
+                    <span class="month-status-dot" style="background:${domain.color}"></span>${escapeHTML(session.month)}
                   </div>
+                  <div class="month-status-title">${escapeHTML(session.title)}${session.inPerson ? ' <span class="month-status-inperson-tag">· In-Person</span>' : ''}</div>
+                  <div class="month-status-track"><div class="month-status-fill" style="width:${progress.percent}%"></div></div>
                   <span class="status-pill ${getStatusClass(status)}">${escapeHTML(status.label)}</span>
                 </div>
               `;
@@ -2178,6 +2366,49 @@ function buildConceptMapPanel() {
 // ═══════════════════════════════════════════════════════
 // SAMPLE PORTFOLIO (illustrative, fictional)
 // ═══════════════════════════════════════════════════════
+function renderSampleAims(sample) {
+  return `
+    <div class="aims-box-row">
+      ${sample.aims.map(a => `
+        <div class="aims-box">
+          <div class="aims-box-title">${escapeHTML(a.title)}</div>
+          <div class="aims-box-text">${escapeHTML(a.text)}</div>
+        </div>
+      `).join('')}
+    </div>
+    ${sample.content ? `<div class="sample-card-note"><em>Reviewer note:</em> ${escapeHTML(sample.content)}</div>` : ''}
+  `;
+}
+
+function renderSampleTimeline(sample) {
+  return `
+    <div class="sample-timeline">
+      ${sample.timeline.map(t => `
+        <div class="timeline-step${t.risk ? ' risk' : ''}">
+          <div class="timeline-dot"></div>
+          <div class="timeline-when">${escapeHTML(t.when)}</div>
+          <div class="timeline-label">${escapeHTML(t.label)}</div>
+          <div class="timeline-detail">${escapeHTML(t.detail)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderSampleSlides(sample) {
+  return `
+    <div class="slide-strip">
+      ${sample.slides.map((s, i) => `
+        <div class="slide-card">
+          <div class="slide-num">${i + 1}</div>
+          <div class="slide-title">${escapeHTML(s.title)}</div>
+          <ul class="slide-bullets">${s.bullets.map(b => `<li>${escapeHTML(b)}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
 function buildSamplePortfolioPanel() {
   const panel = document.getElementById('samplePortfolioPanel');
   if (!panel) return;
@@ -2187,15 +2418,20 @@ function buildSamplePortfolioPanel() {
     const artifact = PORTFOLIO_ARTIFACTS.find(a => a.sessionId === sample.sessionId);
     if (!session || !artifact) return '';
     const domain = DOMAINS[session.domain];
+    const isVisual = sample.format === 'aims' || sample.format === 'timeline' || sample.format === 'slides';
+    let body = `<div class="sample-card-content">${escapeHTML(sample.content)}</div>`;
+    if (sample.format === 'aims') body = renderSampleAims(sample);
+    else if (sample.format === 'timeline') body = renderSampleTimeline(sample);
+    else if (sample.format === 'slides') body = renderSampleSlides(sample);
     return `
-      <div class="sample-card">
+      <div class="sample-card${isVisual ? ' sample-card-full' : ''}">
         <div class="sample-card-header">
           <span class="sample-card-month" style="color:${domain.color}">${escapeHTML(session.month)}</span>
           <span class="artifact-chip">${escapeHTML(artifact.component)}</span>
         </div>
         <div class="sample-card-title">${escapeHTML(artifact.label)}</div>
         <div class="sample-card-prompt"><em>Prompt:</em> ${escapeHTML(artifact.prompt)}</div>
-        <div class="sample-card-content">${escapeHTML(sample.content)}</div>
+        ${body}
       </div>
     `;
   }).join('');
@@ -2330,6 +2566,7 @@ async function resumePendingOAuth() {
 
   fellowName = pendingName || session.user.user_metadata?.full_name || fellowName;
   await pullRemoteProgress();
+  await pullRemoteArtifacts();
   enterApp();
   return true;
 }
@@ -2373,7 +2610,7 @@ Object.assign(window, {
   postDiscussionMessage, toggleVote, editDiscMsg, cancelDiscEdit, saveDiscMsg, deleteDiscMsg,
   showLibAddForm, hideLibAddForm, setLibType, submitLibLink, submitLibFile,
   handleLibDrop, handleLibFileSelect, clearLibFile, handleDeleteResource,
-  filterLibType, filterLibSession, debounceLibSearch,
+  filterLibType, filterLibSession, debounceLibSearch, handleArtifactInput,
 });
 
 init();

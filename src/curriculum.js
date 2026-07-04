@@ -449,7 +449,8 @@ export const PORTFOLIO_ARTIFACTS = [
     label: 'Specific aims or project summary draft',
     component: 'Funding architecture',
     purpose: 'Begins translating the partnership-sourced question into a fundable scholarly project.',
-    prompt: 'Draft a one-page aims page or project summary and mark the claim you most want feedback on.'
+    prompt: 'Draft a one-page aims page or project summary and mark the claim you most want feedback on.',
+    format: 'aims'
   },
   {
     sessionId: 'jan',
@@ -470,7 +471,8 @@ export const PORTFOLIO_ARTIFACTS = [
     label: 'Institutional action plan',
     component: 'Local implementation',
     purpose: 'Maps how the work can survive and grow inside your actual institutional context.',
-    prompt: 'Draft a 12-month action plan naming allies, constraints, decision points, and near-term moves.'
+    prompt: 'Draft a 12-month action plan naming allies, constraints, decision points, and near-term moves.',
+    format: 'timeline'
   },
   {
     sessionId: 'apr',
@@ -484,7 +486,8 @@ export const PORTFOLIO_ARTIFACTS = [
     label: 'Purpose science course module',
     component: 'Teaching product',
     purpose: 'Builds the course, module, or teaching unit that carries the fellowship work into your classroom.',
-    prompt: 'Finalize a teachable module or syllabus segment with learning goals, sequence, and assignments.'
+    prompt: 'Finalize a teachable module or syllabus segment with learning goals, sequence, and assignments.',
+    format: 'slides'
   },
   {
     sessionId: 'jun',
