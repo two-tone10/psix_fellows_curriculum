@@ -2344,6 +2344,80 @@ body {
 .funding-card-fit { font-size: 13px; color: var(--text-med); line-height: 1.55; margin-bottom: 10px; }
 .funding-card-cadence { font-size: 12px; color: var(--text-lt); line-height: 1.5; margin-bottom: 12px; }
 
+/* ═══════════════════════════════════════════════════
+   RESOURCE LIBRARY HUB + BREADCRUMBS
+════════════════════════════════════════════════════ */
+.lib-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  font-size: 12.5px;
+}
+.lib-breadcrumb-link {
+  border: none;
+  background: none;
+  color: var(--text-lt);
+  font-family: 'Raleway', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.lib-breadcrumb-link:hover { color: var(--navy); }
+.lib-breadcrumb-sep { color: var(--border); }
+.lib-breadcrumb-current { color: var(--navy); font-weight: 700; }
+
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.folder-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  cursor: pointer;
+  font-family: 'Raleway', sans-serif;
+}
+.folder-tile:hover { border-color: var(--navy); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+
+.folder-tile-icon { width: 34px; height: 34px; border-radius: 9px; margin-bottom: 14px; }
+.folder-tile-title { font-family: 'EB Garamond', serif; font-size: 19px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.folder-tile-desc { font-size: 13px; color: var(--text-med); line-height: 1.55; margin-bottom: 14px; }
+.folder-tile-open { font-size: 12px; font-weight: 700; color: var(--gold-dk); margin-top: auto; }
+
+.staff-resources { margin-bottom: 22px; }
+.staff-resources-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-lt);
+  margin-bottom: 10px;
+}
+.staff-resources-grid { display: grid; gap: 10px; }
+.staff-resource-card { border-color: #D9C188; }
+.staff-resource-badge {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--gold-lt);
+  color: var(--gold-deep);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 @media print {
   @page { margin: 0.75in; }
   .sidebar, .topbar { display: none !important; }

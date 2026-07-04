@@ -1,6 +1,6 @@
 import { CONFIG } from './config.js';
 import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS, CAPSTONE_COMPONENTS, DOSSIER_SECTIONS, FUNDING_OPPORTUNITIES } from './curriculum.js';
-import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE } from './samplePortfolio.js';
+import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE, SAMPLE_CONCEPT_NOTE, STAFF_RESOURCES } from './samplePortfolio.js';
 import {
   supabaseReady, getSession, onAuthChange, signInWithGoogle, signOut,
   isFacilitatorEmail, fetchMyProgress, syncProgressEvent,
@@ -751,12 +751,17 @@ function applyFellowShell() {
 // Each secondary (non-session, non-dashboard) view registers itself here:
 // key = route.view value, hash = URL hash, panelId/btnId = DOM ids,
 // topbar = topbar label, build = the function that (re)renders the panel.
+// All library-family views share btnId 'libraryNavBtn' so the sidebar keeps
+// "Resource Library" highlighted while browsing any of its sub-pages.
 const SECONDARY_VIEWS = [
-  { key: 'library', hash: 'library', panelId: 'libraryPanel', btnId: 'libraryNavBtn', topbar: 'Resource Library', build: () => buildLibraryPanel() },
-  { key: 'conceptmap', hash: 'concept-map', panelId: 'conceptMapPanel', btnId: 'conceptMapNavBtn', topbar: 'How Your Portfolio Comes Together', build: () => buildConceptMapPanel() },
-  { key: 'sampleportfolio', hash: 'sample-portfolio', panelId: 'samplePortfolioPanel', btnId: 'samplePortfolioNavBtn', topbar: 'Sample Portfolio (Illustrative)', build: () => buildSamplePortfolioPanel() },
-  { key: 'cvdossier', hash: 'cv-dossier', panelId: 'cvDossierPanel', btnId: 'cvDossierNavBtn', topbar: 'CV & Dossier Tools', build: () => buildCvDossierPanel() },
-  { key: 'funding', hash: 'funding', panelId: 'fundingPanel', btnId: 'fundingNavBtn', topbar: 'Funding Opportunities', build: () => buildFundingPanel() },
+  { key: 'library', hash: 'library', panelId: 'libraryHubPanel', btnId: 'libraryNavBtn', topbar: 'Resource Library', build: () => buildLibraryHubPanel() },
+  { key: 'libraryresources', hash: 'library-resources', panelId: 'libraryResourcesPanel', btnId: 'libraryNavBtn', topbar: 'Community Resources', build: () => buildLibraryResourcesPanel() },
+  { key: 'funding', hash: 'library-funding', panelId: 'fundingPanel', btnId: 'libraryNavBtn', topbar: 'Funding Opportunities', build: () => buildFundingPanel() },
+  { key: 'cvdossier', hash: 'library-cv', panelId: 'cvDossierPanel', btnId: 'libraryNavBtn', topbar: 'CV & Dossier Tools', build: () => buildCvDossierPanel() },
+  { key: 'artifactguide', hash: 'library-artifact-guide', panelId: 'artifactGuidePanel', btnId: 'libraryNavBtn', topbar: 'Artifact Guide', build: () => buildArtifactGuidePanel() },
+  { key: 'conceptmap', hash: 'library-concept-map', panelId: 'conceptMapPanel', btnId: 'libraryNavBtn', topbar: 'How Your Portfolio Comes Together', build: () => buildConceptMapPanel() },
+  { key: 'sampleportfolio', hash: 'library-sample-portfolio', panelId: 'samplePortfolioPanel', btnId: 'libraryNavBtn', topbar: 'Sample Portfolio (Illustrative)', build: () => buildSamplePortfolioPanel() },
+  { key: 'sampleconceptnote', hash: 'library-sample-concept-note', panelId: 'sampleConceptNotePanel', btnId: 'libraryNavBtn', topbar: 'Sample Concept Note (Illustrative)', build: () => buildSampleConceptNotePanel() },
 ];
 
 function resetAllPanels() {
@@ -2218,20 +2223,143 @@ async function handleDeleteResource(id) {
   }
 }
 
-function buildLibraryPanel() {
-  const panel = document.getElementById('libraryPanel');
+// ═══════════════════════════════════════════════════════
+// RESOURCE LIBRARY HUB + BREADCRUMBS
+// ═══════════════════════════════════════════════════════
+function renderBreadcrumb(items) {
+  return `
+    <div class="lib-breadcrumb">
+      ${items.map((item, i) => {
+        const isLast = i === items.length - 1;
+        return isLast
+          ? `<span class="lib-breadcrumb-current">${escapeHTML(item.label)}</span>`
+          : `<button class="lib-breadcrumb-link" onclick="${item.onclick}">${escapeHTML(item.label)}</button><span class="lib-breadcrumb-sep">/</span>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderFolderTile({ title, description, color, onclick }) {
+  return `
+    <button class="folder-tile" onclick="${onclick}">
+      <div class="folder-tile-icon" style="background:${color}"></div>
+      <div class="folder-tile-title">${escapeHTML(title)}</div>
+      <div class="folder-tile-desc">${escapeHTML(description)}</div>
+      <div class="folder-tile-open">Open →</div>
+    </button>
+  `;
+}
+
+function buildLibraryHubPanel() {
+  const panel = document.getElementById('libraryHubPanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">Fellowship-Wide</span></div>
+      <h1 class="session-title">Resource Library</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:24px;">
+        Everything fellows and PSiX staff have gathered in one place — organized so you can find what you need without digging.
+      </p>
+    </div>
+    <div class="folder-grid">
+      ${renderFolderTile({ title: 'Community Resources', description: 'Readings, links, slides, and files shared by fellows — searchable across every session.', color: 'var(--con)', onclick: "showSecondaryView('libraryresources')" })}
+      ${renderFolderTile({ title: 'Funding Opportunities', description: 'A curated list of funders relevant to purpose science and community-engaged research.', color: 'var(--all)', onclick: "showSecondaryView('funding')" })}
+      ${renderFolderTile({ title: 'CV & Dossier Tools', description: "Turn this year's work into CV lines and tenure-dossier-ready language.", color: 'var(--gra)', onclick: "showSecondaryView('cvdossier')" })}
+      ${renderFolderTile({ title: 'Artifact Guide', description: 'See how your monthly artifacts fit together, and browse a full sample portfolio.', color: 'var(--tea)', onclick: "showSecondaryView('artifactguide')" })}
+    </div>
+  `;
+}
+
+function buildArtifactGuidePanel() {
+  const panel = document.getElementById('artifactGuidePanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Artifact Guide' }])}
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">Artifact Guide</span></div>
+      <h1 class="session-title">Understand Your Portfolio</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:24px;">
+        Two ways to see the whole picture: how each month's artifact fits into the capstone, and what a fully finished portfolio looks like.
+      </p>
+    </div>
+    <div class="folder-grid">
+      ${renderFolderTile({ title: 'How It Fits Together', description: 'A click-to-explore map showing how each monthly artifact builds toward your capstone portfolio.', color: 'var(--tea)', onclick: "showSecondaryView('conceptmap')" })}
+      ${renderFolderTile({ title: 'Sample Portfolio', description: 'A fictional, fully-worked example of a completed year — illustrative only.', color: 'var(--tra)', onclick: "showSecondaryView('sampleportfolio')" })}
+    </div>
+  `;
+}
+
+function renderStaffResourceCard(resource) {
+  const isReady = resource.status === 'ready';
+  return `
+    <div class="lib-card staff-resource-card">
+      <div class="lib-card-icon">${resource.kind === 'Syllabus' ? '📘' : '📝'}</div>
+      <div class="lib-card-body">
+        <div class="lib-card-title">${escapeHTML(resource.title)}</div>
+        <div class="lib-card-desc">${escapeHTML(resource.description)}</div>
+        <div class="lib-card-meta">
+          <span class="lib-card-type">${escapeHTML(resource.kind)}</span>
+          <span class="staff-resource-badge">PSiX Sample</span>
+          ${!isReady ? '<span class="lib-card-size">Coming soon</span>' : ''}
+        </div>
+      </div>
+      <div class="lib-card-actions">
+        ${isReady
+          ? `<button class="lib-card-action" onclick="showSecondaryView('${resource.routeKey}')">Read →</button>`
+          : `<span class="lib-card-action" style="color:var(--text-lt);cursor:default;">Pending</span>`}
+      </div>
+    </div>
+  `;
+}
+
+function buildSampleConceptNotePanel() {
+  const panel = document.getElementById('sampleConceptNotePanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Community Resources', onclick: "showSecondaryView('libraryresources')" }, { label: 'Sample Concept Note' }])}
+    <div class="sample-banner">
+      <span class="sample-banner-badge">Illustrative Only</span>
+      <span class="sample-banner-text">This concept note describes a fictional project — same fictional fellow and topic as the Sample Portfolio. It exists to show the format and length of a concept note, not to be copied.</span>
+    </div>
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">${escapeHTML(SAMPLE_CONCEPT_NOTE.subtitle)}</span></div>
+      <h1 class="session-title">${escapeHTML(SAMPLE_CONCEPT_NOTE.title)}</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:8px;">${escapeHTML(SAMPLE_CONCEPT_NOTE.author)}</p>
+    </div>
+    <div class="concept-note-sections">
+      ${SAMPLE_CONCEPT_NOTE.sections.map(s => `
+        <section class="resource-section">
+          <div class="resource-section-header">
+            <div class="resource-section-title">${escapeHTML(s.heading)}</div>
+          </div>
+          <div class="portfolio-overview-text">${escapeHTML(s.body)}</div>
+        </section>
+      `).join('')}
+    </div>
+  `;
+}
+
+function buildLibraryResourcesPanel() {
+  const panel = document.getElementById('libraryResourcesPanel');
   if (!panel) return;
   const sessionOpts = SESSIONS.map(s =>
     `<option value="${escapeHTML(s.id)}">${escapeHTML(s.month)} — ${escapeHTML(s.title)}</option>`
   ).join('');
 
   panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Community Resources' }])}
     <div class="session-header" style="padding-top:0;">
       <div class="session-eyebrow"><span class="session-month-label">Fellowship-Wide</span></div>
-      <h1 class="session-title">Resource Library</h1>
+      <h1 class="session-title">Community Resources</h1>
       <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:24px;">
         Share readings, slides, links, and files with the rest of the cohort. Search across every session, or filter down to what's relevant right now.
       </p>
+    </div>
+    <div class="staff-resources">
+      <div class="staff-resources-label">PSiX-Provided Samples</div>
+      <div class="staff-resources-grid">
+        ${STAFF_RESOURCES.map(renderStaffResourceCard).join('')}
+      </div>
     </div>
     <div class="lib-toolbar">
       <input class="lib-search" id="lib-search-input" type="search" placeholder="Search resources…" oninput="debounceLibSearch(this.value)">
@@ -2261,7 +2389,7 @@ async function loadLibraryResources(search) {
   const listEl = document.getElementById('lib-list');
   if (!currentUserId) {
     if (listEl) listEl.innerHTML = signInPromptHTML('Sign in with Google to view and share resources.');
-    const addBtn = document.querySelector('#libraryPanel .lib-add-btn');
+    const addBtn = document.querySelector('#libraryResourcesPanel .lib-add-btn');
     if (addBtn) addBtn.style.display = 'none';
     return;
   }
@@ -2289,7 +2417,7 @@ function renderLibraryList() {
 
 function filterLibType(type) {
   _libFilter = type;
-  document.querySelectorAll('#libraryPanel .lib-filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === type));
+  document.querySelectorAll('#libraryResourcesPanel .lib-filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === type));
   renderLibraryList();
 }
 
@@ -2391,6 +2519,7 @@ function buildConceptMapPanel() {
   if (!panel) return;
   Object.keys(_mapOpenChip).forEach(k => delete _mapOpenChip[k]);
   panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Artifact Guide', onclick: "showSecondaryView('artifactguide')" }, { label: 'How It Fits Together' }])}
     <div class="session-header" style="padding-top:0;">
       <div class="session-eyebrow"><span class="session-month-label">Theory of Change</span></div>
       <h1 class="session-title">How Your Portfolio Comes Together</h1>
@@ -2485,6 +2614,7 @@ function buildSamplePortfolioPanel() {
   }).join('');
 
   panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Artifact Guide', onclick: "showSecondaryView('artifactguide')" }, { label: 'Sample Portfolio' }])}
     <div class="sample-banner">
       <span class="sample-banner-badge">Illustrative Only</span>
       <span class="sample-banner-text">This entire portfolio — the fellow, institution, research topic, and community partner — is fictional. It exists to show the structure and depth of finished work, not to be copied. Your portfolio should look nothing like this one.</span>
@@ -2615,6 +2745,7 @@ function buildCvDossierPanel() {
   if (!panel) return;
   const details = getCvDetails();
   panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'CV & Dossier Tools' }])}
     <div class="session-header" style="padding-top:0;">
       <div class="session-eyebrow"><span class="session-month-label">For Early-Career Faculty</span></div>
       <h1 class="session-title">CV &amp; Dossier Tools</h1>
@@ -2667,6 +2798,7 @@ function buildFundingPanel() {
   const panel = document.getElementById('fundingPanel');
   if (!panel) return;
   panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Funding Opportunities' }])}
     <div class="session-header" style="padding-top:0;">
       <div class="session-eyebrow"><span class="session-month-label">Grant Writing</span></div>
       <h1 class="session-title">Funding Opportunities</h1>
@@ -2710,18 +2842,6 @@ function renderShell() {
           <button class="dashboard-btn" id="libraryNavBtn" onclick="showLibrary()">
             <span class="dashboard-icon" style="background:var(--con)"></span><span>Resource Library</span>
           </button>
-          <button class="dashboard-btn" id="conceptMapNavBtn" onclick="showConceptMap()">
-            <span class="dashboard-icon" style="background:var(--tea)"></span><span>How It Fits Together</span>
-          </button>
-          <button class="dashboard-btn" id="samplePortfolioNavBtn" onclick="showSamplePortfolio()">
-            <span class="dashboard-icon" style="background:var(--tra)"></span><span>Sample Portfolio</span>
-          </button>
-          <button class="dashboard-btn" id="cvDossierNavBtn" onclick="showCvDossier()">
-            <span class="dashboard-icon" style="background:var(--gra)"></span><span>CV &amp; Dossier Tools</span>
-          </button>
-          <button class="dashboard-btn" id="fundingNavBtn" onclick="showFunding()">
-            <span class="dashboard-icon" style="background:var(--all)"></span><span>Funding Opportunities</span>
-          </button>
         </div>
         <div class="sidebar-section-label">Fellowship Year</div>
         <nav class="month-nav" id="monthNav"></nav>
@@ -2753,9 +2873,12 @@ function renderShell() {
       <main class="main">
         <div class="content-wrap" id="contentWrap" tabindex="-1">
           <section class="dashboard-panel active" id="dashboardPanel" aria-label="Fellowship dashboard"></section>
-          <section class="dashboard-panel" id="libraryPanel" aria-label="Resource library"></section>
+          <section class="dashboard-panel" id="libraryHubPanel" aria-label="Resource library"></section>
+          <section class="dashboard-panel" id="libraryResourcesPanel" aria-label="Community resources"></section>
+          <section class="dashboard-panel" id="artifactGuidePanel" aria-label="Artifact guide"></section>
           <section class="dashboard-panel" id="conceptMapPanel" aria-label="How your portfolio comes together"></section>
           <section class="dashboard-panel" id="samplePortfolioPanel" aria-label="Sample portfolio"></section>
+          <section class="dashboard-panel" id="sampleConceptNotePanel" aria-label="Sample concept note"></section>
           <section class="dashboard-panel" id="cvDossierPanel" aria-label="CV and dossier tools"></section>
           <section class="dashboard-panel" id="fundingPanel" aria-label="Funding opportunities"></section>
           <div id="sessionPanels"></div>
@@ -2837,7 +2960,7 @@ async function init() {
 // Expose handlers referenced by inline HTML (module scope isn't global).
 Object.assign(window, {
   showDashboard, showSession, goToTask, switchTab, showLibrary,
-  showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding,
+  showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding, showSecondaryView,
   handleCvDetailsInput, copyCvLine, copyAllCvLines, downloadSessionICS,
   toggleGoal, toggleReading, toggleTaskCheckbox,
   togglePassVisibility, gateCheckPass, gateCheckName,
