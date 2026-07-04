@@ -59,6 +59,52 @@ function getReadingData(reading) {
   };
 }
 
+function icsEscape(text) {
+  return String(text).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+}
+
+function formatICSDate(date) {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+function downloadSessionICS(sessionId) {
+  const session = SESSIONS.find(s => s.id === sessionId);
+  if (!session) return;
+  const monthOrder = ['jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar', 'apr', 'may', 'jun'];
+  const offset = monthOrder.indexOf(sessionId);
+  const now = new Date();
+  const fellowshipStartYear = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1; // fellowship year starts July
+  const calMonth = (6 + offset) % 12;
+  const calYear = fellowshipStartYear + Math.floor((6 + offset) / 12);
+  const start = new Date(calYear, calMonth, 15, 10, 0, 0);
+  const end = new Date(start.getTime() + 90 * 60 * 1000);
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//PSiX Fellowship//Fellow Journey Companion//EN',
+    'BEGIN:VEVENT',
+    `UID:psix-${session.id}-${calYear}@psix-fellows-curriculum`,
+    `DTSTAMP:${formatICSDate(new Date())}`,
+    `DTSTART:${formatICSDate(start)}`,
+    `DTEND:${formatICSDate(end)}`,
+    `SUMMARY:${icsEscape('PSiX Fellowship — ' + session.month + ': ' + session.title)}`,
+    `DESCRIPTION:${icsEscape('Placeholder reminder — edit this event to match your program\'s actual ' + session.month + ' session date and time.\\n\\n' + session.inquiry)}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `psix-${session.id}-${session.month.toLowerCase()}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 // ═══════════════════════════════════════════════════════
 // PROGRESS STORAGE (localStorage cache + optional Supabase sync)
 // ═══════════════════════════════════════════════════════
@@ -995,6 +1041,7 @@ function buildSessions() {
   wrap.innerHTML = '';
   SESSIONS.forEach(s => {
     const d = DOMAINS[s.domain];
+    const isGrantReviewMonth = s.id === 'dec' || s.id === 'apr';
     const panel = document.createElement('div');
     panel.className = 'session-panel';
     panel.id = 'panel-' + s.id;
@@ -1051,6 +1098,7 @@ function buildSessions() {
           <span class="session-month-label">${s.month}</span>
           <span class="domain-pill" style="background:${d.color}">${d.label}</span>
           ${s.inPerson ? '<span class="inperson-badge">In-Person Convening</span>' : ''}
+          <button class="calendar-add-btn" onclick="downloadSessionICS('${s.id}')" title="Downloads a placeholder reminder — adjust the date to your program's actual session date">+ Add to Calendar</button>
         </div>
         <h1 class="session-title">${escapeHTML(s.title)}</h1>
         <div class="session-status-line">
@@ -1149,6 +1197,12 @@ function buildSessions() {
       <section class="tab-pane" id="${s.id}-discussion" data-section="discussion">
         <div class="section-hd">Discussion</div>
         <p class="portfolio-overview-text" style="margin-bottom:18px;">Share reactions, questions, and insights from this session. Posts are visible to all signed-in fellows.</p>
+        ${isGrantReviewMonth ? `
+        <div class="peer-review-guide">
+          <div class="peer-review-guide-title">Peer Review Exchange</div>
+          <div class="peer-review-guide-text">This is a grant-development month — use this thread to request or give structured feedback on a draft. A useful review answers: <strong>Is the gap clear?</strong> <strong>Is the approach feasible?</strong> <strong>Is the scope realistic?</strong> Post your draft (or a link to it in the Resource Library) and tag what kind of feedback you want.</div>
+        </div>
+        ` : ''}
         <div class="disc-wrap">
           <div class="disc-list" id="disc-list-${s.id}">
             <div class="disc-status">Loading discussion…</div>
@@ -1157,7 +1211,7 @@ function buildSessions() {
             <textarea
               class="disc-input"
               id="disc-input-${s.id}"
-              placeholder="Share a thought, question, or reaction… (Enter to post, Shift+Enter for new line)"
+              placeholder="${isGrantReviewMonth ? "Share a draft link or paste your aims — ask reviewers a specific question (Enter to post, Shift+Enter for new line)" : "Share a thought, question, or reaction… (Enter to post, Shift+Enter for new line)"}"
               oninput="this.style.height='38px';this.style.height=Math.min(110,this.scrollHeight)+'px'"
               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postDiscussionMessage('${s.id}')}"
             ></textarea>
@@ -1376,6 +1430,11 @@ function fadeOutGate() {
   const overlay = document.getElementById('gate-overlay');
   if (!overlay) return;
   overlay.classList.add('fade-out');
+  // `inert` immediately drops the overlay (and whatever inside it still has
+  // focus) out of the tab order, so a keyboard user's next Tab lands on the
+  // skip link / app content rather than a fading, soon-to-be-hidden button.
+  overlay.inert = true;
+  document.activeElement?.blur();
   setTimeout(() => { overlay.classList.add('hidden'); }, 500);
 }
 
@@ -1390,6 +1449,11 @@ function enterApp() {
       history.replaceState(null, '', '#dashboard');
     }
     routeFromHash({ behavior: 'auto' });
+    // Give focus a concrete landing point once the gate is gone, instead of
+    // leaving it on document.body — Chromium's next Tab-from-nothing
+    // otherwise resumes near wherever the routed-to scrollIntoView() just
+    // scrolled to, silently skipping the sidebar nav and skip link.
+    setTimeout(() => { document.getElementById('contentWrap')?.focus(); }, 520);
   }
 }
 
@@ -1702,7 +1766,7 @@ function discMsgHTML(m) {
       </div>
       <div class="disc-msg-body" id="disc-body-${m.id}">${escapeHTML(m.body)}</div>
       <div class="disc-msg-footer">
-        <button class="disc-vote-btn${hasVoted ? ' voted' : ''}" id="vote-btn-${m.id}" onclick="toggleVote('${m.id}')">${voteInner}</button>
+        <button class="disc-vote-btn${hasVoted ? ' voted' : ''}" id="vote-btn-${m.id}" onclick="toggleVote('${m.id}')" aria-pressed="${hasVoted}" aria-label="${hasVoted ? 'Remove upvote' : 'Upvote this post'}${voteCount > 0 ? `, ${voteCount} upvote${voteCount === 1 ? '' : 's'} so far` : ''}">${voteInner}</button>
         ${controls}
       </div>
     </div>
@@ -1742,10 +1806,14 @@ async function toggleVote(messageId) {
       btn.classList.remove('voted');
       const n = Math.max(0, count - 1);
       btn.innerHTML = n > 0 ? `▲ <span class="disc-vote-count">${n}</span>` : '▲';
+      btn.setAttribute('aria-pressed', 'false');
+      btn.setAttribute('aria-label', `Upvote this post${n > 0 ? `, ${n} upvote${n === 1 ? '' : 's'} so far` : ''}`);
     } else {
       await addVote({ messageId, userId: currentUserId });
       btn.classList.add('voted');
       btn.innerHTML = `▲ <span class="disc-vote-count">${count + 1}</span>`;
+      btn.setAttribute('aria-pressed', 'true');
+      btn.setAttribute('aria-label', `Remove upvote, ${count + 1} upvote${count === 0 ? '' : 's'} so far`);
     }
   } catch (err) {
     // leave state unchanged on failure
@@ -2626,6 +2694,7 @@ function renderShell() {
   const app = document.getElementById('app');
   app.innerHTML = `
     <div id="gate-overlay"></div>
+    <a href="#contentWrap" class="skip-to-content">Skip to main content</a>
     <div class="app-shell" id="fellowShell">
       <aside class="sidebar">
         <div class="sidebar-brand">
@@ -2682,7 +2751,7 @@ function renderShell() {
         </div>
       </header>
       <main class="main">
-        <div class="content-wrap" id="contentWrap">
+        <div class="content-wrap" id="contentWrap" tabindex="-1">
           <section class="dashboard-panel active" id="dashboardPanel" aria-label="Fellowship dashboard"></section>
           <section class="dashboard-panel" id="libraryPanel" aria-label="Resource library"></section>
           <section class="dashboard-panel" id="conceptMapPanel" aria-label="How your portfolio comes together"></section>
@@ -2769,7 +2838,7 @@ async function init() {
 Object.assign(window, {
   showDashboard, showSession, goToTask, switchTab, showLibrary,
   showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding,
-  handleCvDetailsInput, copyCvLine, copyAllCvLines,
+  handleCvDetailsInput, copyCvLine, copyAllCvLines, downloadSessionICS,
   toggleGoal, toggleReading, toggleTaskCheckbox,
   togglePassVisibility, gateCheckPass, gateCheckName,
   showFacilitatorGate, showFellowGate, skipSync,
