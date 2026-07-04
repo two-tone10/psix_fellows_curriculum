@@ -89,7 +89,7 @@ export const SESSIONS = [
       "Begin drafting a personal researcher-practitioner partnership philosophy statement",
     ],
     activities: [
-      { text: "BCTR-led workshop: Introduction to the translational research continuum and community-engaged research frameworks", time: "30 min" },
+      { text: "Purpose Commons-led workshop: Introduction to the translational research continuum and community-engaged research frameworks", time: "30 min" },
       { text: "Case study analysis: Two real-world examples of community-engaged research in youth development — one successful, one that encountered significant challenges", time: "25 min" },
       { text: "Dyadic reflection with assigned Lab of Labs mentor: What does your current scholarship look like on the translational continuum, and where do you want it to go?", time: "20 min" },
       { text: "Introduction to the co-design process used by Purpose Commons Design Teams", time: "15 min" },
@@ -98,7 +98,7 @@ export const SESSIONS = [
     ],
     readings: [
       "Israel, B. A., et al. (1998). Review of community-based research: Assessing partnership approaches to improve public health",
-      "BCTR Translational Research Framework documentation (internal)",
+      "Purpose Commons Translational Research Framework documentation (internal)",
       "Selected readings on research-practice partnerships in education and youth development",
     ],
     reflectPrompts: [
@@ -132,7 +132,7 @@ export const SESSIONS = [
     ],
     readings: [
       "Selected readings on public scholarship and researcher communication",
-      "Examples of effective research-to-practice briefs from the BCTR and Purpose Commons archives",
+      "Examples of effective research-to-practice briefs from the Purpose Commons archives",
     ],
     reflectPrompts: [
       "What do you lose — scientifically or intellectually — in the act of translation? Is that loss acceptable? Necessary?",
@@ -265,7 +265,7 @@ export const SESSIONS = [
     ],
     readings: [
       "Fellows' own draft grant materials (peer review preparation)",
-      "BCTR reflective practice framework documentation (internal)",
+      "Purpose Commons reflective practice framework documentation (internal)",
     ],
     reflectPrompts: [
       "What has been genuinely harder than you expected — and what does that tell you about what you still need to learn?",
@@ -383,7 +383,7 @@ export const SESSIONS = [
     inquiry: "What am I now positioned to build next?",
     before: "Review your individualized learning plan from the start of the year alongside your capstone portfolio. Write a two-page narrative: How have you changed as a scholar and practitioner? What do you now believe that you did not before?",
     after: "This is the final inquiry — but it is not the last question. The Culminating Symposium marks the beginning of the next phase of your work. Carry your guiding inquiry forward.",
-    description: "The June Culminating Symposium marks the close of the formal fellowship year and the opening of everything the fellowship has been building toward. Fellows present their capstone portfolios — integrating their translational research statement, community partnership documentation, grant proposal, institutional action plan, and course syllabus — to an audience of Lab of Labs researchers, Purpose Commons partners, BCTR colleagues, and invited guests. The symposium is not a defense. It is a demonstration.",
+    description: "The June Culminating Symposium marks the close of the formal fellowship year and the opening of everything the fellowship has been building toward. Fellows present their capstone portfolios — integrating their translational research statement, community partnership documentation, grant proposal, institutional action plan, and course syllabus — to an audience of Lab of Labs researchers, Purpose Commons partners, and invited guests. The symposium is not a defense. It is a demonstration.",
     goals: [
       "Present a coherent capstone portfolio integrating all four fellowship domains",
       "Receive feedback from the broader PSiX network — researchers, practitioners, and community partners — on the work as a whole",
@@ -392,7 +392,7 @@ export const SESSIONS = [
     ],
     activities: [
       { text: "Capstone portfolio presentations: Research plan, community partnership documentation, grant proposal, institutional action plan, and course syllabus", time: "Varies" },
-      { text: "Structured feedback from Lab of Labs researchers, Purpose Commons partners, and BCTR colleagues", time: "Varies" },
+      { text: "Structured feedback from Lab of Labs researchers and Purpose Commons partners", time: "Varies" },
       { text: "Network reception: Fellows and mentors across cohort years share work and build enduring connections", time: "Open" },
       { text: "Cohort reflection: What has this year produced — individually and collectively — for the purpose science field?", time: "30 min" },
     ],

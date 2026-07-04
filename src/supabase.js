@@ -133,3 +133,131 @@ export async function fetchAllProgressForFacilitators() {
   }
   return data || [];
 }
+
+// ── DISCUSSION BOARD ──────────────────────────────────────────────
+
+export async function fetchMessages(sessionId) {
+  const sb = getClient();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from('psix_messages')
+    .select('id, created_at, session_id, user_id, user_name, body, psix_message_votes(user_id)')
+    .eq('session_id', sessionId)
+    .order('created_at', { ascending: true })
+    .limit(300);
+  if (error) {
+    console.warn('Supabase: fetch messages failed', error.message);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function postMessage({ sessionId, userId, userName, body }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_messages').insert({
+    session_id: sessionId, user_id: userId, user_name: userName, body,
+  });
+  if (error) throw error;
+}
+
+export async function updateMessage({ id, userId, body }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_messages').update({ body }).eq('id', id).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function deleteMessage({ id, userId }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_messages').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function addVote({ messageId, userId }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_message_votes').insert({ message_id: messageId, user_id: userId });
+  if (error) throw error;
+}
+
+export async function removeVote({ messageId, userId }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_message_votes').delete()
+    .eq('message_id', messageId).eq('user_id', userId);
+  if (error) throw error;
+}
+
+// ── RESOURCE LIBRARY ──────────────────────────────────────────────
+
+export async function fetchResources({ search, sessionId } = {}) {
+  const sb = getClient();
+  if (!sb) return [];
+  let q = sb.from('psix_resources').select('*').order('created_at', { ascending: false }).limit(300);
+  if (sessionId) q = q.eq('session_id', sessionId);
+  if (search && search.trim()) {
+    const term = search.trim().replace(/[%,()]/g, ' ').trim();
+    if (term) q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+  }
+  const { data, error } = await q;
+  if (error) {
+    console.warn('Supabase: fetch resources failed', error.message);
+    throw error;
+  }
+  return data || [];
+}
+
+export async function addLinkResource(entry) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_resources').insert({
+    user_id: entry.userId,
+    user_name: entry.userName,
+    type: 'link',
+    title: entry.title,
+    description: entry.description || null,
+    url: entry.url,
+    session_id: entry.sessionId || null,
+  });
+  if (error) throw error;
+}
+
+export async function uploadFileResource(entry) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const filePath = `${entry.userId}/${Date.now()}-${entry.file.name}`;
+  const { error: upErr } = await sb.storage
+    .from('psix-resources')
+    .upload(filePath, entry.file, { cacheControl: '3600', upsert: false });
+  if (upErr) throw upErr;
+
+  const { data } = sb.storage.from('psix-resources').getPublicUrl(filePath);
+
+  const { error: dbErr } = await sb.from('psix_resources').insert({
+    user_id: entry.userId,
+    user_name: entry.userName,
+    type: 'file',
+    title: entry.title,
+    description: entry.description || null,
+    url: data.publicUrl,
+    file_name: entry.file.name,
+    file_size: entry.file.size,
+    session_id: entry.sessionId || null,
+  });
+  if (dbErr) throw dbErr;
+}
+
+export async function deleteResource({ id, userId, url, type }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  if (type === 'file' && url) {
+    const base = `${CONFIG.supabaseUrl}/storage/v1/object/public/psix-resources/`;
+    if (url.startsWith(base)) {
+      await sb.storage.from('psix-resources').remove([url.slice(base.length)]);
+    }
+  }
+  const { error } = await sb.from('psix_resources').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
+}

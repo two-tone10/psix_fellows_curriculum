@@ -89,3 +89,117 @@ using (exists (
   select 1 from public.psix_facilitators f
   where f.email = auth.jwt() ->> 'email'
 ));
+
+-- ═══════════════════════════════════════════════════════
+-- DISCUSSION BOARD (per session)
+-- ═══════════════════════════════════════════════════════
+
+create table if not exists public.psix_messages (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  session_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  user_name text not null,
+  body text not null
+);
+
+create table if not exists public.psix_message_votes (
+  message_id uuid not null references public.psix_messages(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (message_id, user_id)
+);
+
+alter table public.psix_messages enable row level security;
+alter table public.psix_message_votes enable row level security;
+
+drop policy if exists "signed-in fellows read messages" on public.psix_messages;
+create policy "signed-in fellows read messages"
+on public.psix_messages for select
+using (auth.role() = 'authenticated');
+
+drop policy if exists "fellows post own messages" on public.psix_messages;
+create policy "fellows post own messages"
+on public.psix_messages for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "fellows edit own messages" on public.psix_messages;
+create policy "fellows edit own messages"
+on public.psix_messages for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "fellows delete own messages" on public.psix_messages;
+create policy "fellows delete own messages"
+on public.psix_messages for delete
+using (auth.uid() = user_id);
+
+drop policy if exists "signed-in fellows read votes" on public.psix_message_votes;
+create policy "signed-in fellows read votes"
+on public.psix_message_votes for select
+using (auth.role() = 'authenticated');
+
+drop policy if exists "fellows cast own votes" on public.psix_message_votes;
+create policy "fellows cast own votes"
+on public.psix_message_votes for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "fellows remove own votes" on public.psix_message_votes;
+create policy "fellows remove own votes"
+on public.psix_message_votes for delete
+using (auth.uid() = user_id);
+
+-- ═══════════════════════════════════════════════════════
+-- RESOURCE LIBRARY (shared links & files, browsable by session)
+-- ═══════════════════════════════════════════════════════
+
+create table if not exists public.psix_resources (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  user_name text not null,
+  type text not null check (type in ('link', 'file')),
+  title text not null,
+  description text,
+  url text not null,
+  file_name text,
+  file_size bigint,
+  session_id text
+);
+
+alter table public.psix_resources enable row level security;
+
+drop policy if exists "signed-in fellows read resources" on public.psix_resources;
+create policy "signed-in fellows read resources"
+on public.psix_resources for select
+using (auth.role() = 'authenticated');
+
+drop policy if exists "fellows add own resources" on public.psix_resources;
+create policy "fellows add own resources"
+on public.psix_resources for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "fellows delete own resources" on public.psix_resources;
+create policy "fellows delete own resources"
+on public.psix_resources for delete
+using (auth.uid() = user_id);
+
+-- Storage bucket for uploaded resource files (safe to re-run)
+insert into storage.buckets (id, name, public)
+values ('psix-resources', 'psix-resources', true)
+on conflict (id) do nothing;
+
+drop policy if exists "psix resources public read" on storage.objects;
+create policy "psix resources public read"
+on storage.objects for select
+using (bucket_id = 'psix-resources');
+
+drop policy if exists "psix resources authenticated upload" on storage.objects;
+create policy "psix resources authenticated upload"
+on storage.objects for insert
+with check (bucket_id = 'psix-resources' and auth.role() = 'authenticated');
+
+drop policy if exists "psix resources own delete" on storage.objects;
+create policy "psix resources own delete"
+on storage.objects for delete
+using (bucket_id = 'psix-resources' and auth.uid()::text = (storage.foldername(name))[1]);
