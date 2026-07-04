@@ -203,3 +203,69 @@ drop policy if exists "psix resources own delete" on storage.objects;
 create policy "psix resources own delete"
 on storage.objects for delete
 using (bucket_id = 'psix-resources' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ═══════════════════════════════════════════════════════
+-- SESSION MATERIALS (facilitator-uploaded, fills "Pending" slots live)
+--
+-- One row per (session, slot). Facilitators upsert onto a slot to
+-- replace whatever's there; deleting a row reverts that slot to
+-- "Pending" in the fellow view. Slot keys are assigned in app.js's
+-- getResourceGroups() — e.g. 'material-slides', 'submit-reflection',
+-- 'reading-0'.
+-- ═══════════════════════════════════════════════════════
+
+create table if not exists public.psix_session_materials (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  session_id text not null,
+  slot_key text not null,
+  type text not null check (type in ('link', 'file')),
+  title text not null,
+  url text not null,
+  file_name text,
+  file_size bigint,
+  uploaded_by_email text,
+  uploaded_by_name text,
+  unique (session_id, slot_key)
+);
+
+alter table public.psix_session_materials enable row level security;
+
+drop policy if exists "signed-in fellows read session materials" on public.psix_session_materials;
+create policy "signed-in fellows read session materials"
+on public.psix_session_materials for select
+using (auth.role() = 'authenticated');
+
+drop policy if exists "facilitators manage session materials" on public.psix_session_materials;
+create policy "facilitators manage session materials"
+on public.psix_session_materials for all
+using (exists (
+  select 1 from public.psix_facilitators f
+  where f.email = auth.jwt() ->> 'email'
+))
+with check (exists (
+  select 1 from public.psix_facilitators f
+  where f.email = auth.jwt() ->> 'email'
+));
+
+-- Facilitator-uploaded files live under a session-materials/ prefix in the
+-- same public bucket used by the resource library; only facilitators may
+-- write there.
+drop policy if exists "psix session materials facilitator upload" on storage.objects;
+create policy "psix session materials facilitator upload"
+on storage.objects for insert
+with check (
+  bucket_id = 'psix-resources'
+  and (storage.foldername(name))[1] = 'session-materials'
+  and exists (select 1 from public.psix_facilitators f where f.email = auth.jwt() ->> 'email')
+);
+
+drop policy if exists "psix session materials facilitator delete" on storage.objects;
+create policy "psix session materials facilitator delete"
+on storage.objects for delete
+using (
+  bucket_id = 'psix-resources'
+  and (storage.foldername(name))[1] = 'session-materials'
+  and exists (select 1 from public.psix_facilitators f where f.email = auth.jwt() ->> 'email')
+);

@@ -7,6 +7,7 @@ import {
   fetchAllProgressForFacilitators, fetchMyArtifacts, syncArtifact,
   fetchMessages, postMessage, updateMessage, deleteMessage, addVote, removeVote,
   fetchResources, addLinkResource, uploadFileResource, deleteResource,
+  fetchSessionMaterials, upsertLinkMaterial, uploadFileMaterial, deleteSessionMaterial,
 } from './supabase.js';
 
 // ═══════════════════════════════════════════════════════
@@ -24,6 +25,12 @@ let gateRole = 'fellow';   // 'fellow' | 'facilitator'
 let gateStep = 'pass';     // 'pass' | 'name' | 'sync'
 let facilitatorLoaded = false;
 let facilitatorUnlocked = false;
+let isFacilitatorUser = false;      // confirmed facilitator (passed the facilitator-list check)
+let previewAsFellow = false;        // facilitator viewing the fellow shell with edit affordances hidden
+let sessionMaterialsCache = {};     // { [sessionId]: { [slotKey]: materialRow } }
+let sessionMaterialsLoaded = false;
+let _materialTarget = null;         // { sessionId, slotKey } for the open upload modal
+let _materialSelFile = null;
 
 // ═══════════════════════════════════════════════════════
 // UTIL
@@ -467,48 +474,66 @@ function renderSessionPortfolio(session) {
   `;
 }
 
+function materialFor(sessionId, slotKey) {
+  return (sessionMaterialsCache[sessionId] || {})[slotKey];
+}
+
+function withMaterial(session, base) {
+  const mat = materialFor(session.id, base.slotKey);
+  if (mat) return { ...base, status: 'Available', url: mat.url };
+  return { ...base, status: 'Pending', url: '' };
+}
+
 function getResourceGroups(session) {
-  const readings = session.readings.map(r => {
+  const readings = session.readings.map((r, i) => {
     const data = getReadingData(r);
-    return { title: data.title, type: data.type, status: data.url ? 'Available' : 'Pending', url: data.url, audience: 'Fellows' };
+    const slotKey = `reading-${i}`;
+    if (data.url) return { title: data.title, type: data.type, status: 'Available', url: data.url, audience: 'Fellows', slotKey, editable: false };
+    return withMaterial(session, { title: data.title, type: data.type, audience: 'Fellows', slotKey, editable: true });
   });
   return [
     { title: 'Core Readings', note: 'Complete before the session', items: readings },
     {
       title: 'Session Materials', note: 'For live work together',
       items: [
-        { title: `${session.month} session slide deck`, type: 'Slides', status: 'Pending', url: '', audience: 'Fellows' },
-        { title: `${session.month} working worksheet`, type: 'Worksheet', status: 'Pending', url: '', audience: 'Fellows' },
-        { title: 'Session agenda and activity flow', type: 'Agenda', status: 'Pending', url: '', audience: 'Fellows' },
+        withMaterial(session, { title: `${session.month} session slide deck`, type: 'Slides', audience: 'Fellows', slotKey: 'material-slides', editable: true }),
+        withMaterial(session, { title: `${session.month} working worksheet`, type: 'Worksheet', audience: 'Fellows', slotKey: 'material-worksheet', editable: true }),
+        withMaterial(session, { title: 'Session agenda and activity flow', type: 'Agenda', audience: 'Fellows', slotKey: 'material-agenda', editable: true }),
       ],
     },
     {
       title: 'Submit or Share', note: 'Where the month becomes evidence',
       items: [
-        { title: getPortfolioArtifact(session).label, type: 'Artifact', status: 'Pending', url: '', audience: 'Fellows' },
-        { title: `${session.month} reflection post`, type: 'Forum', status: 'Pending', url: '', audience: 'Cohort' },
-        { title: 'Mentor submission folder', type: 'Submission', status: 'Pending', url: '', audience: 'Mentor' },
+        withMaterial(session, { title: getPortfolioArtifact(session).label, type: 'Artifact', audience: 'Fellows', slotKey: 'submit-artifact', editable: true }),
+        withMaterial(session, { title: `${session.month} reflection post`, type: 'Forum', audience: 'Cohort', slotKey: 'submit-reflection', editable: true }),
+        withMaterial(session, { title: 'Mentor submission folder', type: 'Submission', audience: 'Mentor', slotKey: 'submit-mentor-folder', editable: true }),
       ],
     },
     {
       title: 'Mentor and Support', note: 'Use when you need feedback or orientation',
       items: [
-        { title: 'Mentor check-in notes', type: 'Mentor', status: 'Pending', url: '', audience: 'Private' },
-        { title: 'Office hours and support channel', type: 'Support', status: 'Pending', url: '', audience: 'Fellows' },
+        withMaterial(session, { title: 'Mentor check-in notes', type: 'Mentor', audience: 'Private', slotKey: 'mentor-notes', editable: true }),
+        withMaterial(session, { title: 'Office hours and support channel', type: 'Support', audience: 'Fellows', slotKey: 'mentor-officehours', editable: true }),
       ],
     },
     {
       title: 'Optional Deeper Dives', note: 'For fellows who want more',
       items: [
-        { title: `Additional ${DOMAINS[session.domain].label.toLowerCase()} resources`, type: 'Optional', status: 'Pending', url: '', audience: 'Optional' },
+        withMaterial(session, { title: `Additional ${DOMAINS[session.domain].label.toLowerCase()} resources`, type: 'Optional', audience: 'Optional', slotKey: 'optional-resources', editable: true }),
       ],
     },
   ];
 }
 
-function renderResourceAction(item) {
-  if (item.url) return `<a class="resource-action" href="${escapeHTML(item.url)}" target="_blank" rel="noopener">Open</a>`;
-  return '<span class="resource-action pending">Pending</span>';
+function renderResourceAction(item, sessionId) {
+  const openLink = item.url
+    ? `<a class="resource-action" href="${escapeHTML(item.url)}" target="_blank" rel="noopener">Open</a>`
+    : '<span class="resource-action pending">Pending</span>';
+  const showEdit = isFacilitatorUser && !previewAsFellow && item.editable !== false;
+  if (!showEdit) return openLink;
+  const editLabel = item.url ? 'Replace' : '+ Add';
+  const editBtn = `<button class="resource-action-edit" onclick="openMaterialModal('${sessionId}','${item.slotKey}','${escapeHTML(item.title)}')">${editLabel}</button>`;
+  return `<div class="resource-action-group">${openLink}${editBtn}</div>`;
 }
 
 function renderResourceGroups(session) {
@@ -529,12 +554,219 @@ function renderResourceGroups(session) {
                 <span class="resource-chip">${escapeHTML(item.audience)}</span>
               </div>
             </div>
-            ${renderResourceAction(item)}
+            ${renderResourceAction(item, session.id)}
           </div>
         `).join('')}
       </div>
     </section>
   `).join('');
+}
+
+function refreshResourceGroups(sessionId) {
+  const session = SESSIONS.find(s => s.id === sessionId);
+  const el = document.getElementById('resource-groups-' + sessionId);
+  if (!session || !el) return;
+  el.innerHTML = renderResourceGroups(session);
+}
+
+async function loadSessionMaterials(force) {
+  if (sessionMaterialsLoaded && !force) return;
+  sessionMaterialsLoaded = true;
+  const rows = await fetchSessionMaterials();
+  sessionMaterialsCache = {};
+  rows.forEach(row => {
+    if (!sessionMaterialsCache[row.session_id]) sessionMaterialsCache[row.session_id] = {};
+    sessionMaterialsCache[row.session_id][row.slot_key] = row;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// SESSION MATERIAL UPLOAD MODAL (facilitator only)
+// ═══════════════════════════════════════════════════════
+function openMaterialModal(sessionId, slotKey, defaultTitle) {
+  const session = SESSIONS.find(s => s.id === sessionId);
+  const existing = materialFor(sessionId, slotKey);
+  _materialTarget = { sessionId, slotKey };
+  _materialSelFile = null;
+
+  const titleEl = document.getElementById('material-modal-title');
+  const subEl = document.getElementById('material-modal-sub');
+  if (titleEl) titleEl.textContent = existing ? 'Replace Material' : 'Add Material';
+  if (subEl) subEl.textContent = `${session ? session.month : ''} — ${defaultTitle}`;
+
+  const urlInput = document.getElementById('material-url');
+  const linkTitleInput = document.getElementById('material-link-title');
+  const fileTitleInput = document.getElementById('material-file-title');
+  if (urlInput) urlInput.value = existing && existing.type === 'link' ? existing.url : '';
+  if (linkTitleInput) linkTitleInput.value = existing ? existing.title : defaultTitle;
+  if (fileTitleInput) fileTitleInput.value = existing ? existing.title : defaultTitle;
+  const linkErr = document.getElementById('material-link-error');
+  const fileErr = document.getElementById('material-file-error');
+  if (linkErr) linkErr.textContent = '';
+  if (fileErr) fileErr.textContent = '';
+
+  clearMaterialFile();
+  setMaterialType('link');
+
+  const footer = document.getElementById('material-modal-footer');
+  if (footer) footer.style.display = existing ? 'block' : 'none';
+
+  const overlay = document.getElementById('material-modal-overlay');
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function closeMaterialModal() {
+  const overlay = document.getElementById('material-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+  _materialTarget = null;
+}
+
+function setMaterialType(type) {
+  const isFile = type === 'file';
+  document.getElementById('material-type-link')?.classList.toggle('active', !isFile);
+  document.getElementById('material-type-file')?.classList.toggle('active', isFile);
+  const linkForm = document.getElementById('material-link-form');
+  const fileForm = document.getElementById('material-file-form');
+  if (linkForm) linkForm.style.display = isFile ? 'none' : 'block';
+  if (fileForm) fileForm.style.display = isFile ? 'block' : 'none';
+}
+
+function handleMaterialDrop(event) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('dragging');
+  const file = event.dataTransfer.files[0];
+  if (file) setMaterialFile(file);
+}
+
+function handleMaterialFileSelect(file) {
+  if (file) setMaterialFile(file);
+}
+
+function setMaterialFile(file) {
+  if (file.size > 20 * 1024 * 1024) {
+    alert('That file is over 20 MB. Please upload a smaller file, or share a link instead.');
+    return;
+  }
+  _materialSelFile = file;
+  const selectedEl = document.getElementById('material-file-selected');
+  const nameEl = document.getElementById('material-file-name-display');
+  const dropZone = document.getElementById('material-drop-zone');
+  if (selectedEl) selectedEl.style.display = 'flex';
+  if (nameEl) nameEl.textContent = `${file.name} (${formatFileSize(file.size)})`;
+  if (dropZone) dropZone.style.display = 'none';
+  const titleEl = document.getElementById('material-file-title');
+  if (titleEl && !titleEl.value) titleEl.value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+}
+
+function clearMaterialFile() {
+  _materialSelFile = null;
+  const selectedEl = document.getElementById('material-file-selected');
+  const dropZone = document.getElementById('material-drop-zone');
+  if (selectedEl) selectedEl.style.display = 'none';
+  if (dropZone) dropZone.style.display = 'block';
+  const inp = document.getElementById('material-file-input');
+  if (inp) inp.value = '';
+}
+
+async function submitMaterialLink() {
+  if (!_materialTarget) return;
+  const url = (document.getElementById('material-url')?.value || '').trim();
+  const title = (document.getElementById('material-link-title')?.value || '').trim();
+  const errEl = document.getElementById('material-link-error');
+  if (!url) { if (errEl) errEl.textContent = 'Please enter a URL.'; return; }
+  if (!title) { if (errEl) errEl.textContent = 'Please enter a title.'; return; }
+  if (errEl) errEl.textContent = '';
+
+  const btn = document.getElementById('material-link-submit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  const target = _materialTarget;
+  try {
+    await upsertLinkMaterial({
+      sessionId: target.sessionId, slotKey: target.slotKey, title, url,
+      email: currentUserEmail, name: fellowName || currentUserEmail || 'Facilitator',
+    });
+    await loadSessionMaterials(true);
+    refreshResourceGroups(target.sessionId);
+    closeMaterialModal();
+  } catch (err) {
+    if (errEl) errEl.textContent = 'Could not save: ' + (err.message || 'please try again.');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+}
+
+async function submitMaterialFile() {
+  if (!_materialTarget) return;
+  const errEl = document.getElementById('material-file-error');
+  if (!_materialSelFile) { if (errEl) errEl.textContent = 'Please select a file first.'; return; }
+  const title = (document.getElementById('material-file-title')?.value || '').trim();
+  if (!title) { if (errEl) errEl.textContent = 'Please enter a title.'; return; }
+  if (errEl) errEl.textContent = '';
+
+  const btn = document.getElementById('material-file-submit');
+  if (btn) { btn.disabled = true; btn.textContent = 'Uploading…'; }
+  const target = _materialTarget;
+  try {
+    await uploadFileMaterial({
+      sessionId: target.sessionId, slotKey: target.slotKey, title, file: _materialSelFile,
+      email: currentUserEmail, name: fellowName || currentUserEmail || 'Facilitator',
+    });
+    await loadSessionMaterials(true);
+    refreshResourceGroups(target.sessionId);
+    closeMaterialModal();
+  } catch (err) {
+    if (errEl) errEl.textContent = 'Upload failed: ' + (err.message || 'please try again.');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Upload'; }
+}
+
+async function removeMaterial() {
+  if (!_materialTarget) return;
+  if (!confirm('Revert this item to Pending?')) return;
+  const target = _materialTarget;
+  const existing = materialFor(target.sessionId, target.slotKey);
+  try {
+    await deleteSessionMaterial({
+      sessionId: target.sessionId, slotKey: target.slotKey,
+      url: existing?.url, type: existing?.type,
+    });
+    await loadSessionMaterials(true);
+    refreshResourceGroups(target.sessionId);
+    closeMaterialModal();
+  } catch (err) {
+    alert('Could not remove — please try again.');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// FACILITATOR PREVIEW TOOLBAR (shown when browsing the fellow shell as a facilitator)
+// ═══════════════════════════════════════════════════════
+function updateFacilitatorToolbar() {
+  const bar = document.getElementById('facToolbar');
+  if (!bar) return;
+  bar.style.display = isFacilitatorUser ? 'flex' : 'none';
+  document.body.classList.toggle('fac-toolbar-active', isFacilitatorUser);
+  const btn = document.getElementById('facToolbarPreviewBtn');
+  if (btn) {
+    btn.textContent = previewAsFellow
+      ? '👁 Viewing as: Fellow — click to resume editing'
+      : '🔧 Viewing as: Facilitator — editing live';
+    btn.classList.toggle('previewing', previewAsFellow);
+  }
+}
+
+function toggleFacilitatorPreview() {
+  previewAsFellow = !previewAsFellow;
+  updateFacilitatorToolbar();
+  SESSIONS.forEach(s => refreshResourceGroups(s.id));
+}
+
+function browseFellowContent() {
+  previewAsFellow = false;
+  setRoute('dashboard');
+}
+
+function backToFacilitatorDashboard() {
+  setRoute('facilitator');
 }
 
 function getSessionTasks(session) {
@@ -746,6 +978,7 @@ function applyFellowShell() {
   const facilitatorShell = document.getElementById('facilitatorShell');
   if (fellowShell) fellowShell.classList.add('active');
   if (facilitatorShell) facilitatorShell.classList.remove('active');
+  updateFacilitatorToolbar();
 }
 
 // Each secondary (non-session, non-dashboard) view registers itself here:
@@ -1182,7 +1415,7 @@ function buildSessions() {
       </section>
       <section class="tab-pane" id="${s.id}-resources" data-section="resources">
         <div class="section-hd">Resource Hub</div>
-        ${renderResourceGroups(s)}
+        <div id="resource-groups-${s.id}">${renderResourceGroups(s)}</div>
 
         <div class="section-hd" style="margin-top:24px">Shared by Fellows</div>
         <div class="resource-section">
@@ -1428,7 +1661,10 @@ async function handleSignOut() {
   await signOut();
   currentUserId = null;
   currentUserEmail = null;
+  isFacilitatorUser = false;
+  previewAsFellow = false;
   updateAccountPanel();
+  updateFacilitatorToolbar();
 }
 
 function fadeOutGate() {
@@ -1447,6 +1683,8 @@ function enterApp() {
   fadeOutGate();
   if (gateRole === 'facilitator') {
     facilitatorUnlocked = true;
+    isFacilitatorUser = true;
+    loadSessionMaterials().then(() => SESSIONS.forEach(s => refreshResourceGroups(s.id)));
     setRoute('facilitator');
   } else {
     updateAccountPanel();
@@ -1454,6 +1692,7 @@ function enterApp() {
       history.replaceState(null, '', '#dashboard');
     }
     routeFromHash({ behavior: 'auto' });
+    loadSessionMaterials().then(() => SESSIONS.forEach(s => refreshResourceGroups(s.id)));
     // Give focus a concrete landing point once the gate is gone, instead of
     // leaving it on document.body — Chromium's next Tab-from-nothing
     // otherwise resumes near wherever the routed-to scrollIntoView() just
@@ -1498,6 +1737,7 @@ function buildFacilitatorShell() {
       <div class="fac-topbar-title">Facilitator Dashboard</div>
       <span class="fac-badge">🔒 FACILITATOR ONLY</span>
       <span class="fac-refresh-status" id="facRefreshStatus"></span>
+      <button class="fac-btn" onclick="browseFellowContent()">🖉 Browse &amp; Manage Content</button>
       <button class="fac-btn fac-btn-refresh" onclick="refreshFacilitatorData()">↻ Refresh</button>
     </div>
     <div class="fac-page">
@@ -2835,6 +3075,61 @@ function renderShell() {
   app.innerHTML = `
     <div id="gate-overlay"></div>
     <a href="#contentWrap" class="skip-to-content">Skip to main content</a>
+    <div class="fac-toolbar" id="facToolbar" style="display:none;">
+      <span class="fac-toolbar-label">🔧 Facilitator Mode</span>
+      <button class="fac-toolbar-btn" id="facToolbarPreviewBtn" onclick="toggleFacilitatorPreview()">Viewing as: Facilitator — editing live</button>
+      <button class="fac-toolbar-btn fac-toolbar-btn-ghost" onclick="backToFacilitatorDashboard()">← Facilitator Dashboard</button>
+    </div>
+    <div class="material-modal-overlay" id="material-modal-overlay" style="display:none;" onclick="if(event.target===this)closeMaterialModal()">
+      <div class="material-modal">
+        <div class="lib-add-header">
+          <div class="material-modal-title" id="material-modal-title">Add Material</div>
+          <button class="lib-add-close" onclick="closeMaterialModal()">✕</button>
+        </div>
+        <div class="material-modal-sub" id="material-modal-sub"></div>
+        <div class="lib-type-toggle" style="margin-bottom:16px;">
+          <button class="lib-type-btn active" id="material-type-link" onclick="setMaterialType('link')">🔗 Share a Link</button>
+          <button class="lib-type-btn" id="material-type-file" onclick="setMaterialType('file')">📄 Upload a File</button>
+        </div>
+        <div id="material-link-form">
+          <div class="lib-field">
+            <label class="lib-label">URL</label>
+            <input id="material-url" class="lib-input" type="url" placeholder="https://…">
+          </div>
+          <div class="lib-field">
+            <label class="lib-label">Title</label>
+            <input id="material-link-title" class="lib-input" type="text" placeholder="What fellows will see">
+          </div>
+          <div id="material-link-error" class="lib-form-error"></div>
+          <button class="lib-submit-btn" id="material-link-submit" onclick="submitMaterialLink()">Save</button>
+        </div>
+        <div id="material-file-form" style="display:none;">
+          <div class="lib-drop-zone" id="material-drop-zone"
+               ondragover="event.preventDefault();this.classList.add('dragging')"
+               ondragleave="this.classList.remove('dragging')"
+               ondrop="handleMaterialDrop(event)"
+               onclick="document.getElementById('material-file-input').click()">
+            <div class="lib-drop-icon">📂</div>
+            <div class="lib-drop-text">Drag a file here, or click to browse</div>
+            <div class="lib-drop-hint">PDF, slides, images, documents — max 20 MB</div>
+            <input id="material-file-input" type="file" style="display:none;" onchange="handleMaterialFileSelect(this.files[0])">
+          </div>
+          <div id="material-file-selected" style="display:none;" class="lib-file-selected">
+            <span id="material-file-name-display" style="flex:1;"></span>
+            <button onclick="clearMaterialFile()" style="background:none;border:none;cursor:pointer;color:var(--text-lt);font-size:14px;padding:2px 6px;line-height:1;">✕</button>
+          </div>
+          <div class="lib-field">
+            <label class="lib-label">Title</label>
+            <input id="material-file-title" class="lib-input" type="text" placeholder="What fellows will see">
+          </div>
+          <div id="material-file-error" class="lib-form-error"></div>
+          <button class="lib-submit-btn" id="material-file-submit" onclick="submitMaterialFile()">Upload</button>
+        </div>
+        <div class="material-modal-footer" id="material-modal-footer" style="display:none;">
+          <button class="material-remove-btn" onclick="removeMaterial()">Remove this item (revert to Pending)</button>
+        </div>
+      </div>
+    </div>
     <div class="app-shell" id="fellowShell">
       <aside class="sidebar">
         <div class="sidebar-brand">
@@ -2978,6 +3273,9 @@ Object.assign(window, {
   showLibAddForm, hideLibAddForm, setLibType, submitLibLink, submitLibFile,
   handleLibDrop, handleLibFileSelect, clearLibFile, handleDeleteResource,
   filterLibType, filterLibSession, debounceLibSearch, handleArtifactInput,
+  openMaterialModal, closeMaterialModal, setMaterialType, handleMaterialDrop,
+  handleMaterialFileSelect, clearMaterialFile, submitMaterialLink, submitMaterialFile,
+  removeMaterial, toggleFacilitatorPreview, browseFellowContent, backToFacilitatorDashboard,
 });
 
 init();

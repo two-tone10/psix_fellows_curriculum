@@ -261,3 +261,74 @@ export async function deleteResource({ id, userId, url, type }) {
   const { error } = await sb.from('psix_resources').delete().eq('id', id).eq('user_id', userId);
   if (error) throw error;
 }
+
+// ── SESSION MATERIALS (facilitator-managed, fills "Pending" slots) ──────
+
+export async function fetchSessionMaterials() {
+  const sb = getClient();
+  if (!sb) return [];
+  const { data, error } = await sb.from('psix_session_materials').select('*');
+  if (error) {
+    console.warn('Supabase: fetch session materials failed', error.message);
+    return [];
+  }
+  return data || [];
+}
+
+export async function upsertLinkMaterial(entry) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const { error } = await sb.from('psix_session_materials').upsert({
+    session_id: entry.sessionId,
+    slot_key: entry.slotKey,
+    type: 'link',
+    title: entry.title,
+    url: entry.url,
+    file_name: null,
+    file_size: null,
+    uploaded_by_email: entry.email || null,
+    uploaded_by_name: entry.name || null,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'session_id,slot_key' });
+  if (error) throw error;
+}
+
+export async function uploadFileMaterial(entry) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  const filePath = `session-materials/${entry.sessionId}/${entry.slotKey}-${Date.now()}-${entry.file.name}`;
+  const { error: upErr } = await sb.storage
+    .from('psix-resources')
+    .upload(filePath, entry.file, { cacheControl: '3600', upsert: true });
+  if (upErr) throw upErr;
+
+  const { data } = sb.storage.from('psix-resources').getPublicUrl(filePath);
+
+  const { error: dbErr } = await sb.from('psix_session_materials').upsert({
+    session_id: entry.sessionId,
+    slot_key: entry.slotKey,
+    type: 'file',
+    title: entry.title,
+    url: data.publicUrl,
+    file_name: entry.file.name,
+    file_size: entry.file.size,
+    uploaded_by_email: entry.email || null,
+    uploaded_by_name: entry.name || null,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'session_id,slot_key' });
+  if (dbErr) throw dbErr;
+}
+
+export async function deleteSessionMaterial({ sessionId, slotKey, url, type }) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured.');
+  if (type === 'file' && url) {
+    const base = `${CONFIG.supabaseUrl}/storage/v1/object/public/psix-resources/`;
+    if (url.startsWith(base)) {
+      await sb.storage.from('psix-resources').remove([url.slice(base.length)]);
+    }
+  }
+  const { error } = await sb.from('psix_session_materials').delete()
+    .eq('session_id', sessionId).eq('slot_key', slotKey);
+  if (error) throw error;
+}
