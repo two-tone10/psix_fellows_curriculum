@@ -994,6 +994,7 @@ const SECONDARY_VIEWS = [
   { key: 'artifactguide', hash: 'library-artifact-guide', panelId: 'artifactGuidePanel', btnId: 'libraryNavBtn', topbar: 'Artifact Guide', build: () => buildArtifactGuidePanel() },
   { key: 'conceptmap', hash: 'library-concept-map', panelId: 'conceptMapPanel', btnId: 'libraryNavBtn', topbar: 'How Your Portfolio Comes Together', build: () => buildConceptMapPanel() },
   { key: 'sampleportfolio', hash: 'library-sample-portfolio', panelId: 'samplePortfolioPanel', btnId: 'libraryNavBtn', topbar: 'Sample Portfolio (Illustrative)', build: () => buildSamplePortfolioPanel() },
+  { key: 'myportfolio', hash: 'library-my-portfolio', panelId: 'myPortfolioPanel', btnId: 'libraryNavBtn', topbar: 'My Portfolio', build: () => buildMyPortfolioPanel() },
   { key: 'sampleconceptnote', hash: 'library-sample-concept-note', panelId: 'sampleConceptNotePanel', btnId: 'libraryNavBtn', topbar: 'Sample Concept Note (Illustrative)', build: () => buildSampleConceptNotePanel() },
 ];
 
@@ -1684,7 +1685,10 @@ function enterApp() {
   if (gateRole === 'facilitator') {
     facilitatorUnlocked = true;
     isFacilitatorUser = true;
-    loadSessionMaterials().then(() => SESSIONS.forEach(s => refreshResourceGroups(s.id)));
+    loadSessionMaterials().then(() => {
+      SESSIONS.forEach(s => refreshResourceGroups(s.id));
+      buildMaterialsCoverage();
+    });
     setRoute('facilitator');
   } else {
     updateAccountPanel();
@@ -1769,6 +1773,8 @@ function buildFacilitatorShell() {
       </div>
       <div class="fac-section-hdr"><h2>Fellowship Year Arc</h2><div class="fac-section-hdr-line"></div></div>
       <div class="fac-arc-wrap"><div class="fac-arc-row" id="facArcRow"></div></div>
+      <div class="fac-section-hdr"><h2>Materials Coverage</h2><div class="fac-section-hdr-line"></div></div>
+      <div class="fac-coverage-wrap" id="facCoverageWrap"></div>
       <div class="fac-section-hdr"><h2>Fellow Progress by Session</h2><div class="fac-section-hdr-line"></div></div>
       <div class="fac-grid-wrap"><table><thead id="facProgressHead"></thead><tbody id="facProgressBody"></tbody></table></div>
       <div class="fac-section-hdr"><h2>Recent Activity</h2><div class="fac-section-hdr-line"></div></div>
@@ -1777,6 +1783,37 @@ function buildFacilitatorShell() {
   `;
   buildFacilitatorArc();
   buildFacilitatorTableSkeleton();
+  buildMaterialsCoverage();
+}
+
+function getMaterialsCoverage(session) {
+  const items = getResourceGroups(session).flatMap(g => g.items).filter(i => i.editable !== false);
+  const filled = items.filter(i => i.status === 'Available').length;
+  return { filled, total: items.length };
+}
+
+function manageSessionMaterials(sessionId) {
+  previewAsFellow = false;
+  setRoute(sessionId + '-resources');
+}
+
+function buildMaterialsCoverage() {
+  const wrap = document.getElementById('facCoverageWrap');
+  if (!wrap) return;
+  wrap.innerHTML = SESSIONS.map(s => {
+    const { filled, total } = getMaterialsCoverage(s);
+    const pct = total > 0 ? Math.round((filled / total) * 100) : 100;
+    const barColor = pct === 100 ? 'var(--fac-tra)' : pct > 0 ? 'var(--fac-amber)' : 'var(--fac-slate)';
+    return `
+      <div class="fac-coverage-row">
+        <div class="fac-coverage-month" style="color:${DOMAINS[s.domain].color}">${escapeHTML(s.month.slice(0, 3))}</div>
+        <div class="fac-coverage-title">${escapeHTML(s.title)}</div>
+        <div class="fac-coverage-bar-track"><div class="fac-coverage-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div class="fac-coverage-count">${filled}/${total}</div>
+        <button class="fac-coverage-btn" onclick="manageSessionMaterials('${s.id}')">Manage →</button>
+      </div>
+    `;
+  }).join('');
 }
 
 function buildFacilitatorArc() {
@@ -1912,6 +1949,8 @@ async function loadFacilitatorData() {
   const status = document.getElementById('facRefreshStatus');
   if (status) status.textContent = 'Refreshing…';
   const rows = await fetchAllProgressForFacilitators();
+  await loadSessionMaterials(true);
+  buildMaterialsCoverage();
   const banner = document.getElementById('facNoDataBanner');
   if (banner) banner.style.display = rows.length === 0 ? 'flex' : 'none';
   populateFacilitatorTable(rows);
@@ -1933,6 +1972,11 @@ function applyFacilitatorView() {
     facilitatorLoaded = true;
     buildFacilitatorShell();
     loadFacilitatorData();
+  } else {
+    // Materials Coverage reflects whatever's in sessionMaterialsCache, which the
+    // upload modal already keeps fresh — so a cheap re-render (no network call)
+    // is enough to reflect edits made since the last full dashboard load.
+    buildMaterialsCoverage();
   }
 }
 
@@ -2525,6 +2569,7 @@ function buildArtifactGuidePanel() {
     <div class="folder-grid">
       ${renderFolderTile({ title: 'How It Fits Together', description: 'A click-to-explore map showing how each monthly artifact builds toward your capstone portfolio.', color: 'var(--tea)', onclick: "showSecondaryView('conceptmap')" })}
       ${renderFolderTile({ title: 'Sample Portfolio', description: 'A fictional, fully-worked example of a completed year — illustrative only.', color: 'var(--tra)', onclick: "showSecondaryView('sampleportfolio')" })}
+      ${renderFolderTile({ title: 'My Portfolio', description: "Your own artifacts, pulled from what you've drafted this year — export a clean copy for your dossier.", color: 'var(--gold)', onclick: "showSecondaryView('myportfolio')" })}
     </div>
   `;
 }
@@ -2888,6 +2933,63 @@ function buildSamplePortfolioPanel() {
 }
 
 // ═══════════════════════════════════════════════════════
+// MY PORTFOLIO (real fellow artifacts, exportable to PDF)
+// ═══════════════════════════════════════════════════════
+function exportMyPortfolio() {
+  document.body.classList.add('printing-portfolio');
+  window.print();
+}
+
+function buildMyPortfolioPanel() {
+  const panel = document.getElementById('myPortfolioPanel');
+  if (!panel) return;
+
+  const cards = PORTFOLIO_ARTIFACTS.map(artifact => {
+    const session = SESSIONS.find(s => s.id === artifact.sessionId);
+    if (!session) return '';
+    const domain = DOMAINS[session.domain];
+    const format = artifact.format || 'text';
+    const draft = getArtifactDraft(session.id);
+    const hasContent = hasArtifactContent(session.id);
+    const isVisual = hasContent && (format === 'aims' || format === 'timeline' || format === 'slides');
+    let body;
+    if (!hasContent) {
+      body = `<div class="sample-card-content my-portfolio-empty">Not started yet. <button class="dashboard-link-button no-print" onclick="goToTask('${session.id}','portfolio')">Draft this artifact →</button></div>`;
+    } else if (format === 'text') {
+      body = `<div class="sample-card-content">${escapeHTML(draft.text)}</div>`;
+    } else {
+      body = renderArtifactPreview(format, draft);
+    }
+    return `
+      <div class="sample-card${isVisual ? ' sample-card-full' : ''}">
+        <div class="sample-card-header">
+          <span class="sample-card-month" style="color:${domain.color}">${escapeHTML(session.month)}</span>
+          <span class="artifact-chip">${escapeHTML(artifact.component)}</span>
+        </div>
+        <div class="sample-card-title">${escapeHTML(artifact.label)}</div>
+        <div class="sample-card-prompt"><em>Prompt:</em> ${escapeHTML(artifact.prompt)}</div>
+        ${body}
+      </div>
+    `;
+  }).join('');
+
+  const stats = getPortfolioStats();
+
+  panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Artifact Guide', onclick: "showSecondaryView('artifactguide')" }, { label: 'My Portfolio' }])}
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">My Portfolio</span></div>
+      <h1 class="session-title">${escapeHTML(fellowName ? fellowName + "'s" : 'Your')} Fellowship Portfolio</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:8px;">
+        Your own artifacts, pulled directly from what you've drafted across the year — ${stats.complete}/${stats.total} months complete. Nothing here is fictional; if a month looks empty, you haven't drafted it yet.
+      </p>
+      <button class="btn-outline no-print" onclick="exportMyPortfolio()">⎙ Export / Save as PDF</button>
+    </div>
+    <div class="sample-grid">${cards}</div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
 // CV & DOSSIER TOOLS
 // ═══════════════════════════════════════════════════════
 function getCvDetails() {
@@ -3181,6 +3283,7 @@ function renderShell() {
           <section class="dashboard-panel" id="artifactGuidePanel" aria-label="Artifact guide"></section>
           <section class="dashboard-panel" id="conceptMapPanel" aria-label="How your portfolio comes together"></section>
           <section class="dashboard-panel" id="samplePortfolioPanel" aria-label="Sample portfolio"></section>
+          <section class="dashboard-panel" id="myPortfolioPanel" aria-label="My portfolio"></section>
           <section class="dashboard-panel" id="sampleConceptNotePanel" aria-label="Sample concept note"></section>
           <section class="dashboard-panel" id="cvDossierPanel" aria-label="CV and dossier tools"></section>
           <section class="dashboard-panel" id="fundingPanel" aria-label="Funding opportunities"></section>
@@ -3253,6 +3356,7 @@ async function init() {
   });
 
   window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
+  window.addEventListener('afterprint', () => document.body.classList.remove('printing-portfolio'));
 
   const resumed = await resumePendingOAuth();
   if (!resumed) {
@@ -3276,6 +3380,7 @@ Object.assign(window, {
   openMaterialModal, closeMaterialModal, setMaterialType, handleMaterialDrop,
   handleMaterialFileSelect, clearMaterialFile, submitMaterialLink, submitMaterialFile,
   removeMaterial, toggleFacilitatorPreview, browseFellowContent, backToFacilitatorDashboard,
+  manageSessionMaterials, exportMyPortfolio,
 });
 
 init();

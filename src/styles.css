@@ -2155,6 +2155,7 @@ body {
 .sample-card-title { font-family: 'EB Garamond', serif; font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
 .sample-card-prompt { font-size: 12.5px; color: var(--text-lt); line-height: 1.5; margin-bottom: 10px; font-style: italic; }
 .sample-card-content { font-size: 13.5px; color: var(--text-med); line-height: 1.65; }
+.my-portfolio-empty { color: var(--text-lt); font-style: italic; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .sample-card-capstone { border-color: var(--gold); background: var(--gold-pale); }
 .sample-card-full { grid-column: 1 / -1; }
@@ -2447,6 +2448,13 @@ body {
   .phase-card, .reflect-after-card, .readings-card { break-inside: avoid; }
   .content-wrap { padding: 0; max-width: 100%; }
   .session-header { padding: 24px 0 0; }
+  .no-print { display: none !important; }
+
+  /* "Export My Portfolio" prints only that panel, not the whole curriculum */
+  body.printing-portfolio .session-panel { display: none !important; }
+  body.printing-portfolio .dashboard-panel { display: none !important; }
+  body.printing-portfolio #myPortfolioPanel { display: block !important; }
+  body.printing-portfolio .sample-card { break-inside: avoid; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2826,6 +2834,40 @@ body.fac-toolbar-active .main { padding-top: 92px; }
 .fac-feed-type-goal { color: var(--fac-gold-lt); }
 .fac-feed-type-reading { color: var(--fac-tra); }
 .fac-feed-empty { padding: 32px 20px; text-align: center; color: var(--fac-text-dim); font-size: 13px; }
+
+.fac-coverage-wrap { background: var(--fac-navy-md); border-radius: 4px; padding: 4px 0; }
+.fac-coverage-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 150px 46px auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.fac-coverage-row:last-child { border-bottom: none; }
+.fac-coverage-month { font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.fac-coverage-title { font-size: 12.5px; color: var(--fac-text-med); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fac-coverage-bar-track { height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden; }
+.fac-coverage-bar-fill { height: 100%; border-radius: 3px; transition: width 0.2s; }
+.fac-coverage-count { font-size: 11px; color: var(--fac-text-dim); text-align: right; white-space: nowrap; }
+.fac-coverage-btn {
+  border: 1px solid var(--fac-slate);
+  background: var(--fac-navy-dk);
+  color: var(--fac-gold-lt);
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fac-coverage-btn:hover { border-color: var(--fac-gold); }
+
+@media screen and (max-width: 900px) {
+  .fac-coverage-row { grid-template-columns: 1fr; gap: 6px; padding: 12px 16px; }
+  .fac-coverage-count { text-align: left; }
+}
 
 .fac-no-data-banner {
   background: rgba(168,120,32,.12); border: 1px solid rgba(168,120,32,.3);
