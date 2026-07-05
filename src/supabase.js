@@ -48,6 +48,20 @@ export async function signOut() {
   await sb.auth.signOut();
 }
 
+// Passwordless sign-in for fellows without a Google account — works with any
+// email (e.g. a university address). Supabase emails a one-time link back to
+// `emailRedirectTo`; clicking it establishes a session the same way Google
+// sign-in does, so the rest of the app treats both identically.
+export async function signInWithEmailOtp(email) {
+  const sb = getClient();
+  if (!sb) throw new Error('Supabase is not configured yet.');
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href },
+  });
+  if (error) throw error;
+}
+
 export async function isFacilitatorEmail(email) {
   if (!email) return false;
   if (CONFIG.facilitatorEmails.includes(email)) return true;

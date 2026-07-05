@@ -314,6 +314,9 @@ body {
   letter-spacing: 0.02em;
 }
 .sidebar-account-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.28); }
+.sidebar-account-btn + .sidebar-account-btn { margin-top: 6px; }
+.sidebar-account-btn-ghost { background: none; border-color: transparent; color: rgba(255,255,255,0.4); font-size: 11px; }
+.sidebar-account-btn-ghost:hover { color: rgba(255,255,255,0.7); border-color: transparent; }
 
 /* ─── TOPBAR ────────────────────────────────────────── */
 .topbar {
@@ -2643,6 +2646,21 @@ body.fac-toolbar-active .main { padding-top: 92px; }
 .gate-divider-or::before, .gate-divider-or::after {
   content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
 }
+
+.gate-email-otp { display: flex; flex-direction: column; gap: 8px; }
+.gate-email-otp .gate-input { text-align: left; }
+.gate-btn-email {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 13px; font-weight: 600;
+  color: #fff; cursor: pointer;
+}
+.gate-btn-email:hover:not(:disabled) { border-color: var(--gold); }
+.gate-btn-email:disabled { opacity: 0.6; cursor: default; }
 
 .gate-skip {
   background: none; border: none;

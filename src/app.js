@@ -2,7 +2,7 @@ import { CONFIG } from './config.js';
 import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS, CAPSTONE_COMPONENTS, DOSSIER_SECTIONS, FUNDING_OPPORTUNITIES } from './curriculum.js';
 import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE, SAMPLE_CONCEPT_NOTE, STAFF_RESOURCES } from './samplePortfolio.js';
 import {
-  supabaseReady, getSession, onAuthChange, signInWithGoogle, signOut,
+  supabaseReady, getSession, onAuthChange, signInWithGoogle, signInWithEmailOtp, signOut,
   isFacilitatorEmail, fetchMyProgress, syncProgressEvent,
   fetchAllProgressForFacilitators, fetchMyArtifacts, syncArtifact,
   fetchMessages, postMessage, updateMessage, deleteMessage, addVote, removeVote,
@@ -1575,6 +1575,12 @@ function renderGate() {
                  <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.85.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
                  Sign in with Google
                </button>
+               <div class="gate-divider-or">or</div>
+               <div class="gate-email-otp">
+                 <input id="gate-email-input" class="gate-input" type="email" placeholder="you@youruniversity.edu" autocomplete="email" onkeydown="if(event.key==='Enter'){event.preventDefault();handleEmailOtpSignIn()}">
+                 <button class="gate-btn-email" onclick="handleEmailOtpSignIn()">Email me a sign-in link</button>
+               </div>
+               <div id="gate-email-status" class="gate-error"></div>
                <div class="gate-divider-or">or</div>`
             : ''}
           <button class="gate-skip" onclick="skipSync()">Continue without syncing</button>
@@ -1627,6 +1633,10 @@ function gateCheckName() {
     return;
   }
   fellowName = val;
+  // Save now (not just at enterApp) so a magic-link click-through that opens
+  // in a fresh tab — a different in-memory JS state — can still recover the
+  // name that was typed here moments ago, as long as it's the same browser.
+  localStorage.setItem(`${STORAGE_PREFIX}:fellowName`, val);
   gateStep = 'sync';
   renderGate();
 }
@@ -1658,14 +1668,47 @@ async function handleGoogleSignIn() {
   }
 }
 
+async function handleEmailOtpSignIn() {
+  const input = document.getElementById('gate-email-input');
+  const statusEl = document.getElementById('gate-email-status');
+  const email = (input?.value || '').trim();
+  if (!email || !email.includes('@')) {
+    if (statusEl) { statusEl.style.color = ''; statusEl.textContent = 'Please enter a valid email address.'; }
+    return;
+  }
+  const btn = document.querySelector('.gate-btn-email');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    await signInWithEmailOtp(email);
+    if (statusEl) {
+      statusEl.style.color = 'rgba(150,220,180,0.9)';
+      statusEl.textContent = `Check ${email} for a sign-in link — it'll bring you right back here.`;
+    }
+    if (input) input.value = '';
+  } catch (err) {
+    if (statusEl) { statusEl.style.color = ''; statusEl.textContent = 'Could not send link: ' + err.message; }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Email me a sign-in link'; }
+}
+
 async function handleSignOut() {
   await signOut();
   currentUserId = null;
   currentUserEmail = null;
   isFacilitatorUser = false;
   previewAsFellow = false;
+  localStorage.removeItem(`${STORAGE_PREFIX}:lastRole`);
+  localStorage.removeItem(`${STORAGE_PREFIX}:localGateOK`);
   updateAccountPanel();
   updateFacilitatorToolbar();
+}
+
+function resetLocalAccess() {
+  if (!confirm("Reset access on this device? You'll need the passcode again next time.")) return;
+  localStorage.removeItem(`${STORAGE_PREFIX}:lastRole`);
+  localStorage.removeItem(`${STORAGE_PREFIX}:localGateOK`);
+  localStorage.removeItem(`${STORAGE_PREFIX}:fellowName`);
+  window.location.reload();
 }
 
 function fadeOutGate() {
@@ -1681,6 +1724,14 @@ function fadeOutGate() {
 }
 
 function enterApp() {
+  // Remember this device passed the gate, so a returning visitor skips
+  // straight past the passcode (and, for signed-in fellows, past the whole
+  // gate — see tryResumeExistingSession).
+  localStorage.setItem(`${STORAGE_PREFIX}:lastRole`, gateRole);
+  if (gateRole === 'fellow') {
+    if (fellowName) localStorage.setItem(`${STORAGE_PREFIX}:fellowName`, fellowName);
+    localStorage.setItem(`${STORAGE_PREFIX}:localGateOK`, '1');
+  }
   fadeOutGate();
   if (gateRole === 'facilitator') {
     facilitatorUnlocked = true;
@@ -1719,6 +1770,7 @@ function updateAccountPanel() {
     panel.innerHTML = `
       <div class="sidebar-account-status"><div class="sidebar-account-dot"></div>Progress saved on this device only</div>
       ${supabaseReady() ? `<button class="sidebar-account-btn" onclick="handleGoogleSignIn()">Sign in to sync</button>` : ''}
+      ${localStorage.getItem(`${STORAGE_PREFIX}:localGateOK`) === '1' ? `<button class="sidebar-account-btn sidebar-account-btn-ghost" onclick="resetLocalAccess()">Not you? Reset access</button>` : ''}
     `;
   }
 }
@@ -3328,11 +3380,50 @@ async function resumePendingOAuth() {
     return true;
   }
 
-  fellowName = pendingName || session.user.user_metadata?.full_name || fellowName;
+  fellowName = pendingName || session.user.user_metadata?.full_name
+    || localStorage.getItem(`${STORAGE_PREFIX}:fellowName`) || fellowName;
   await pullRemoteProgress();
   await pullRemoteArtifacts();
   enterApp();
   return true;
+}
+
+// Covers everyone `resumePendingOAuth` doesn't: a returning visitor who's
+// still signed in from a previous visit (Supabase persists that session in
+// localStorage on its own), and a magic-link click-through that lands in a
+// brand-new tab with no `psix_pending_role` sessionStorage flag to find.
+let _resumingSession = false;
+async function tryResumeExistingSession() {
+  if (_resumingSession) return false;
+  const session = await getSession();
+  if (!session) return false;
+  _resumingSession = true;
+  try {
+    currentUserId = session.user.id;
+    currentUserEmail = session.user.email;
+    const savedRole = localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow';
+
+    if (savedRole === 'facilitator') {
+      const ok = await isFacilitatorEmail(currentUserEmail);
+      if (ok) {
+        gateRole = 'facilitator';
+        enterApp();
+        return true;
+      }
+      // No longer (or never) a facilitator on this email — fall through and
+      // treat them as a fellow instead of stranding them on the gate.
+    }
+
+    gateRole = 'fellow';
+    fellowName = localStorage.getItem(`${STORAGE_PREFIX}:fellowName`)
+      || session.user.user_metadata?.full_name || fellowName;
+    await pullRemoteProgress();
+    await pullRemoteArtifacts();
+    enterApp();
+    return true;
+  } finally {
+    _resumingSession = false;
+  }
 }
 
 async function init() {
@@ -3353,14 +3444,33 @@ async function init() {
       currentUserEmail = null;
     }
     updateAccountPanel();
+    // A magic-link click-through fires this event once Supabase finishes
+    // parsing the URL — often in a brand-new tab with no sessionStorage
+    // flag for resumePendingOAuth to find. If the gate's still up when a
+    // session appears, that's our signal to resume it here instead.
+    const overlay = document.getElementById('gate-overlay');
+    const gateStillUp = overlay && !overlay.classList.contains('hidden') && !overlay.classList.contains('fade-out');
+    if (session && gateStillUp) tryResumeExistingSession();
   });
 
   window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-portfolio'));
 
-  const resumed = await resumePendingOAuth();
-  if (!resumed) {
-    // fresh load: gate stays up until the fellow/facilitator completes it
+  const resumedOAuth = await resumePendingOAuth();
+  if (resumedOAuth) return;
+
+  const resumedSession = await tryResumeExistingSession();
+  if (resumedSession) return;
+
+  // No live Supabase session — fall back to local recognition for fellows
+  // who previously chose "Continue without syncing" on this device.
+  if (localStorage.getItem(`${STORAGE_PREFIX}:localGateOK`) === '1') {
+    const savedName = localStorage.getItem(`${STORAGE_PREFIX}:fellowName`) || '';
+    if (savedName) {
+      gateRole = 'fellow';
+      fellowName = savedName;
+      enterApp();
+    }
   }
 }
 
@@ -3372,7 +3482,7 @@ Object.assign(window, {
   toggleGoal, toggleReading, toggleTaskCheckbox,
   togglePassVisibility, gateCheckPass, gateCheckName,
   showFacilitatorGate, showFellowGate, skipSync,
-  handleGoogleSignIn, handleSignOut, refreshFacilitatorData,
+  handleGoogleSignIn, handleEmailOtpSignIn, handleSignOut, resetLocalAccess, refreshFacilitatorData,
   postDiscussionMessage, toggleVote, editDiscMsg, cancelDiscEdit, saveDiscMsg, deleteDiscMsg,
   showLibAddForm, hideLibAddForm, setLibType, submitLibLink, submitLibFile,
   handleLibDrop, handleLibFileSelect, clearLibFile, handleDeleteResource,
