@@ -883,7 +883,9 @@ function renderReadinessChecklist(session) {
       </div>
       <div class="readiness-checklist">
         ${getReadinessItems(session).map((item, index) => `
-          <div class="readiness-check ${item.done ? 'done' : item.ready ? 'ready' : ''}" data-readiness-session="${session.id}" data-readiness-index="${index}">
+          <button type="button" class="readiness-check ${item.done ? 'done' : item.ready ? 'ready' : ''}"
+            data-readiness-session="${session.id}" data-readiness-index="${index}"
+            onclick="goToTask('${session.id}', '${item.actionTab}')">
             <div class="readiness-kind">${escapeHTML(item.kind)}</div>
             <div class="readiness-mark">${item.done ? '✓' : item.ready ? '•' : ''}</div>
             <div>
@@ -891,7 +893,8 @@ function renderReadinessChecklist(session) {
               <div class="readiness-check-detail">${escapeHTML(item.detail)}</div>
               <span class="readiness-check-status">${item.done ? 'Done' : item.ready ? 'Ready' : 'Waiting'}</span>
             </div>
-          </div>
+            <div class="readiness-check-arrow">→</div>
+          </button>
         `).join('')}
       </div>
     </div>

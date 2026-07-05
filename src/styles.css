@@ -760,13 +760,29 @@ body {
 
 .readiness-check {
   display: grid;
-  grid-template-columns: 76px 22px minmax(0, 1fr);
+  grid-template-columns: 76px 22px minmax(0, 1fr) 18px;
   gap: 10px;
   align-items: start;
+  width: 100%;
   padding: 11px 0;
+  border: none;
   border-bottom: 1px solid #F2F2F2;
+  background: none;
+  font-family: 'Raleway', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
 }
 .readiness-check:last-child { border-bottom: none; }
+.readiness-check:hover { background: var(--off-white); }
+.readiness-check:hover .readiness-check-arrow { color: var(--gold-dk); transform: translateX(2px); }
+
+.readiness-check-arrow {
+  color: var(--text-lt);
+  font-size: 15px;
+  padding-top: 5px;
+  transition: transform 0.15s, color 0.15s;
+}
 
 .readiness-kind {
   color: var(--text-lt);
