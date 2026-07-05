@@ -80,7 +80,7 @@ export async function fetchMyProgress(userId) {
   if (!sb || !userId) return [];
   const { data, error } = await sb
     .from('psix_progress_events')
-    .select('session_id, task_type, task_index, action')
+    .select('session_id, task_type, task_index, action, note')
     .eq('user_id', userId);
   if (error) {
     console.warn('Supabase: fetch progress failed', error.message);
@@ -103,6 +103,29 @@ export async function syncProgressEvent(entry) {
     action: entry.action,
   }, { onConflict: 'user_id,session_id,task_type,task_index' });
   if (error) console.warn('Supabase: sync progress failed', error.message);
+}
+
+// Informal, ungraded notes under the Before/After session tasks — stored on
+// the same row as its progress checkbox (task_index is always 0 for these),
+// via a dedicated `note` column. Deliberately omits `action` unless a value
+// is supplied by the caller, so the note-only path never overwrites the
+// checkbox's completion state, and syncProgressEvent() above never touches
+// `note` — the two update paths only ever touch their own column.
+export async function syncTaskNote(entry) {
+  const sb = getClient();
+  if (!sb || !entry.userId) return;
+  const { error } = await sb.from('psix_progress_events').upsert({
+    user_id: entry.userId,
+    fellow_name: entry.fellowName,
+    fellow_email: entry.fellowEmail,
+    session_id: entry.sessionId,
+    task_type: entry.taskType,
+    task_index: 0,
+    task_text: entry.taskText,
+    action: entry.action,
+    note: entry.note,
+  }, { onConflict: 'user_id,session_id,task_type,task_index' });
+  if (error) console.warn('Supabase: sync task note failed', error.message);
 }
 
 export async function fetchMyArtifacts(userId) {

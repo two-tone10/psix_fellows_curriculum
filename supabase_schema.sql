@@ -9,8 +9,10 @@ create table if not exists public.psix_progress_events (
   task_index integer not null default 0,
   task_text text not null,
   action text not null check (action in ('checked', 'unchecked')),
+  note text,
   unique (user_id, session_id, task_type, task_index)
 );
+alter table public.psix_progress_events add column if not exists note text;
 
 create table if not exists public.psix_portfolio_artifacts (
   id uuid primary key default gen_random_uuid(),

@@ -1440,6 +1440,9 @@ body {
 
 .task-check-wrap label { font-size: 13px; color: var(--text-lt); font-style: italic; cursor: pointer; line-height: 1.45; }
 
+.task-note-wrap { margin-top: 12px; }
+.task-note-wrap .cv-copy-status { display: inline-block; margin-top: 4px; }
+
 .readings-card {
   background: var(--white);
   border: 1px solid var(--border);

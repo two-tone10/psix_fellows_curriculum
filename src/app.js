@@ -3,7 +3,7 @@ import { DOMAINS, SESSIONS, PORTFOLIO_ARTIFACTS, CAPSTONE_COMPONENTS, DOSSIER_SE
 import { SAMPLE_FELLOW, SAMPLE_ARTIFACTS, SAMPLE_CAPSTONE_NARRATIVE, SAMPLE_CONCEPT_NOTE, STAFF_RESOURCES } from './samplePortfolio.js';
 import {
   supabaseReady, getSession, onAuthChange, signInWithGoogle, signInWithEmailOtp, signOut,
-  isFacilitatorEmail, fetchMyProgress, syncProgressEvent,
+  isFacilitatorEmail, fetchMyProgress, syncProgressEvent, syncTaskNote,
   fetchAllProgressForFacilitators, fetchMyArtifacts, syncArtifact,
   fetchMessages, postMessage, updateMessage, deleteMessage, addVote, removeVote,
   fetchResources, addLinkResource, uploadFileResource, deleteResource,
@@ -148,6 +148,73 @@ async function pullRemoteProgress() {
   const rows = await fetchMyProgress(currentUserId);
   rows.forEach(row => {
     setLocalOnly(row.session_id, row.task_type, row.task_index, row.action === 'checked');
+    // Don't clobber a local draft that hasn't synced yet.
+    if (row.note && !localStorage.getItem(taskNoteKey(row.session_id, row.task_type))) {
+      localStorage.setItem(taskNoteKey(row.session_id, row.task_type), row.note);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TASK NOTES — informal, ungraded scratch space under the "Before/After
+// the Session" tasks, so a fellow's own thinking (e.g. July's "write a
+// paragraph" prep task) is actually captured somewhere, not just a
+// checkbox. Same localStorage-first + optional Supabase sync pattern as
+// progress checkboxes; reuses the same psix_progress_events row via its
+// `note` column rather than a separate table.
+// ═══════════════════════════════════════════════════════
+function taskNoteKey(sessionId, type) {
+  return `${STORAGE_PREFIX}:tasknote:${sessionId}:${type}`;
+}
+
+function getTaskNote(sessionId, type) {
+  return localStorage.getItem(taskNoteKey(sessionId, type)) || '';
+}
+
+function saveTaskNote(sessionId, type, text, taskText) {
+  localStorage.setItem(taskNoteKey(sessionId, type), text);
+  if (currentUserId) {
+    syncTaskNote({
+      userId: currentUserId,
+      fellowName,
+      fellowEmail: currentUserEmail,
+      sessionId,
+      taskType: type,
+      taskText: taskText || '',
+      // Reflects current true completion state so this save can't
+      // accidentally flip the checkbox — syncProgressEvent() (the checkbox
+      // handler) never touches `note`, and this never touches anything
+      // else's meaning for `action`.
+      action: isComplete(sessionId, type, 0) ? 'checked' : 'unchecked',
+      note: text,
+    });
+  }
+}
+
+const _taskNoteSaveTimers = {};
+function handleTaskNoteInput(sessionId, type) {
+  const timerKey = sessionId + ':' + type;
+  const textarea = document.getElementById(`tasknote-${type}-${sessionId}`);
+  const statusEl = document.getElementById(`tasknote-status-${type}-${sessionId}`);
+  if (statusEl) statusEl.textContent = 'Saving…';
+  clearTimeout(_taskNoteSaveTimers[timerKey]);
+  _taskNoteSaveTimers[timerKey] = setTimeout(() => {
+    const session = SESSIONS.find(s => s.id === sessionId);
+    const taskText = session ? (type === 'before' ? session.before : session.after) : '';
+    saveTaskNote(sessionId, type, textarea ? textarea.value : '', taskText);
+    if (statusEl) statusEl.textContent = 'Saved';
+  }, 500);
+}
+
+// Session panels are built once at init(), before a signed-in fellow's
+// remotely-synced notes have been pulled in — without this, a note saved on
+// another device would silently never appear in a freshly loaded textarea.
+function refreshTaskNoteFields() {
+  SESSIONS.forEach(s => {
+    const beforeEl = document.getElementById(`tasknote-before-${s.id}`);
+    if (beforeEl) beforeEl.value = getTaskNote(s.id, 'before');
+    const afterEl = document.getElementById(`tasknote-after-${s.id}`);
+    if (afterEl) afterEl.value = getTaskNote(s.id, 'after');
   });
 }
 
@@ -1382,6 +1449,13 @@ function buildSessions() {
               onchange="toggleTaskCheckbox(this, '${s.id}', 'Before Session')">
             <label for="check-before-${s.id}">Mark complete when done</label>
           </div>
+          <div class="task-note-wrap">
+            <label class="lib-label" for="tasknote-before-${s.id}">Your Notes <span class="lib-optional">optional, saved automatically — not graded</span></label>
+            <textarea class="artifact-editor-textarea small" id="tasknote-before-${s.id}"
+              placeholder="Jot down your paragraph or working thoughts here…"
+              oninput="handleTaskNoteInput('${s.id}','before')">${escapeHTML(getTaskNote(s.id, 'before'))}</textarea>
+            <span class="cv-copy-status" id="tasknote-status-before-${s.id}"></span>
+          </div>
         </div>
         <div class="section-hd" style="margin-top:24px">Assigned Readings</div>
         <div class="readings-card">${readingsHTML}</div>
@@ -1402,6 +1476,13 @@ function buildSessions() {
               data-task="${escapeHTML(s.after)}"
               onchange="toggleTaskCheckbox(this, '${s.id}', 'After Session')">
             <label for="check-after-${s.id}">Mark reflection complete</label>
+          </div>
+          <div class="task-note-wrap">
+            <label class="lib-label" for="tasknote-after-${s.id}">Your Notes <span class="lib-optional">optional, saved automatically — not graded</span></label>
+            <textarea class="artifact-editor-textarea small" id="tasknote-after-${s.id}"
+              placeholder="Jot down your reflection here…"
+              oninput="handleTaskNoteInput('${s.id}','after')">${escapeHTML(getTaskNote(s.id, 'after'))}</textarea>
+            <span class="cv-copy-status" id="tasknote-status-after-${s.id}"></span>
           </div>
         </div>
         <div class="section-hd">Reflection Prompts</div>
@@ -3360,6 +3441,7 @@ async function resumeSession(retry) {
     fellowName = pendingName || localStorage.getItem(`${STORAGE_PREFIX}:fellowName`)
       || session.user.user_metadata?.full_name || fellowName;
     await pullRemoteProgress();
+    refreshTaskNoteFields();
     await pullRemoteArtifacts();
     await refreshAdminStatus();
     enterApp();
@@ -3439,7 +3521,7 @@ Object.assign(window, {
   showDashboard, showSession, goToTask, switchTab, showLibrary,
   showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding, showSecondaryView,
   handleCvDetailsInput, copyCvLine, copyAllCvLines, downloadSessionICS,
-  toggleGoal, toggleReading, toggleTaskCheckbox,
+  toggleGoal, toggleReading, toggleTaskCheckbox, handleTaskNoteInput,
   togglePassVisibility, gateCheckPass, gateCheckName, skipSync,
   handleGoogleSignIn, handleEmailOtpSignIn, handleSignOut, resetLocalAccess, toggleAdminView, refreshFacilitatorData,
   postDiscussionMessage, toggleVote, editDiscMsg, cancelDiscEdit, saveDiscMsg, deleteDiscMsg,
