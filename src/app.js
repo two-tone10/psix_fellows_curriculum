@@ -3372,7 +3372,17 @@ function renderShell() {
 async function resumePendingOAuth() {
   const pendingRole = sessionStorage.getItem('psix_pending_role');
   if (!pendingRole) return false;
-  const session = await getSession();
+
+  // Supabase parses the OAuth redirect's tokens asynchronously — on a slow
+  // connection getSession() can briefly return null right after landing
+  // back from Google, even though a session is about to exist. Give it a
+  // moment rather than giving up on the first check (which used to fall
+  // through to tryResumeExistingSession()'s stale localStorage role guess).
+  let session = await getSession();
+  for (let i = 0; i < 10 && !session; i++) {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    session = await getSession();
+  }
   if (!session) return false;
 
   sessionStorage.removeItem('psix_pending_role');
@@ -3423,7 +3433,18 @@ async function tryResumeExistingSession() {
     // even if this device last remembered "fellow", instead of silently
     // routing back to the fellow side.
     const hashWantsFacilitator = window.location.hash === '#facilitator';
-    const savedRole = hashWantsFacilitator ? 'facilitator' : (localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow');
+    // A still-pending OAuth-redirect role hint outranks the remembered role —
+    // it reflects what was explicitly requested moments ago (e.g. Facilitator
+    // gate → Sign in with Google), and resumePendingOAuth() may not have
+    // consumed it yet if this ran first due to session-parsing timing.
+    const pendingRole = sessionStorage.getItem('psix_pending_role');
+    const savedRole = hashWantsFacilitator ? 'facilitator' : (pendingRole || localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow');
+    if (pendingRole) {
+      sessionStorage.removeItem('psix_pending_role');
+      const pendingName = sessionStorage.getItem('psix_pending_name') || '';
+      sessionStorage.removeItem('psix_pending_name');
+      if (pendingName) fellowName = pendingName;
+    }
 
     if (savedRole === 'facilitator') {
       const ok = await isFacilitatorEmail(currentUserEmail);
