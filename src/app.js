@@ -3327,6 +3327,19 @@ function looksLikeOAuthReturn() {
   return /access_token=|refresh_token=/.test(window.location.hash) || /[?&]code=/.test(window.location.search);
 }
 
+// Google/Supabase append error=...&error_description=... (query string) or
+// #error=...&error_description=... (hash) when an OAuth sign-in fails before
+// ever producing a session — e.g. a misconfigured provider or redirect. Read
+// this so a failure is a visible message instead of a silent bounce back to
+// the passcode screen.
+function readOAuthError() {
+  const params = new URLSearchParams(window.location.search.replace(/^\?/, ''));
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const err = params.get('error_description') || params.get('error')
+    || hashParams.get('error_description') || hashParams.get('error');
+  return err ? decodeURIComponent(err.replace(/\+/g, ' ')) : null;
+}
+
 let _resumingSession = false;
 async function resumeSession(retry) {
   if (_resumingSession) return false;
@@ -3385,7 +3398,15 @@ async function init() {
   window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-portfolio'));
 
-  const resumed = await resumeSession(looksLikeOAuthReturn());
+  const oauthError = readOAuthError();
+  const wasOAuthReturn = looksLikeOAuthReturn() || Boolean(oauthError);
+  const resumed = await resumeSession(wasOAuthReturn);
+  if (wasOAuthReturn) {
+    // Only strip when there was actually OAuth debris (tokens/code/error) in
+    // the URL — otherwise this would blow away a normal deep link's hash
+    // (e.g. someone bookmarking #library) on every single page load.
+    history.replaceState(null, '', window.location.pathname);
+  }
   if (resumed) return;
 
   // No live Supabase session — fall back to local recognition for fellows
@@ -3395,6 +3416,20 @@ async function init() {
     if (savedName) {
       fellowName = savedName;
       enterApp();
+      return;
+    }
+  }
+
+  // Sign-in was attempted (we can tell from the returned URL) but never
+  // produced a session — surface exactly why instead of silently bouncing
+  // back to a blank passcode screen, which is what made this so hard to
+  // diagnose remotely.
+  if (wasOAuthReturn) {
+    const el = document.getElementById('gate-pass-error');
+    if (el) {
+      el.textContent = oauthError
+        ? `Sign-in failed: ${oauthError}`
+        : "Sign-in didn't complete — Supabase never returned a session. Try again, and if this repeats, check Authentication → Providers → Google is enabled in Supabase.";
     }
   }
 }
