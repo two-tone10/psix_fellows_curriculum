@@ -1761,18 +1761,37 @@ function updateAccountPanel() {
   if (!panel) return;
   const greeting = document.getElementById('fellow-greeting');
   if (greeting) greeting.textContent = fellowName ? 'Welcome, ' + fellowName.split(' ')[0] : '';
+  const facilitatorSwitchBtn = `<button class="sidebar-account-btn sidebar-account-btn-ghost" onclick="switchToFacilitatorGate()">Facilitator? Switch portal →</button>`;
   if (currentUserId) {
     panel.innerHTML = `
       <div class="sidebar-account-status"><div class="sidebar-account-dot synced"></div>Synced as ${escapeHTML(currentUserEmail || '')}</div>
       <button class="sidebar-account-btn" onclick="handleSignOut()">Sign out</button>
+      ${facilitatorSwitchBtn}
     `;
   } else {
     panel.innerHTML = `
       <div class="sidebar-account-status"><div class="sidebar-account-dot"></div>Progress saved on this device only</div>
       ${supabaseReady() ? `<button class="sidebar-account-btn" onclick="handleGoogleSignIn()">Sign in to sync</button>` : ''}
       ${localStorage.getItem(`${STORAGE_PREFIX}:localGateOK`) === '1' ? `<button class="sidebar-account-btn sidebar-account-btn-ghost" onclick="resetLocalAccess()">Not you? Reset access</button>` : ''}
+      ${facilitatorSwitchBtn}
     `;
   }
+}
+
+// Always-reachable escape hatch: the sign-in persistence feature auto-resumes
+// a returning visitor into whichever role was last remembered on this device,
+// *before* the gate (and its "Facilitator? Enter the dashboard" link) ever
+// renders. Without this, a facilitator who previously used the fellow side
+// on the same device/browser could never reach the facilitator gate again.
+function switchToFacilitatorGate() {
+  const overlay = document.getElementById('gate-overlay');
+  if (overlay) {
+    overlay.inert = false;
+    overlay.classList.remove('hidden', 'fade-out');
+  }
+  gateRole = 'facilitator';
+  gateStep = 'pass';
+  renderGate();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3369,9 +3388,8 @@ async function resumePendingOAuth() {
     if (!ok) {
       gateStep = 'pass';
       renderGate();
-      document.getElementById('gate-pass-error') && (document.getElementById('gate-pass-error').textContent = '');
       setTimeout(() => {
-        const err = document.getElementById('gate-sync-error');
+        const err = document.getElementById('gate-pass-error');
         if (err) err.textContent = `${currentUserEmail} is not on the facilitator list.`;
       }, 0);
       return true;
@@ -3401,7 +3419,11 @@ async function tryResumeExistingSession() {
   try {
     currentUserId = session.user.id;
     currentUserEmail = session.user.email;
-    const savedRole = localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow';
+    // A direct link/bookmark to #facilitator is explicit intent — honor it
+    // even if this device last remembered "fellow", instead of silently
+    // routing back to the fellow side.
+    const hashWantsFacilitator = window.location.hash === '#facilitator';
+    const savedRole = hashWantsFacilitator ? 'facilitator' : (localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow');
 
     if (savedRole === 'facilitator') {
       const ok = await isFacilitatorEmail(currentUserEmail);
@@ -3410,8 +3432,22 @@ async function tryResumeExistingSession() {
         enterApp();
         return true;
       }
-      // No longer (or never) a facilitator on this email — fall through and
-      // treat them as a fellow instead of stranding them on the gate.
+      if (hashWantsFacilitator) {
+        // Explicit intent, but this signed-in email isn't on the facilitator
+        // list — show the facilitator gate with a clear reason instead of
+        // quietly dropping them into the fellow view.
+        gateRole = 'facilitator';
+        gateStep = 'pass';
+        renderGate();
+        setTimeout(() => {
+          const err = document.getElementById('gate-pass-error');
+          if (err) err.textContent = `${currentUserEmail} is not on the facilitator list.`;
+        }, 0);
+        return true;
+      }
+      // Remembered role was "facilitator" but no longer qualifies, and there
+      // was no explicit request for it — fall through to the fellow view
+      // instead of stranding them on the gate.
     }
 
     gateRole = 'fellow';
@@ -3482,7 +3518,7 @@ Object.assign(window, {
   toggleGoal, toggleReading, toggleTaskCheckbox,
   togglePassVisibility, gateCheckPass, gateCheckName,
   showFacilitatorGate, showFellowGate, skipSync,
-  handleGoogleSignIn, handleEmailOtpSignIn, handleSignOut, resetLocalAccess, refreshFacilitatorData,
+  handleGoogleSignIn, handleEmailOtpSignIn, handleSignOut, resetLocalAccess, switchToFacilitatorGate, refreshFacilitatorData,
   postDiscussionMessage, toggleVote, editDiscMsg, cancelDiscEdit, saveDiscMsg, deleteDiscMsg,
   showLibAddForm, hideLibAddForm, setLibType, submitLibLink, submitLibFile,
   handleLibDrop, handleLibFileSelect, clearLibFile, handleDeleteResource,
