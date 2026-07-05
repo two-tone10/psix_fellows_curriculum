@@ -1659,9 +1659,16 @@ function skipSync() {
 
 async function handleGoogleSignIn() {
   try {
+    // sessionStorage is a nice-to-have (it's what recovers fellowName), but
+    // it isn't guaranteed to survive every Google OAuth round-trip — so the
+    // role we actually rely on rides along in the redirect URL itself, via
+    // OAUTH_RETURN_HASH below. That's the one thing Supabase is guaranteed
+    // to hand back to us unchanged.
     sessionStorage.setItem('psix_pending_role', gateRole);
     sessionStorage.setItem('psix_pending_name', fellowName);
-    await signInWithGoogle();
+    const marker = gateRole === 'facilitator' ? OAUTH_RETURN_HASH.facilitator : OAUTH_RETURN_HASH.fellow;
+    const redirectTo = window.location.origin + window.location.pathname + window.location.search + marker;
+    await signInWithGoogle(redirectTo);
   } catch (err) {
     const el = document.getElementById('gate-sync-error');
     if (el) el.textContent = 'Sign-in failed: ' + err.message;
@@ -3369,18 +3376,38 @@ function renderShell() {
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
-async function resumePendingOAuth() {
-  const pendingRole = sessionStorage.getItem('psix_pending_role');
+// Encodes which gate a "Sign in with Google" click came from directly into
+// the OAuth redirect URL. sessionStorage *usually* survives the round-trip
+// through Google and back, but it isn't guaranteed on every connection/
+// browser — a hash fragment on the URL Supabase is told to redirect back to
+// is the one thing that reliably comes back unchanged, since it never
+// touches the network (fragments aren't sent in HTTP requests at all).
+const OAUTH_RETURN_HASH = { facilitator: '#oauth-return-facilitator', fellow: '#oauth-return-fellow' };
+
+// Reads and clears an OAUTH_RETURN_HASH marker from the current URL, if
+// present. Call this once per page load, before any routing logic looks at
+// window.location.hash, so a stray "#oauth-return-facilitator" never gets
+// mistaken for a session/route hash.
+function consumeOAuthReturnRole() {
+  const hash = window.location.hash;
+  let role = null;
+  if (hash === OAUTH_RETURN_HASH.facilitator) role = 'facilitator';
+  else if (hash === OAUTH_RETURN_HASH.fellow) role = 'fellow';
+  if (role) history.replaceState(null, '', window.location.pathname + window.location.search);
+  return role;
+}
+
+async function resumePendingOAuth(oauthReturnRole) {
+  const pendingRole = oauthReturnRole || sessionStorage.getItem('psix_pending_role');
   if (!pendingRole) return false;
 
   // Supabase parses the OAuth redirect's tokens asynchronously — on a slow
   // connection getSession() can briefly return null right after landing
   // back from Google, even though a session is about to exist. Give it a
-  // moment rather than giving up on the first check (which used to fall
-  // through to tryResumeExistingSession()'s stale localStorage role guess).
+  // few seconds rather than giving up on the first check.
   let session = await getSession();
-  for (let i = 0; i < 10 && !session; i++) {
-    await new Promise(resolve => setTimeout(resolve, 150));
+  for (let i = 0; i < 15 && !session; i++) {
+    await new Promise(resolve => setTimeout(resolve, 200));
     session = await getSession();
   }
   if (!session) return false;
@@ -3421,7 +3448,7 @@ async function resumePendingOAuth() {
 // localStorage on its own), and a magic-link click-through that lands in a
 // brand-new tab with no `psix_pending_role` sessionStorage flag to find.
 let _resumingSession = false;
-async function tryResumeExistingSession() {
+async function tryResumeExistingSession(oauthReturnRole) {
   if (_resumingSession) return false;
   const session = await getSession();
   if (!session) return false;
@@ -3429,15 +3456,16 @@ async function tryResumeExistingSession() {
   try {
     currentUserId = session.user.id;
     currentUserEmail = session.user.email;
-    // A direct link/bookmark to #facilitator is explicit intent — honor it
-    // even if this device last remembered "fellow", instead of silently
-    // routing back to the fellow side.
-    const hashWantsFacilitator = window.location.hash === '#facilitator';
+    // A direct link/bookmark to #facilitator, or an OAuth-return marker this
+    // load already carried, is explicit intent — honor it even if this
+    // device last remembered "fellow", instead of silently routing back to
+    // the fellow side.
+    const hashWantsFacilitator = oauthReturnRole === 'facilitator' || window.location.hash === '#facilitator';
     // A still-pending OAuth-redirect role hint outranks the remembered role —
     // it reflects what was explicitly requested moments ago (e.g. Facilitator
     // gate → Sign in with Google), and resumePendingOAuth() may not have
     // consumed it yet if this ran first due to session-parsing timing.
-    const pendingRole = sessionStorage.getItem('psix_pending_role');
+    const pendingRole = oauthReturnRole || sessionStorage.getItem('psix_pending_role');
     const savedRole = hashWantsFacilitator ? 'facilitator' : (pendingRole || localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow');
     if (pendingRole) {
       sessionStorage.removeItem('psix_pending_role');
@@ -3492,6 +3520,11 @@ async function init() {
   gateStep = 'pass';
   renderGate();
 
+  // Read (and strip) an OAUTH_RETURN_HASH marker before anything else looks
+  // at the URL hash, so this load knows unambiguously which gate the
+  // "Sign in with Google" click that led here came from.
+  const oauthReturnRole = consumeOAuthReturnRole();
+
   onAuthChange(session => {
     if (session) {
       currentUserId = session.user.id;
@@ -3507,16 +3540,16 @@ async function init() {
     // session appears, that's our signal to resume it here instead.
     const overlay = document.getElementById('gate-overlay');
     const gateStillUp = overlay && !overlay.classList.contains('hidden') && !overlay.classList.contains('fade-out');
-    if (session && gateStillUp) tryResumeExistingSession();
+    if (session && gateStillUp) tryResumeExistingSession(oauthReturnRole);
   });
 
   window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-portfolio'));
 
-  const resumedOAuth = await resumePendingOAuth();
+  const resumedOAuth = await resumePendingOAuth(oauthReturnRole);
   if (resumedOAuth) return;
 
-  const resumedSession = await tryResumeExistingSession();
+  const resumedSession = await tryResumeExistingSession(oauthReturnRole);
   if (resumedSession) return;
 
   // No live Supabase session — fall back to local recognition for fellows

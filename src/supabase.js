@@ -32,12 +32,12 @@ export function onAuthChange(callback) {
   return () => data.subscription.unsubscribe();
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(redirectTo) {
   const sb = getClient();
   if (!sb) throw new Error('Supabase is not configured yet.');
   const { error } = await sb.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href },
+    options: { redirectTo: redirectTo || window.location.href },
   });
   if (error) throw error;
 }
