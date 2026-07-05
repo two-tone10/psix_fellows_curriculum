@@ -25,8 +25,10 @@ create table if not exists public.psix_portfolio_artifacts (
 );
 
 create table if not exists public.psix_facilitators (
-  email text primary key
+  email text primary key,
+  role text not null default 'admin'
 );
+alter table public.psix_facilitators add column if not exists role text not null default 'admin';
 
 alter table public.psix_progress_events enable row level security;
 alter table public.psix_portfolio_artifacts enable row level security;

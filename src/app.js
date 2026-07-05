@@ -21,11 +21,9 @@ let currentUserId = null;
 let currentUserEmail = null;
 let activeView = 'dashboard';
 let activeSessionId = '';
-let gateRole = 'fellow';   // 'fellow' | 'facilitator'
-let gateStep = 'pass';     // 'pass' | 'name' | 'sync'
+let gateStep = 'pass';     // 'pass' | 'name' | 'sync' — one gate for everyone now
 let facilitatorLoaded = false;
-let facilitatorUnlocked = false;
-let isFacilitatorUser = false;      // confirmed facilitator (passed the facilitator-list check)
+let isFacilitatorUser = false;      // signed-in email is on the facilitator list — grants the admin toggle
 let previewAsFellow = false;        // facilitator viewing the fellow shell with edit affordances hidden
 let sessionMaterialsCache = {};     // { [sessionId]: { [slotKey]: materialRow } }
 let sessionMaterialsLoaded = false;
@@ -947,7 +945,7 @@ function routeFromHash(options = {}) {
   const route = parseRoute();
   const behavior = options.behavior || 'smooth';
   if (route.view === 'facilitator') {
-    if (!facilitatorUnlocked) {
+    if (!isFacilitatorUser) {
       history.replaceState(null, '', '#dashboard');
       applyFellowShell();
       applyDashboardView();
@@ -1494,48 +1492,38 @@ function toggleTaskCheckbox(el, sessionId) {
 const LOGO_LIGHT = './src/assets/psix-logo-light.png';
 const LOGO_DARK = './src/assets/psix-logo-dark.png';
 
-function gateRoleCopy() {
-  if (gateRole === 'facilitator') {
-    return {
-      eyebrow: 'PSiX · Purpose Commons',
-      title: 'Facilitator Dashboard',
-      subtitle: 'Fellow progress, session coverage, and live activity',
-    };
-  }
-  return {
-    eyebrow: 'PSiX · Purpose Commons',
-    title: "Fellow's Journey Companion",
-    subtitle: 'Translational Fellowship in Purpose Science',
-  };
-}
+const GATE_COPY = {
+  eyebrow: 'PSiX · Purpose Commons',
+  title: "Fellow's Journey Companion",
+  subtitle: 'Translational Fellowship in Purpose Science',
+};
 
+// Everyone comes in through this one gate now — there is no separate
+// facilitator passcode. Administrator access (the toggle to the Facilitator
+// Dashboard, once inside) is granted by being listed in the psix_facilitators
+// table under the Google/email address used to sign in here, checked after
+// entry — not by which passcode screen someone found.
 function renderGate() {
   const overlay = document.getElementById('gate-overlay');
   if (!overlay) return;
-  const copy = gateRoleCopy();
+  const copy = GATE_COPY;
   const syncAvailable = supabaseReady();
 
   let stepHTML = '';
   if (gateStep === 'pass') {
     stepHTML = `
       <div class="gate-card">
-        ${gateRole === 'facilitator' ? '<div style="text-align:center"><span class="gate-badge">🔒 Facilitator Only</span></div>' : ''}
         <div>
           <div class="gate-label">Access Code</div>
           <div class="gate-input-wrap">
             <input id="gate-pass-input" class="gate-input" type="password"
-                   placeholder="Enter your ${gateRole === 'facilitator' ? 'facilitator' : 'cohort'} passcode"
+                   placeholder="Enter your cohort passcode"
                    autocomplete="off" onkeydown="if(event.key==='Enter')gateCheckPass()">
             <button class="gate-pass-toggle" type="button" onclick="togglePassVisibility()">Show</button>
           </div>
         </div>
         <div id="gate-pass-error" class="gate-error"></div>
         <button class="gate-btn" onclick="gateCheckPass()">Continue →</button>
-      </div>
-      <div class="gate-role-switch">
-        ${gateRole === 'fellow'
-          ? `<button onclick="showFacilitatorGate()">Facilitator? Enter the dashboard →</button>`
-          : `<button onclick="showFellowGate()">← Back to fellow access</button>`}
       </div>
     `;
   } else if (gateStep === 'name') {
@@ -1552,42 +1540,26 @@ function renderGate() {
       </div>
     `;
   } else if (gateStep === 'sync') {
-    if (gateRole === 'facilitator') {
-      stepHTML = `
-        <div class="gate-card">
-          <div class="gate-label" style="text-align:center; margin-bottom:0;">Sign in to load live fellow data</div>
-          ${syncAvailable
-            ? `<button class="gate-btn-google" onclick="handleGoogleSignIn()">
-                 <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.85.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
-                 Sign in with Google
-               </button>`
-            : `<div class="gate-error" style="color:rgba(255,255,255,0.5)">Supabase isn't configured yet, so live data can't load. Add your project details to src/config.js.</div>`}
-          <div id="gate-sync-error" class="gate-error"></div>
-        </div>
-        <div class="gate-role-switch"><button onclick="showFellowGate()">← Back to fellow access</button></div>
-      `;
-    } else {
-      stepHTML = `
-        <div class="gate-card">
-          <div class="gate-label" style="text-align:center; margin-bottom:0;">Sync your progress across devices</div>
-          ${syncAvailable
-            ? `<button class="gate-btn-google" onclick="handleGoogleSignIn()">
-                 <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.85.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
-                 Sign in with Google
-               </button>
-               <div class="gate-divider-or">or</div>
-               <div class="gate-email-otp">
-                 <input id="gate-email-input" class="gate-input" type="email" placeholder="you@youruniversity.edu" autocomplete="email" onkeydown="if(event.key==='Enter'){event.preventDefault();handleEmailOtpSignIn()}">
-                 <button class="gate-btn-email" onclick="handleEmailOtpSignIn()">Email me a sign-in link</button>
-               </div>
-               <div id="gate-email-status" class="gate-error"></div>
-               <div class="gate-divider-or">or</div>`
-            : ''}
-          <button class="gate-skip" onclick="skipSync()">Continue without syncing</button>
-          <div id="gate-sync-error" class="gate-error"></div>
-        </div>
-      `;
-    }
+    stepHTML = `
+      <div class="gate-card">
+        <div class="gate-label" style="text-align:center; margin-bottom:0;">Sync your progress across devices</div>
+        ${syncAvailable
+          ? `<button class="gate-btn-google" onclick="handleGoogleSignIn()">
+               <svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.85.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
+               Sign in with Google
+             </button>
+             <div class="gate-divider-or">or</div>
+             <div class="gate-email-otp">
+               <input id="gate-email-input" class="gate-input" type="email" placeholder="you@youruniversity.edu" autocomplete="email" onkeydown="if(event.key==='Enter'){event.preventDefault();handleEmailOtpSignIn()}">
+               <button class="gate-btn-email" onclick="handleEmailOtpSignIn()">Email me a sign-in link</button>
+             </div>
+             <div id="gate-email-status" class="gate-error"></div>
+             <div class="gate-divider-or">or</div>`
+          : ''}
+        <button class="gate-skip" onclick="skipSync()">Continue without syncing</button>
+        <div id="gate-sync-error" class="gate-error"></div>
+      </div>
+    `;
   }
 
   overlay.innerHTML = `
@@ -1614,12 +1586,11 @@ function togglePassVisibility() {
 async function gateCheckPass() {
   const input = document.getElementById('gate-pass-input');
   const val = input.value.trim();
-  const expected = gateRole === 'facilitator' ? CONFIG.facilitatorAccessHash : CONFIG.fellowAccessHash;
   const hash = await sha256Hex(val);
-  if (val && hash === expected) {
-    gateStep = gateRole === 'facilitator' ? 'sync' : 'name';
+  if (val && hash === CONFIG.fellowAccessHash) {
+    gateStep = 'name';
     renderGate();
-    if (gateStep === 'name') setTimeout(() => document.getElementById('gate-name-input')?.focus(), 50);
+    setTimeout(() => document.getElementById('gate-name-input')?.focus(), 50);
   } else {
     document.getElementById('gate-pass-error').textContent = 'Incorrect passcode. Please try again.';
     input.value = '';
@@ -1641,34 +1612,14 @@ function gateCheckName() {
   renderGate();
 }
 
-function showFacilitatorGate() {
-  gateRole = 'facilitator';
-  gateStep = 'pass';
-  renderGate();
-}
-
-function showFellowGate() {
-  gateRole = 'fellow';
-  gateStep = 'pass';
-  renderGate();
-}
-
 function skipSync() {
   enterApp();
 }
 
 async function handleGoogleSignIn() {
   try {
-    // sessionStorage is a nice-to-have (it's what recovers fellowName), but
-    // it isn't guaranteed to survive every Google OAuth round-trip — so the
-    // role we actually rely on rides along in the redirect URL itself, via
-    // OAUTH_RETURN_HASH below. That's the one thing Supabase is guaranteed
-    // to hand back to us unchanged.
-    sessionStorage.setItem('psix_pending_role', gateRole);
     sessionStorage.setItem('psix_pending_name', fellowName);
-    const marker = gateRole === 'facilitator' ? OAUTH_RETURN_HASH.facilitator : OAUTH_RETURN_HASH.fellow;
-    const redirectTo = window.location.origin + window.location.pathname + window.location.search + marker;
-    await signInWithGoogle(redirectTo);
+    await signInWithGoogle();
   } catch (err) {
     const el = document.getElementById('gate-sync-error');
     if (el) el.textContent = 'Sign-in failed: ' + err.message;
@@ -1704,9 +1655,9 @@ async function handleSignOut() {
   currentUserEmail = null;
   isFacilitatorUser = false;
   previewAsFellow = false;
-  localStorage.removeItem(`${STORAGE_PREFIX}:lastRole`);
   localStorage.removeItem(`${STORAGE_PREFIX}:localGateOK`);
   updateAccountPanel();
+  updateAdminToggle();
   updateFacilitatorToolbar();
 }
 
@@ -1732,35 +1683,39 @@ function fadeOutGate() {
 
 function enterApp() {
   // Remember this device passed the gate, so a returning visitor skips
-  // straight past the passcode (and, for signed-in fellows, past the whole
-  // gate — see tryResumeExistingSession).
-  localStorage.setItem(`${STORAGE_PREFIX}:lastRole`, gateRole);
-  if (gateRole === 'fellow') {
-    if (fellowName) localStorage.setItem(`${STORAGE_PREFIX}:fellowName`, fellowName);
-    localStorage.setItem(`${STORAGE_PREFIX}:localGateOK`, '1');
-  }
+  // straight past the passcode next time — see resumeSession().
+  if (fellowName) localStorage.setItem(`${STORAGE_PREFIX}:fellowName`, fellowName);
+  localStorage.setItem(`${STORAGE_PREFIX}:localGateOK`, '1');
   fadeOutGate();
-  if (gateRole === 'facilitator') {
-    facilitatorUnlocked = true;
-    isFacilitatorUser = true;
-    loadSessionMaterials().then(() => {
-      SESSIONS.forEach(s => refreshResourceGroups(s.id));
-      buildMaterialsCoverage();
-    });
-    setRoute('facilitator');
-  } else {
-    updateAccountPanel();
-    if (!window.location.hash || window.location.hash === '#') {
-      history.replaceState(null, '', '#dashboard');
-    }
-    routeFromHash({ behavior: 'auto' });
-    loadSessionMaterials().then(() => SESSIONS.forEach(s => refreshResourceGroups(s.id)));
-    // Give focus a concrete landing point once the gate is gone, instead of
-    // leaving it on document.body — Chromium's next Tab-from-nothing
-    // otherwise resumes near wherever the routed-to scrollIntoView() just
-    // scrolled to, silently skipping the sidebar nav and skip link.
-    setTimeout(() => { document.getElementById('contentWrap')?.focus(); }, 520);
+  updateAccountPanel();
+  if (!window.location.hash || window.location.hash === '#') {
+    history.replaceState(null, '', '#dashboard');
   }
+  routeFromHash({ behavior: 'auto' });
+  loadSessionMaterials().then(() => SESSIONS.forEach(s => refreshResourceGroups(s.id)));
+  // Give focus a concrete landing point once the gate is gone, instead of
+  // leaving it on document.body — Chromium's next Tab-from-nothing
+  // otherwise resumes near wherever the routed-to scrollIntoView() just
+  // scrolled to, silently skipping the sidebar nav and skip link.
+  setTimeout(() => { document.getElementById('contentWrap')?.focus(); }, 520);
+}
+
+// Everyone enters as a fellow. Whether the "Facilitator Dashboard" toggle
+// appears (and works) is decided here, after sign-in, by checking the signed-
+// in email against psix_facilitators — not by which gate someone found.
+async function refreshAdminStatus() {
+  isFacilitatorUser = currentUserEmail ? await isFacilitatorEmail(currentUserEmail) : false;
+  updateAdminToggle();
+}
+
+function updateAdminToggle() {
+  const btn = document.getElementById('adminToggleBtn');
+  if (btn) btn.style.display = isFacilitatorUser ? 'flex' : 'none';
+}
+
+function toggleAdminView() {
+  if (!isFacilitatorUser) return;
+  setRoute('facilitator');
 }
 
 function updateAccountPanel() {
@@ -1768,37 +1723,18 @@ function updateAccountPanel() {
   if (!panel) return;
   const greeting = document.getElementById('fellow-greeting');
   if (greeting) greeting.textContent = fellowName ? 'Welcome, ' + fellowName.split(' ')[0] : '';
-  const facilitatorSwitchBtn = `<button class="sidebar-account-btn sidebar-account-btn-ghost" onclick="switchToFacilitatorGate()">Facilitator? Switch portal →</button>`;
   if (currentUserId) {
     panel.innerHTML = `
       <div class="sidebar-account-status"><div class="sidebar-account-dot synced"></div>Synced as ${escapeHTML(currentUserEmail || '')}</div>
       <button class="sidebar-account-btn" onclick="handleSignOut()">Sign out</button>
-      ${facilitatorSwitchBtn}
     `;
   } else {
     panel.innerHTML = `
       <div class="sidebar-account-status"><div class="sidebar-account-dot"></div>Progress saved on this device only</div>
       ${supabaseReady() ? `<button class="sidebar-account-btn" onclick="handleGoogleSignIn()">Sign in to sync</button>` : ''}
       ${localStorage.getItem(`${STORAGE_PREFIX}:localGateOK`) === '1' ? `<button class="sidebar-account-btn sidebar-account-btn-ghost" onclick="resetLocalAccess()">Not you? Reset access</button>` : ''}
-      ${facilitatorSwitchBtn}
     `;
   }
-}
-
-// Always-reachable escape hatch: the sign-in persistence feature auto-resumes
-// a returning visitor into whichever role was last remembered on this device,
-// *before* the gate (and its "Facilitator? Enter the dashboard" link) ever
-// renders. Without this, a facilitator who previously used the fellow side
-// on the same device/browser could never reach the facilitator gate again.
-function switchToFacilitatorGate() {
-  const overlay = document.getElementById('gate-overlay');
-  if (overlay) {
-    overlay.inert = false;
-    overlay.classList.remove('hidden', 'fade-out');
-  }
-  gateRole = 'facilitator';
-  gateStep = 'pass';
-  renderGate();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3326,6 +3262,9 @@ function renderShell() {
             <span class="dashboard-icon" style="background:var(--con)"></span><span>Resource Library</span>
           </button>
         </div>
+        <button class="admin-toggle-btn" id="adminToggleBtn" style="display:none;" onclick="toggleAdminView()">
+          <span class="admin-toggle-icon">🔧</span><span>Facilitator Dashboard</span><span class="admin-toggle-arrow">→</span>
+        </button>
         <div class="sidebar-section-label">Fellowship Year</div>
         <nav class="month-nav" id="monthNav"></nav>
         <div class="sidebar-progress" aria-label="Fellowship progress">
@@ -3376,134 +3315,40 @@ function renderShell() {
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
-// Encodes which gate a "Sign in with Google" click came from directly into
-// the OAuth redirect URL. sessionStorage *usually* survives the round-trip
-// through Google and back, but it isn't guaranteed on every connection/
-// browser — a hash fragment on the URL Supabase is told to redirect back to
-// is the one thing that reliably comes back unchanged, since it never
-// touches the network (fragments aren't sent in HTTP requests at all).
-const OAUTH_RETURN_HASH = { facilitator: '#oauth-return-facilitator', fellow: '#oauth-return-fellow' };
+// There's one role at sign-in time now (fellow) — administrator access is a
+// post-entry check (refreshAdminStatus), not a separate gate/flow — so this
+// no longer needs to track or recover which gate a Google sign-in came from.
 
-// Reads and clears an OAUTH_RETURN_HASH marker from the current URL, if
-// present. Call this once per page load, before any routing logic looks at
-// window.location.hash, so a stray "#oauth-return-facilitator" never gets
-// mistaken for a session/route hash.
-function consumeOAuthReturnRole() {
-  const hash = window.location.hash;
-  let role = null;
-  if (hash === OAUTH_RETURN_HASH.facilitator) role = 'facilitator';
-  else if (hash === OAUTH_RETURN_HASH.fellow) role = 'fellow';
-  if (role) history.replaceState(null, '', window.location.pathname + window.location.search);
-  return role;
+function looksLikeOAuthReturn() {
+  // Supabase's implicit flow puts tokens in the hash; PKCE puts a code in
+  // the query string. Either means this load is the tail end of an OAuth
+  // redirect, so it's worth waiting a moment for the session to appear
+  // rather than failing fast on the first empty check.
+  return /access_token=|refresh_token=/.test(window.location.hash) || /[?&]code=/.test(window.location.search);
 }
 
-async function resumePendingOAuth(oauthReturnRole) {
-  const pendingRole = oauthReturnRole || sessionStorage.getItem('psix_pending_role');
-  if (!pendingRole) return false;
-
-  // Supabase parses the OAuth redirect's tokens asynchronously — on a slow
-  // connection getSession() can briefly return null right after landing
-  // back from Google, even though a session is about to exist. Give it a
-  // few seconds rather than giving up on the first check.
-  let session = await getSession();
-  for (let i = 0; i < 15 && !session; i++) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    session = await getSession();
-  }
-  if (!session) return false;
-
-  sessionStorage.removeItem('psix_pending_role');
-  const pendingName = sessionStorage.getItem('psix_pending_name') || '';
-  sessionStorage.removeItem('psix_pending_name');
-
-  currentUserId = session.user.id;
-  currentUserEmail = session.user.email;
-  gateRole = pendingRole;
-
-  if (pendingRole === 'facilitator') {
-    const ok = await isFacilitatorEmail(currentUserEmail);
-    if (!ok) {
-      gateStep = 'pass';
-      renderGate();
-      setTimeout(() => {
-        const err = document.getElementById('gate-pass-error');
-        if (err) err.textContent = `${currentUserEmail} is not on the facilitator list.`;
-      }, 0);
-      return true;
-    }
-    enterApp();
-    return true;
-  }
-
-  fellowName = pendingName || session.user.user_metadata?.full_name
-    || localStorage.getItem(`${STORAGE_PREFIX}:fellowName`) || fellowName;
-  await pullRemoteProgress();
-  await pullRemoteArtifacts();
-  enterApp();
-  return true;
-}
-
-// Covers everyone `resumePendingOAuth` doesn't: a returning visitor who's
-// still signed in from a previous visit (Supabase persists that session in
-// localStorage on its own), and a magic-link click-through that lands in a
-// brand-new tab with no `psix_pending_role` sessionStorage flag to find.
 let _resumingSession = false;
-async function tryResumeExistingSession(oauthReturnRole) {
+async function resumeSession(retry) {
   if (_resumingSession) return false;
-  const session = await getSession();
+  let session = await getSession();
+  if (retry) {
+    for (let i = 0; i < 15 && !session; i++) {
+      await new Promise(resolve => setTimeout(resolve, 200));
+      session = await getSession();
+    }
+  }
   if (!session) return false;
   _resumingSession = true;
   try {
     currentUserId = session.user.id;
     currentUserEmail = session.user.email;
-    // A direct link/bookmark to #facilitator, or an OAuth-return marker this
-    // load already carried, is explicit intent — honor it even if this
-    // device last remembered "fellow", instead of silently routing back to
-    // the fellow side.
-    const hashWantsFacilitator = oauthReturnRole === 'facilitator' || window.location.hash === '#facilitator';
-    // A still-pending OAuth-redirect role hint outranks the remembered role —
-    // it reflects what was explicitly requested moments ago (e.g. Facilitator
-    // gate → Sign in with Google), and resumePendingOAuth() may not have
-    // consumed it yet if this ran first due to session-parsing timing.
-    const pendingRole = oauthReturnRole || sessionStorage.getItem('psix_pending_role');
-    const savedRole = hashWantsFacilitator ? 'facilitator' : (pendingRole || localStorage.getItem(`${STORAGE_PREFIX}:lastRole`) || 'fellow');
-    if (pendingRole) {
-      sessionStorage.removeItem('psix_pending_role');
-      const pendingName = sessionStorage.getItem('psix_pending_name') || '';
-      sessionStorage.removeItem('psix_pending_name');
-      if (pendingName) fellowName = pendingName;
-    }
-
-    if (savedRole === 'facilitator') {
-      const ok = await isFacilitatorEmail(currentUserEmail);
-      if (ok) {
-        gateRole = 'facilitator';
-        enterApp();
-        return true;
-      }
-      if (hashWantsFacilitator) {
-        // Explicit intent, but this signed-in email isn't on the facilitator
-        // list — show the facilitator gate with a clear reason instead of
-        // quietly dropping them into the fellow view.
-        gateRole = 'facilitator';
-        gateStep = 'pass';
-        renderGate();
-        setTimeout(() => {
-          const err = document.getElementById('gate-pass-error');
-          if (err) err.textContent = `${currentUserEmail} is not on the facilitator list.`;
-        }, 0);
-        return true;
-      }
-      // Remembered role was "facilitator" but no longer qualifies, and there
-      // was no explicit request for it — fall through to the fellow view
-      // instead of stranding them on the gate.
-    }
-
-    gateRole = 'fellow';
-    fellowName = localStorage.getItem(`${STORAGE_PREFIX}:fellowName`)
+    const pendingName = sessionStorage.getItem('psix_pending_name') || '';
+    sessionStorage.removeItem('psix_pending_name');
+    fellowName = pendingName || localStorage.getItem(`${STORAGE_PREFIX}:fellowName`)
       || session.user.user_metadata?.full_name || fellowName;
     await pullRemoteProgress();
     await pullRemoteArtifacts();
+    await refreshAdminStatus();
     enterApp();
     return true;
   } finally {
@@ -3516,14 +3361,8 @@ async function init() {
   buildNav();
   buildSessions();
   buildDashboard();
-  gateRole = 'fellow';
   gateStep = 'pass';
   renderGate();
-
-  // Read (and strip) an OAUTH_RETURN_HASH marker before anything else looks
-  // at the URL hash, so this load knows unambiguously which gate the
-  // "Sign in with Google" click that led here came from.
-  const oauthReturnRole = consumeOAuthReturnRole();
 
   onAuthChange(session => {
     if (session) {
@@ -3535,29 +3374,25 @@ async function init() {
     }
     updateAccountPanel();
     // A magic-link click-through fires this event once Supabase finishes
-    // parsing the URL — often in a brand-new tab with no sessionStorage
-    // flag for resumePendingOAuth to find. If the gate's still up when a
-    // session appears, that's our signal to resume it here instead.
+    // parsing the URL — often in a brand-new tab with no in-memory state.
+    // If the gate's still up when a session appears, that's our signal to
+    // resume it here instead of waiting on the main init() flow below.
     const overlay = document.getElementById('gate-overlay');
     const gateStillUp = overlay && !overlay.classList.contains('hidden') && !overlay.classList.contains('fade-out');
-    if (session && gateStillUp) tryResumeExistingSession(oauthReturnRole);
+    if (session && gateStillUp) resumeSession(false);
   });
 
   window.addEventListener('hashchange', () => routeFromHash({ behavior: 'smooth' }));
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-portfolio'));
 
-  const resumedOAuth = await resumePendingOAuth(oauthReturnRole);
-  if (resumedOAuth) return;
-
-  const resumedSession = await tryResumeExistingSession(oauthReturnRole);
-  if (resumedSession) return;
+  const resumed = await resumeSession(looksLikeOAuthReturn());
+  if (resumed) return;
 
   // No live Supabase session — fall back to local recognition for fellows
   // who previously chose "Continue without syncing" on this device.
   if (localStorage.getItem(`${STORAGE_PREFIX}:localGateOK`) === '1') {
     const savedName = localStorage.getItem(`${STORAGE_PREFIX}:fellowName`) || '';
     if (savedName) {
-      gateRole = 'fellow';
       fellowName = savedName;
       enterApp();
     }
@@ -3570,9 +3405,8 @@ Object.assign(window, {
   showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding, showSecondaryView,
   handleCvDetailsInput, copyCvLine, copyAllCvLines, downloadSessionICS,
   toggleGoal, toggleReading, toggleTaskCheckbox,
-  togglePassVisibility, gateCheckPass, gateCheckName,
-  showFacilitatorGate, showFellowGate, skipSync,
-  handleGoogleSignIn, handleEmailOtpSignIn, handleSignOut, resetLocalAccess, switchToFacilitatorGate, refreshFacilitatorData,
+  togglePassVisibility, gateCheckPass, gateCheckName, skipSync,
+  handleGoogleSignIn, handleEmailOtpSignIn, handleSignOut, resetLocalAccess, toggleAdminView, refreshFacilitatorData,
   postDiscussionMessage, toggleVote, editDiscMsg, cancelDiscEdit, saveDiscMsg, deleteDiscMsg,
   showLibAddForm, hideLibAddForm, setLibType, submitLibLink, submitLibFile,
   handleLibDrop, handleLibFileSelect, clearLibFile, handleDeleteResource,
