@@ -1057,6 +1057,7 @@ function applyFellowShell() {
 const SECONDARY_VIEWS = [
   { key: 'library', hash: 'library', panelId: 'libraryHubPanel', btnId: 'libraryNavBtn', topbar: 'Resource Library', build: () => buildLibraryHubPanel() },
   { key: 'libraryresources', hash: 'library-resources', panelId: 'libraryResourcesPanel', btnId: 'libraryNavBtn', topbar: 'Community Resources', build: () => buildLibraryResourcesPanel() },
+  { key: 'lounge', hash: 'library-lounge', panelId: 'cohortLoungePanel', btnId: 'libraryNavBtn', topbar: 'Cohort Lounge', build: () => buildCohortLoungePanel() },
   { key: 'funding', hash: 'library-funding', panelId: 'fundingPanel', btnId: 'libraryNavBtn', topbar: 'Funding Opportunities', build: () => buildFundingPanel() },
   { key: 'cvdossier', hash: 'library-cv', panelId: 'cvDossierPanel', btnId: 'libraryNavBtn', topbar: 'CV & Dossier Tools', build: () => buildCvDossierPanel() },
   { key: 'artifactguide', hash: 'library-artifact-guide', panelId: 'artifactGuidePanel', btnId: 'libraryNavBtn', topbar: 'Artifact Guide', build: () => buildArtifactGuidePanel() },
@@ -2645,11 +2646,43 @@ function buildLibraryHubPanel() {
     </div>
     <div class="folder-grid">
       ${renderFolderTile({ title: 'Community Resources', description: 'Readings, links, slides, and files shared by fellows — searchable across every session.', color: 'var(--con)', onclick: "showSecondaryView('libraryresources')" })}
+      ${renderFolderTile({ title: 'Cohort Lounge', description: "A running conversation with the whole cohort, not tied to any month — share a thought or point people to something you posted below.", color: 'var(--gold)', onclick: "showSecondaryView('lounge')" })}
       ${renderFolderTile({ title: 'Funding Opportunities', description: 'A curated list of funders relevant to purpose science and community-engaged research.', color: 'var(--all)', onclick: "showSecondaryView('funding')" })}
       ${renderFolderTile({ title: 'CV & Dossier Tools', description: "Turn this year's work into CV lines and tenure-dossier-ready language.", color: 'var(--gra)', onclick: "showSecondaryView('cvdossier')" })}
       ${renderFolderTile({ title: 'Artifact Guide', description: 'See how your monthly artifacts fit together, and browse a full sample portfolio.', color: 'var(--tea)', onclick: "showSecondaryView('artifactguide')" })}
     </div>
   `;
+}
+
+function buildCohortLoungePanel() {
+  const panel = document.getElementById('cohortLoungePanel');
+  if (!panel) return;
+  panel.innerHTML = `
+    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Cohort Lounge' }])}
+    <div class="session-header" style="padding-top:0;">
+      <div class="session-eyebrow"><span class="session-month-label">Cohort-Wide</span></div>
+      <h1 class="session-title">Cohort Lounge</h1>
+      <p class="session-description" style="border-bottom:none;padding-bottom:0;margin-bottom:8px;">
+        A running conversation with the whole cohort — not tied to any particular month. Share a thought, ask a question, or point people to something you just added to the Resource Library. Text and upvotes only; for links and files, use the Resource Library instead.
+      </p>
+    </div>
+    <div class="disc-wrap">
+      <div class="disc-list" id="disc-list-lounge">
+        <div class="disc-status">Loading discussion…</div>
+      </div>
+      <div class="disc-composer" id="disc-composer-lounge" style="display:none;">
+        <textarea
+          class="disc-input"
+          id="disc-input-lounge"
+          placeholder="Share a thought, question, or something worth knowing… (Enter to post, Shift+Enter for new line)"
+          oninput="this.style.height='38px';this.style.height=Math.min(110,this.scrollHeight)+'px'"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postDiscussionMessage('lounge')}"
+        ></textarea>
+        <button class="disc-post-btn" id="disc-post-btn-lounge" onclick="postDiscussionMessage('lounge')">Post</button>
+      </div>
+    </div>
+  `;
+  loadSessionDiscussion('lounge');
 }
 
 function buildArtifactGuidePanel() {
@@ -3381,6 +3414,7 @@ function renderShell() {
           <section class="dashboard-panel active" id="dashboardPanel" aria-label="Fellowship dashboard"></section>
           <section class="dashboard-panel" id="libraryHubPanel" aria-label="Resource library"></section>
           <section class="dashboard-panel" id="libraryResourcesPanel" aria-label="Community resources"></section>
+          <section class="dashboard-panel" id="cohortLoungePanel" aria-label="Cohort lounge"></section>
           <section class="dashboard-panel" id="artifactGuidePanel" aria-label="Artifact guide"></section>
           <section class="dashboard-panel" id="conceptMapPanel" aria-label="How your portfolio comes together"></section>
           <section class="dashboard-panel" id="samplePortfolioPanel" aria-label="Sample portfolio"></section>
