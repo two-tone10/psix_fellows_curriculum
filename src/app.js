@@ -988,6 +988,7 @@ function showSecondaryView(key) {
 }
 
 function showLibrary() { showSecondaryView('library'); }
+function showCohortLounge() { showSecondaryView('lounge'); }
 function showConceptMap() { showSecondaryView('conceptmap'); }
 function showSamplePortfolio() { showSecondaryView('sampleportfolio'); }
 function showCvDossier() { showSecondaryView('cvdossier'); }
@@ -1057,7 +1058,7 @@ function applyFellowShell() {
 const SECONDARY_VIEWS = [
   { key: 'library', hash: 'library', panelId: 'libraryHubPanel', btnId: 'libraryNavBtn', topbar: 'Resource Library', build: () => buildLibraryHubPanel() },
   { key: 'libraryresources', hash: 'library-resources', panelId: 'libraryResourcesPanel', btnId: 'libraryNavBtn', topbar: 'Community Resources', build: () => buildLibraryResourcesPanel() },
-  { key: 'lounge', hash: 'library-lounge', panelId: 'cohortLoungePanel', btnId: 'libraryNavBtn', topbar: 'Cohort Lounge', build: () => buildCohortLoungePanel() },
+  { key: 'lounge', hash: 'lounge', panelId: 'cohortLoungePanel', btnId: 'loungeNavBtn', topbar: 'Cohort Lounge', build: () => buildCohortLoungePanel() },
   { key: 'funding', hash: 'library-funding', panelId: 'fundingPanel', btnId: 'libraryNavBtn', topbar: 'Funding Opportunities', build: () => buildFundingPanel() },
   { key: 'cvdossier', hash: 'library-cv', panelId: 'cvDossierPanel', btnId: 'libraryNavBtn', topbar: 'CV & Dossier Tools', build: () => buildCvDossierPanel() },
   { key: 'artifactguide', hash: 'library-artifact-guide', panelId: 'artifactGuidePanel', btnId: 'libraryNavBtn', topbar: 'Artifact Guide', build: () => buildArtifactGuidePanel() },
@@ -2646,7 +2647,6 @@ function buildLibraryHubPanel() {
     </div>
     <div class="folder-grid">
       ${renderFolderTile({ title: 'Community Resources', description: 'Readings, links, slides, and files shared by fellows — searchable across every session.', color: 'var(--con)', onclick: "showSecondaryView('libraryresources')" })}
-      ${renderFolderTile({ title: 'Cohort Lounge', description: "A running conversation with the whole cohort, not tied to any month — share a thought or point people to something you posted below.", color: 'var(--gold)', onclick: "showSecondaryView('lounge')" })}
       ${renderFolderTile({ title: 'Funding Opportunities', description: 'A curated list of funders relevant to purpose science and community-engaged research.', color: 'var(--all)', onclick: "showSecondaryView('funding')" })}
       ${renderFolderTile({ title: 'CV & Dossier Tools', description: "Turn this year's work into CV lines and tenure-dossier-ready language.", color: 'var(--gra)', onclick: "showSecondaryView('cvdossier')" })}
       ${renderFolderTile({ title: 'Artifact Guide', description: 'See how your monthly artifacts fit together, and browse a full sample portfolio.', color: 'var(--tea)', onclick: "showSecondaryView('artifactguide')" })}
@@ -2658,7 +2658,6 @@ function buildCohortLoungePanel() {
   const panel = document.getElementById('cohortLoungePanel');
   if (!panel) return;
   panel.innerHTML = `
-    ${renderBreadcrumb([{ label: 'Resource Library', onclick: 'showLibrary()' }, { label: 'Cohort Lounge' }])}
     <div class="session-header" style="padding-top:0;">
       <div class="session-eyebrow"><span class="session-month-label">Cohort-Wide</span></div>
       <h1 class="session-title">Cohort Lounge</h1>
@@ -3378,6 +3377,9 @@ function renderShell() {
           <button class="dashboard-btn" id="libraryNavBtn" onclick="showLibrary()">
             <span class="dashboard-icon" style="background:var(--con)"></span><span>Resource Library</span>
           </button>
+          <button class="dashboard-btn" id="loungeNavBtn" onclick="showCohortLounge()">
+            <span class="dashboard-icon" style="background:var(--gold)"></span><span>Cohort Lounge</span>
+          </button>
         </div>
         <button class="admin-toggle-btn" id="adminToggleBtn" style="display:none;" onclick="toggleAdminView()">
           <span class="admin-toggle-icon">🔧</span><span>Facilitator Dashboard</span><span class="admin-toggle-arrow">→</span>
@@ -3555,7 +3557,7 @@ async function init() {
 
 // Expose handlers referenced by inline HTML (module scope isn't global).
 Object.assign(window, {
-  showDashboard, showSession, goToTask, switchTab, showLibrary,
+  showDashboard, showSession, goToTask, switchTab, showLibrary, showCohortLounge,
   showConceptMap, showSamplePortfolio, toggleMapChip, showCvDossier, showFunding, showSecondaryView,
   handleCvDetailsInput, copyCvLine, copyAllCvLines, downloadSessionICS,
   toggleGoal, toggleReading, toggleTaskCheckbox, handleTaskNoteInput,
