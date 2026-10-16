@@ -113,7 +113,8 @@ export const SESSIONS = [
     id: 'oct', month: 'October', domain: 'translational', inPerson: false,
     title: 'Communicating Across Boundaries: Writing, Speaking, and Translating Science',
     inquiry: "What makes knowledge about purpose usable — and for whom?",
-    before: "Find one example of purpose science research communicated effectively to a non-academic audience. Analyze what makes it work: what was translated, what was preserved, and what — if anything — was lost?",
+    before: "Before we meet, watch or listen to “When A.I. Comes for Your Purpose in Life.” A mathematician reflects on AI solving the kinds of problems his life’s work was built on. It’s purpose in the wild, and close to home for anyone whose sense of purpose is tied to their scholarship. As you listen, notice how he puts his purpose into words, and bring one moment that stayed with you.",
+    beforeLink: { label: "Watch or listen on YouTube", url: "https://www.youtube.com/watch?v=LfGenpmOjDQ" },
     after: "Draft a one-page research brief on your emerging project, written for a YSO program director with no social science background. Have a colleague or community partner read it and give you honest feedback before November's convening.",
     description: "Translational researchers must be multilingual in a professional sense — able to write for peer-reviewed journals, speak to practitioners in plain language, and communicate findings to youth, families, and policymakers. This session builds those communication competencies directly, with particular attention to skills that are rarely taught in doctoral programs but are essential for the kind of scholarship this fellowship cultivates.",
     goals: [
