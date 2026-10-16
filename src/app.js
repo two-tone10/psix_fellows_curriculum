@@ -1447,6 +1447,7 @@ function buildSessions() {
             <div class="phase-card-title">Before the Session</div>
           </div>
           <div class="phase-task-text">${escapeHTML(s.before)}</div>
+          ${s.beforeLink ? `<a class="phase-task-link" href="${escapeHTML(s.beforeLink.url)}" target="_blank" rel="noopener">${escapeHTML(s.beforeLink.label)} ↗</a>` : ''}
           <div class="task-check-wrap">
             <input type="checkbox" id="check-before-${s.id}"
               data-progress-type="before" data-progress-index="0"
