@@ -131,8 +131,9 @@ export const SESSIONS = [
       { text: "Research Communication Audit — Bring one page of your own academic writing and annotate what would need to change (vocabulary, framing, structure) for a non-academic practitioner audience. Generates a personal translation checklist.", time: "15 min", isNew: true },
     ],
     readings: [
-      "Selected readings on public scholarship and researcher communication",
-      "Examples of effective research-to-practice briefs from the Purpose Commons archives",
+      { title: "What counts as good science?", url: "./src/assets/resources/what-counts-as-good-science.pdf", type: "PDF" },
+      { title: "Universities claim to value community-engaged scholarship. So why do they discourage it?", url: "./src/assets/resources/universities-community-engaged-scholarship.pdf", type: "PDF" },
+      { title: "Science Democratization for Rigor, Relevance, and Resilience", url: "./src/assets/resources/science-democratization-rigor-relevance-resilience.pdf", type: "PDF" },
     ],
     reflectPrompts: [
       "What do you lose — scientifically or intellectually — in the act of translation? Is that loss acceptable? Necessary?",
